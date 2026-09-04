@@ -1,0 +1,95 @@
+# API interna `/api/v1` — contrato de endpoints
+
+Fuente de verdad compartida entre `apps/api` (Fastify) y `apps/web` (Next.js).
+Todos los schemas de request/response viven en `@smlxl/contracts` (`packages/contracts/src/api.ts`).
+La API genera OpenAPI en `GET /api/v1/openapi.json` y Swagger UI en `/docs`.
+
+## Autenticación
+
+- El frontend (Auth.js) emite un JWT HS256 firmado con `AUTH_SECRET` con claims `{ sub: userId, email, role, name }` y lo envía en `Authorization: Bearer <jwt>`.
+- La API verifica el JWT, carga el `User` y construye el `Principal` (`@smlxl/domain` → `rbac.ts`). RBAC siempre server-side.
+- `GET /api/v1/session` → `SessionDto` (usuario + permisos efectivos).
+- Con `AUTH_DEV_BYPASS=true` (sólo desarrollo) la API acepta además el header `x-dev-user-email` para facilitar pruebas manuales/E2E.
+- El webhook Pub/Sub usa `?token=GOOGLE_PUBSUB_PUSH_TOKEN` (no JWT de usuario).
+
+## Errores
+
+Todas las respuestas de error usan `ErrorResponseSchema`: `{ code, message, details?, correlationId }`. `code` es un `DomainErrorCode`; el status HTTP se deriva con `httpStatusForCode`.
+
+## Endpoints
+
+| Método   | Ruta                                                     | Query/Body                               | Respuesta                                                                               | Permiso                                                                         |
+| -------- | -------------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| GET      | `/health`                                                | —                                        | `{ status, db, version }`                                                               | público                                                                         |
+| GET      | `/metrics`                                               | —                                        | texto Prometheus                                                                        | público (red interna)                                                           |
+| GET      | `/api/v1/session`                                        | —                                        | `SessionDto`                                                                            | autenticado                                                                     |
+| GET      | `/api/v1/notifications/counts`                           | —                                        | `{ pendingAiReview, pendingCompletionProposals }` (`NotificationCountsSchema`)          | autenticado (0 si el rol no puede resolver/aprobar)                             |
+| GET      | `/api/v1/dashboard`                                      | `PeriodQuerySchema`                      | `DashboardDto`                                                                          | ACTION_ITEM_READ                                                                |
+| GET      | `/api/v1/meetings`                                       | `MeetingListQuerySchema`                 | `pageSchema(MeetingListItemSchema)`                                                     | MEETING_READ (filtrado por alcance)                                             |
+| POST     | `/api/v1/meetings/manual`                                | `ManualMeetingBodySchema`                | `MeetingDetailSchema`                                                                   | ACTION_ITEM_CREATE                                                              |
+| GET      | `/api/v1/meetings/:id`                                   | —                                        | `MeetingDetailSchema`                                                                   | canAccessMeeting                                                                |
+| PATCH    | `/api/v1/meetings/:id`                                   | `UpdateMeetingBodySchema`                | `MeetingDetailSchema`                                                                   | MEETING_SET_CONFIDENTIALITY / MEETING_EXCLUDE                                   |
+| POST     | `/api/v1/meetings/:id/reprocess`                         | —                                        | `{ queued: true, jobId }`                                                               | MEETING_REPROCESS                                                               |
+| GET      | `/api/v1/meetings/:id/transcript`                        | —                                        | `{ transcripts: [{ id, sourceType, languageCode, segments: TranscriptSegmentDto[] }] }` | MEETING_READ_TRANSCRIPT + canAccessMeeting                                      |
+| GET      | `/api/v1/meetings/:id/action-items`                      | —                                        | `ActionItemDto[]`                                                                       | canAccessMeeting                                                                |
+| GET      | `/api/v1/meetings/:id/review-items`                      | —                                        | `AiReviewItemDto[]`                                                                     | canAccessMeeting                                                                |
+| GET      | `/api/v1/meetings/:id/audit`                             | —                                        | `AuditEntryDto[]`                                                                       | AUDIT_READ o canAccessMeeting                                                   |
+| GET      | `/api/v1/action-items`                                   | `ActionItemListQuerySchema`              | `pageSchema(ActionItemDtoSchema)`                                                       | ACTION_ITEM_READ (filtrado por alcance)                                         |
+| POST     | `/api/v1/action-items`                                   | `CreateActionItemBodySchema`             | `ActionItemDetailSchema`                                                                | ACTION_ITEM_CREATE                                                              |
+| GET      | `/api/v1/action-items/:id`                               | —                                        | `ActionItemDetailSchema`                                                                | canAccessActionItem                                                             |
+| PATCH    | `/api/v1/action-items/:id`                               | `UpdateActionItemBodySchema`             | `ActionItemDetailSchema`                                                                | canUpdateActionItem (+ REASSIGN si cambia owner)                                |
+| POST     | `/api/v1/action-items/:id/complete`                      | `ProposeCompletionBodySchema`            | `ActionItemDetailSchema`                                                                | canUpdateActionItem → crea CompletionProposal USER (estado COMPLETION_PROPOSED) |
+| POST     | `/api/v1/action-items/:id/proposals/:proposalId/approve` | `ReviewProposalBodySchema`               | `ActionItemDetailSchema`                                                                | canApproveCompletion                                                            |
+| POST     | `/api/v1/action-items/:id/proposals/:proposalId/reject`  | `ReviewProposalBodySchema`               | `ActionItemDetailSchema`                                                                | canApproveCompletion                                                            |
+| POST     | `/api/v1/action-items/:id/reopen`                        | `{ reason }`                             | `ActionItemDetailSchema`                                                                | canUpdateActionItem (COMPLETED → IN_PROGRESS, auditado)                         |
+| POST     | `/api/v1/action-items/:id/comments`                      | `CommentBodySchema`                      | `CommentDto`                                                                            | canAccessActionItem                                                             |
+| GET      | `/api/v1/ai-review`                                      | `AiReviewListQuerySchema` (`PaginationQuerySchema & { meetingId?, reason? }`) | `pageSchema(AiReviewItemDtoSchema)`                                | AI_REVIEW_RESOLVE                                                               |
+| POST     | `/api/v1/ai-review/:id/approve`                          | `AiReviewApproveBodySchema`              | `AiReviewItemDto`                                                                       | AI_REVIEW_RESOLVE                                                               |
+| POST     | `/api/v1/ai-review/:id/reject`                           | `AiReviewRejectBodySchema`               | `AiReviewItemDto`                                                                       | AI_REVIEW_RESOLVE                                                               |
+| POST     | `/api/v1/ai-review/:id/merge`                            | `AiReviewMergeBodySchema`                | `AiReviewItemDto`                                                                       | AI_REVIEW_RESOLVE                                                               |
+| GET      | `/api/v1/reports/weekly`                                 | `{ limit? }`                             | `WeeklyDigestDto[]`                                                                     | REPORT_GLOBAL o REPORT_AREA                                                     |
+| GET      | `/api/v1/reports/weekly/config`                          | —                                        | `WeeklyDigestConfigDto`                                                                 | CONFIG_MANAGE o DIGEST_GENERATE                                                 |
+| PUT      | `/api/v1/reports/weekly/config`                          | `UpdateWeeklyDigestConfigBodySchema`     | `WeeklyDigestConfigDto`                                                                 | CONFIG_MANAGE                                                                   |
+| POST     | `/api/v1/reports/weekly/generate`                        | `GenerateDigestBodySchema`               | `WeeklyDigestDto`                                                                       | DIGEST_GENERATE                                                                 |
+| GET      | `/api/v1/reports/weekly/:id`                             | —                                        | `WeeklyDigestDto` (con `emailPreviewHtml`)                                              | REPORT_GLOBAL                                                                   |
+| POST     | `/api/v1/reports/weekly/:id/send`                        | —                                        | `WeeklyDigestDto`                                                                       | DIGEST_SEND                                                                     |
+| GET      | `/api/v1/search`                                         | `SearchQuerySchema`                      | `SearchResultDto`                                                                       | autenticado (filtrado por alcance)                                              |
+| GET      | `/api/v1/team/users`                                     | —                                        | `UserDto[]`                                                                             | autenticado                                                                     |
+| GET      | `/api/v1/team/areas`                                     | —                                        | `AreaDto[]`                                                                             | autenticado                                                                     |
+| GET      | `/api/v1/team/projects`                                  | —                                        | `ProjectDto[]`                                                                          | autenticado                                                                     |
+| GET      | `/api/v1/team/external-assignees`                        | —                                        | `ExternalAssigneeDto[]` (`{ id, displayName, company, email, active }`)                 | autenticado                                                                     |
+| GET      | `/api/v1/integrations/google/status`                     | —                                        | `GoogleStatusDto`                                                                       | INTEGRATION_MANAGE                                                              |
+| POST     | `/api/v1/integrations/google/subscriptions/sync`         | —                                        | `GoogleStatusDto`                                                                       | INTEGRATION_MANAGE (crea/renueva subs por usuario monitoreado)                  |
+| POST     | `/api/v1/integrations/google/calendar/sync`              | —                                        | `{ queued: true }`                                                                      | INTEGRATION_MANAGE                                                              |
+| POST     | `/api/v1/integrations/google/sheets/sync`                | `{ dryRun?: boolean }`                   | `SheetsSyncResultDto`                                                                   | SHEETS_SYNC                                                                     |
+| POST     | `/api/v1/integrations/simulate/meeting-ended`            | `{ meetingId? }` (modo FAKE)             | `{ queued: true, meetingId }`                                                           | INTEGRATION_MANAGE — dispara el pipeline completo con adapters fake             |
+| POST     | `/api/v1/webhooks/google/pubsub`                         | `PubSubPushEnvelopeSchema` (+ `?token=`) | `204`                                                                                   | token                                                                           |
+| GET      | `/api/v1/admin/users`                                    | —                                        | `UserDto[]`                                                                             | USER_MANAGE                                                                     |
+| PATCH    | `/api/v1/admin/users/:id`                                | `UpdateUserBodySchema`                   | `UserDto`                                                                               | USER_MANAGE                                                                     |
+| GET/POST | `/api/v1/admin/areas`                                    | `UpsertAreaBodySchema`                   | `AreaDto`                                                                               | CATALOG_MANAGE                                                                  |
+| PATCH    | `/api/v1/admin/areas/:id`                                | `UpsertAreaBodySchema`                   | `AreaDto`                                                                               | CATALOG_MANAGE                                                                  |
+| GET/POST | `/api/v1/admin/projects`                                 | `UpsertProjectBodySchema`                | `ProjectDto`                                                                            | CATALOG_MANAGE                                                                  |
+| PATCH    | `/api/v1/admin/projects/:id`                             | `UpsertProjectBodySchema`                | `ProjectDto`                                                                            | CATALOG_MANAGE                                                                  |
+| GET      | `/api/v1/admin/settings`                                 | —                                        | `PlatformSettingsDto`                                                                   | CONFIG_MANAGE                                                                   |
+| PUT      | `/api/v1/admin/settings`                                 | `UpdatePlatformSettingsBodySchema`       | `PlatformSettingsDto`                                                                   | CONFIG_MANAGE                                                                   |
+| GET      | `/api/v1/admin/audit`                                    | `AuditQuerySchema`                       | `pageSchema(AuditEntryDtoSchema)`                                                       | AUDIT_READ                                                                      |
+| GET      | `/api/v1/admin/jobs`                                     | —                                        | `{ queues: [{ name, created, active, completed, failed }] }`                            | INTEGRATION_MANAGE                                                              |
+
+## Vistas de `GET /action-items?view=`
+
+| view        | Filtro                                              |
+| ----------- | --------------------------------------------------- |
+| `all`       | abiertos + propuestos (excluye COMPLETED/CANCELLED) |
+| `mine`      | ownerUserId = principal                             |
+| `team`      | owner ∈ equipo/áreas del principal                  |
+| `overdue`   | isOverdue (derivado en servidor)                    |
+| `thisWeek`  | dueDate dentro de la semana ISO actual              |
+| `noDueDate` | dueDate null, abiertos                              |
+| `noOwner`   | sin owner ni externalAssignee, abiertos             |
+| `blocked`   | status BLOCKED                                      |
+| `completed` | COMPLETED                                           |
+| `proposed`  | PROPOSED o COMPLETION_PROPOSED                      |
+
+## Frontend
+
+`apps/web` nunca llama Google ni Gemini. Los Server Components llaman a la API con el JWT de sesión (`lib/api.ts`). Los Client Components usan `app/api/proxy/[...path]/route.ts`, un proxy delgado que reenvía a la API agregando `Authorization`.

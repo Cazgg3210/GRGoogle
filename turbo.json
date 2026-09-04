@@ -1,0 +1,51 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [".env"],
+  "globalEnv": [
+    "NODE_ENV",
+    "APP_URL",
+    "API_URL",
+    "NEXT_PUBLIC_API_URL",
+    "DATABASE_URL",
+    "AUTH_SECRET",
+    "AUTH_DEV_BYPASS",
+    "AUTH_DEV_BOOTSTRAP_EMAIL",
+    "GOOGLE_OAUTH_CLIENT_ID",
+    "GOOGLE_OAUTH_CLIENT_SECRET",
+    "GOOGLE_WORKSPACE_DOMAIN",
+    "GOOGLE_CLOUD_PROJECT_ID",
+    "GOOGLE_PUBSUB_TOPIC",
+    "GOOGLE_PUBSUB_SUBSCRIPTION",
+    "GOOGLE_PUBSUB_PUSH_TOKEN",
+    "GOOGLE_SERVICE_ACCOUNT_EMAIL",
+    "GOOGLE_SERVICE_ACCOUNT_CREDENTIALS",
+    "GEMINI_API_KEY",
+    "GEMINI_MODEL",
+    "GOOGLE_GENAI_USE_VERTEXAI",
+    "GOOGLE_CLOUD_LOCATION",
+    "GOOGLE_SHEETS_SPREADSHEET_ID",
+    "GMAIL_SENDER_EMAIL",
+    "LOG_LEVEL",
+    "COMPANY_TIMEZONE",
+    "GOOGLE_INTEGRATION_ENABLED",
+    "GOOGLE_MEET_EVENTS_ENABLED",
+    "AI_PROCESSING_ENABLED",
+    "AI_COMPLETION_PROPOSALS_ENABLED",
+    "GMAIL_NOTIFICATIONS_ENABLED",
+    "SHEETS_SYNC_ENABLED",
+    "WEEKLY_DIGEST_ENABLED",
+    "PORT_API",
+    "PORT_WEB"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    },
+    "dev": { "cache": false, "persistent": true },
+    "lint": { "dependsOn": ["^build"] },
+    "typecheck": { "dependsOn": ["^build"] },
+    "test": { "dependsOn": ["^build"], "cache": false },
+    "clean": { "cache": false }
+  }
+}

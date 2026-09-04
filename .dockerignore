@@ -1,0 +1,29 @@
+# Contexto de build = raíz del monorepo. Excluir todo lo que no necesita la imagen.
+.git
+.github
+.turbo
+**/.turbo
+**/node_modules
+**/dist
+**/.next
+**/coverage
+**/*.tsbuildinfo
+**/*.log
+
+# Secretos: nunca dentro de una imagen (§27.3, §45.5)
+.env
+.env.*
+!.env.example
+**/service-account*.json
+
+# Datos y documentación no necesarios en runtime
+imports/*.xlsx
+docs
+tests
+docker/README.md
+SMLXL_MASTER_PROMPT_PLATAFORMA_REUNIONES_IA_v1.0.md
+README.md
+CLAUDE.md
+.prettierrc
+.DS_Store
+Thumbs.db

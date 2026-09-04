@@ -1,0 +1,43 @@
+{
+  "name": "@smlxl/auth",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./token": "./src/token/api-token.ts",
+    "./next": "./src/next/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run",
+    "clean": "rimraf dist .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@smlxl/contracts": "workspace:*",
+    "@smlxl/domain": "workspace:*",
+    "jose": "^5.9.6",
+    "next-auth": "5.0.0-beta.25",
+    "zod": "^3.24.1"
+  },
+  "peerDependencies": {
+    "next": ">=15.0.0"
+  },
+  "peerDependenciesMeta": {
+    "next": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "next": "15.1.6",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}

@@ -1,0 +1,29 @@
+# Override para Dokploy (Traefik). Uso:
+#   docker compose -f docker-compose.yml -f docker-compose.dokploy.yml --profile full up -d --build
+# En Dokploy: "Compose Path" = docker-compose.yml, "Compose Override" = este archivo,
+# variable de entorno COMPOSE_PROFILES=full.
+# Los dominios se asignan en la UI de Dokploy a los servicios `web` (3000) y `api` (4000);
+# Traefik los alcanza por la red externa `dokploy-network`, así que no se publican puertos al host.
+services:
+  postgres:
+    ports: !reset []
+
+  api:
+    ports: !reset []
+    networks:
+      - default
+      - dokploy-network
+
+  worker:
+    networks:
+      - default
+
+  web:
+    ports: !reset []
+    networks:
+      - default
+      - dokploy-network
+
+networks:
+  dokploy-network:
+    external: true

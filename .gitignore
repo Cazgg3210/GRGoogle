@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.next/
+.turbo/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+imports/*.xlsx
+!imports/.gitkeep
+tests/e2e/test-results/
+tests/e2e/playwright-report/
+*.log
+.DS_Store
+Thumbs.db
+packages/database/src/generated/

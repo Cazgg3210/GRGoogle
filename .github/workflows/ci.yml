@@ -1,0 +1,156 @@
+# CI — SMLXL Meeting Intelligence (§41)
+# install → lint → typecheck → unit → integration (PostgreSQL) → build → security → prisma drift
+name: CI
+
+on:
+  push:
+    branches: [main, dev, 'feature/**', 'fix/**']
+  pull_request:
+    branches: [main, dev]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_ENV: test
+  # Base de datos de servicio: sin secretos, sólo alcanzable dentro del job.
+  DATABASE_URL: postgresql://smlxl:smlxl@localhost:5432/smlxl_test?schema=public
+  AUTH_SECRET: ci-only-secret-not-for-production-0123456789
+  AUTH_DEV_BYPASS: 'false'
+  COMPANY_TIMEZONE: America/Mexico_City
+  GOOGLE_INTEGRATION_ENABLED: 'false'
+  GOOGLE_MEET_EVENTS_ENABLED: 'false'
+  AI_PROCESSING_ENABLED: 'false'
+  GMAIL_NOTIFICATIONS_ENABLED: 'false'
+  SHEETS_SYNC_ENABLED: 'false'
+  WEEKLY_DIGEST_ENABLED: 'true'
+  TURBO_TELEMETRY_DISABLED: '1'
+
+jobs:
+  verify:
+    name: lint · typecheck · test · build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: smlxl
+          POSTGRES_PASSWORD: smlxl
+          POSTGRES_DB: smlxl_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U smlxl -d smlxl_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Habilitar pnpm 9.12 vía corepack
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.12.0 --activate
+
+      - name: Node 20 con caché de pnpm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Generar cliente Prisma
+        run: pnpm db:generate
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Pruebas unitarias
+        run: pnpm test
+
+      - name: Migraciones en la base de servicio
+        run: pnpm db:deploy
+
+      - name: Pruebas de integración (PostgreSQL)
+        run: pnpm test:integration
+
+      - name: Build
+        run: pnpm build
+
+      - name: Formato
+        run: pnpm format:check
+
+  security:
+    name: dependencias · drift de Prisma
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: smlxl
+          POSTGRES_PASSWORD: smlxl
+          POSTGRES_DB: smlxl_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U smlxl -d smlxl_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Habilitar pnpm 9.12 vía corepack
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.12.0 --activate
+
+      - name: Node 20 con caché de pnpm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      # Falla el pipeline ante vulnerabilidades high/critical. Si una advisory no aplica
+      # (sin ruta de explotación en este proyecto), documentar la excepción en
+      # docs/security/threat-model.md y añadirla a "pnpm.auditConfig.ignoreCves" en
+      # package.json (allow-list explícita y revisable), nunca con continue-on-error.
+      - name: Auditoría de dependencias
+        run: pnpm audit --audit-level=high
+
+      # El esquema y las migraciones deben coincidir: detecta cambios en schema.prisma
+      # sin migración generada (§41: migraciones controladas).
+      - name: Verificar drift entre migraciones y schema
+        working-directory: packages/database
+        run: |
+          pnpm exec prisma migrate diff \
+            --from-migrations ../../prisma/migrations \
+            --to-schema-datamodel ../../prisma/schema.prisma \
+            --shadow-database-url "$DATABASE_URL" \
+            --exit-code
+
+      - name: Secretos accidentales en el árbol
+        run: |
+          if git ls-files | grep -E '(^|/)\.env(\..+)?$' | grep -v '\.env\.example$'; then
+            echo "Archivo .env versionado: prohibido (§45.5)"; exit 1
+          fi
+          if git ls-files | grep -E 'service-account.*\.json$'; then
+            echo "Credencial de service account versionada: prohibido (§27.3)"; exit 1
+          fi

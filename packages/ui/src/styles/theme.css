@@ -1,0 +1,213 @@
+/*
+ * SMLXL — tema compartido (Tailwind v4).
+ * Dirección: "sala de control de compromisos". Tinta azul profunda como
+ * primario, superficies de papel cálido, cobre como señal de atención y
+ * tonos semánticos sobrios para estados. Nada de gradientes morados.
+ */
+@theme {
+  --font-sans:
+    'Instrument Sans', 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-display: 'Instrument Serif', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', 'SFMono-Regular', monospace;
+
+  --color-ink-50: #f3f5f9;
+  --color-ink-100: #e4e8f0;
+  --color-ink-200: #c9d1e0;
+  --color-ink-300: #a3b0c8;
+  --color-ink-400: #7686a6;
+  --color-ink-500: #55658a;
+  --color-ink-600: #405072;
+  --color-ink-700: #2f3d5b;
+  --color-ink-800: #222d45;
+  --color-ink-900: #17233b;
+  --color-ink-950: #0d1526;
+
+  --color-paper-50: #faf9f6;
+  --color-paper-100: #f4f2ec;
+  --color-paper-200: #ebe7de;
+  --color-paper-300: #ddd7ca;
+  --color-paper-400: #c4bcab;
+  --color-paper-500: #a3998a;
+  --color-paper-600: #7d7366;
+  --color-paper-700: #5e564c;
+  --color-paper-800: #3f3a33;
+  --color-paper-900: #2a2622;
+
+  --color-signal-50: #fdf3ec;
+  --color-signal-100: #f9e2d2;
+  --color-signal-200: #f2c4a6;
+  --color-signal-300: #e79f72;
+  --color-signal-400: #d97a45;
+  --color-signal-500: #bf5a29;
+  --color-signal-600: #a3471f;
+  --color-signal-700: #83391b;
+  --color-signal-800: #692f1a;
+  --color-signal-900: #562818;
+
+  --color-success-50: #eef7f0;
+  --color-success-100: #d6ecdb;
+  --color-success-200: #aed9b9;
+  --color-success-300: #7fbf91;
+  --color-success-400: #4f9f68;
+  --color-success-500: #33824e;
+  --color-success-600: #27683f;
+  --color-success-700: #215334;
+  --color-success-800: #1c422b;
+  --color-success-900: #173624;
+
+  --color-warning-50: #fdf7e7;
+  --color-warning-100: #f9ebbd;
+  --color-warning-200: #f3d77f;
+  --color-warning-300: #e9bd45;
+  --color-warning-400: #d9a020;
+  --color-warning-500: #b98214;
+  --color-warning-600: #946412;
+  --color-warning-700: #744c14;
+  --color-warning-800: #5f3d16;
+  --color-warning-900: #4f3315;
+
+  --color-danger-50: #fcefee;
+  --color-danger-100: #f8d9d6;
+  --color-danger-200: #f0b3ae;
+  --color-danger-300: #e3847d;
+  --color-danger-400: #d15a52;
+  --color-danger-500: #b93d36;
+  --color-danger-600: #9a2f2a;
+  --color-danger-700: #7d2724;
+  --color-danger-800: #672322;
+  --color-danger-900: #562020;
+
+  --color-info-50: #eef4fb;
+  --color-info-100: #d7e4f5;
+  --color-info-200: #b0c9ea;
+  --color-info-300: #82a7db;
+  --color-info-400: #5a86c9;
+  --color-info-500: #3f6ab2;
+  --color-info-600: #325492;
+  --color-info-700: #2b4576;
+  --color-info-800: #273b61;
+  --color-info-900: #243350;
+
+  --color-ai-50: #ecf7f6;
+  --color-ai-100: #cfece9;
+  --color-ai-200: #a2d9d3;
+  --color-ai-300: #6dbfb7;
+  --color-ai-400: #43a199;
+  --color-ai-500: #2f857e;
+  --color-ai-600: #276b66;
+  --color-ai-700: #235652;
+  --color-ai-800: #204643;
+  --color-ai-900: #1d3b39;
+
+  --color-background: #f6f4ef;
+  --color-surface: #fffdf9;
+  --color-surface-muted: #f1eee6;
+  --color-surface-sunken: #ebe7de;
+  --color-border: #e2ddd1;
+  --color-border-strong: #c9c2b2;
+  --color-foreground: #17202f;
+  --color-muted-foreground: #6b6558;
+  --color-primary: #17233b;
+  --color-primary-foreground: #f6f4ef;
+  --color-accent: #bf5a29;
+  --color-accent-foreground: #ffffff;
+  --color-ring: #3f6ab2;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-2xl: 20px;
+
+  --shadow-card: 0 1px 0 rgba(23, 32, 47, 0.04), 0 1px 3px rgba(23, 32, 47, 0.06);
+  --shadow-raised: 0 2px 4px rgba(23, 32, 47, 0.06), 0 8px 20px -10px rgba(23, 32, 47, 0.18);
+  --shadow-pop: 0 8px 24px -8px rgba(23, 32, 47, 0.22), 0 2px 6px rgba(23, 32, 47, 0.08);
+
+  --animate-fade-up: fade-up 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-fade-in: fade-in 0.25s ease-out both;
+  --animate-pulse-soft: pulse-soft 1.8s ease-in-out infinite;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes pulse-soft {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.45;
+    }
+  }
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  html {
+    font-family: var(--font-sans);
+    font-feature-settings: 'ss01', 'cv11', 'tnum' 0;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    background-color: var(--color-background);
+    background-image:
+      radial-gradient(1200px 600px at 100% -10%, rgba(23, 35, 59, 0.05), transparent 60%),
+      radial-gradient(900px 500px at -10% 100%, rgba(191, 90, 41, 0.05), transparent 60%);
+    background-attachment: fixed;
+    color: var(--color-foreground);
+    min-height: 100dvh;
+  }
+  ::selection {
+    background: var(--color-signal-200);
+    color: var(--color-ink-950);
+  }
+  *:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+  button,
+  [role='button'] {
+    cursor: pointer;
+  }
+  button:disabled,
+  [role='button'][aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility display-num {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.02em;
+}
+
+@utility hairline {
+  box-shadow: inset 0 0 0 1px var(--color-border);
+}
+
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-paper-400) transparent;
+}

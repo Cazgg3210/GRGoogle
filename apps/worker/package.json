@@ -1,0 +1,35 @@
+{
+  "name": "@smlxl/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "dotenv -e ../../.env -- tsx watch src/main.ts",
+    "build": "esbuild src/main.ts --bundle --platform=node --target=node20 --format=esm --outfile=dist/main.js --packages=external",
+    "start": "node dist/main.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run",
+    "clean": "rimraf dist .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@smlxl/ai": "workspace:*",
+    "@smlxl/application": "workspace:*",
+    "@smlxl/config": "workspace:*",
+    "@smlxl/contracts": "workspace:*",
+    "@smlxl/database": "workspace:*",
+    "@smlxl/domain": "workspace:*",
+    "@smlxl/google-workspace": "workspace:*",
+    "@smlxl/jobs": "workspace:*",
+    "@smlxl/observability": "workspace:*",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "dotenv-cli": "^8.0.0",
+    "esbuild": "^0.24.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}

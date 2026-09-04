@@ -1,0 +1,198 @@
+{
+  "spaces": [
+    {
+      "name": "spaces/fakeAlfaSpace01",
+      "meetingCode": "abc-defg-hij",
+      "ownerEmail": "andres.escandon@smlxl.mx",
+      "autoTranscription": "OFF",
+      "autoSmartNotes": "OFF",
+      "patchBlockedReason": null
+    },
+    {
+      "name": "spaces/fakeOpsSpace02",
+      "meetingCode": "wxy-zabc-def",
+      "ownerEmail": "mariana.solis@smlxl.mx",
+      "autoTranscription": "ON",
+      "autoSmartNotes": "OFF",
+      "patchBlockedReason": null
+    },
+    {
+      "name": "spaces/fakePipelineSpace03",
+      "meetingCode": "mno-pqrs-tuv",
+      "ownerEmail": "lucia.ferrer@smlxl.mx",
+      "autoTranscription": "OFF",
+      "autoSmartNotes": "OFF",
+      "patchBlockedReason": "GOOGLE_PERMISSION_DENIED: la política del dominio no permite activar Smart Notes automáticamente para este usuario"
+    }
+  ],
+  "conferenceRecords": [
+    {
+      "name": "conferenceRecords/fake-alfa-001",
+      "spaceName": "spaces/fakeAlfaSpace01",
+      "meetingCode": "abc-defg-hij",
+      "title": "Seguimiento contrato Cliente Alfa",
+      "startOffsetMinutes": -1500,
+      "durationMinutes": 48,
+      "accessibleTo": null,
+      "participants": [
+        { "id": "p-andres", "displayName": "Andrés Escandón", "email": "andres.escandon@smlxl.mx", "type": "SIGNED_IN_USER" },
+        { "id": "p-lucia", "displayName": "Lucía Ferrer", "email": "lucia.ferrer@smlxl.mx", "type": "SIGNED_IN_USER" },
+        { "id": "p-carlos", "displayName": "Carlos Martínez", "email": "carlos.martinez@cliente-alfa.example", "type": "SIGNED_IN_USER" },
+        { "id": "p-mariana", "displayName": "Mariana Solís", "email": "mariana.solis@smlxl.mx", "type": "SIGNED_IN_USER" }
+      ],
+      "transcripts": [
+        {
+          "id": "t-alfa-1",
+          "state": "FILE_GENERATED",
+          "docsDocumentId": "doc-alfa-transcript-001",
+          "languageCode": "es-MX",
+          "entries": [
+            { "participant": "p-andres", "offsetSeconds": 5, "durationSeconds": 12, "text": "Buenos días a todos. El objetivo de hoy es cerrar los puntos abiertos del contrato con Cliente Alfa antes de la firma." },
+            { "participant": "p-carlos", "offsetSeconds": 20, "durationSeconds": 10, "text": "Gracias, Andrés. De nuestro lado ya revisamos la versión tres del contrato y sólo nos quedan dudas en el anexo de penalizaciones." },
+            { "participant": "p-lucia", "offsetSeconds": 35, "durationSeconds": 9, "text": "Perfecto. Sobre el anexo de penalizaciones, Jurídico tiene que revisar el tope máximo que proponen, hoy está en un quince por ciento." },
+            { "participant": "p-andres", "offsetSeconds": 50, "durationSeconds": 8, "text": "Lucía, ¿puedes coordinar con Jurídico que revisen el anexo de penalizaciones para el viernes?" },
+            { "participant": "p-lucia", "offsetSeconds": 62, "durationSeconds": 6, "text": "Sí, yo me encargo de que Jurídico revise el anexo de penalizaciones y tengamos comentarios para el viernes." },
+            { "participant": "p-carlos", "offsetSeconds": 75, "durationSeconds": 11, "text": "Por nuestra parte, yo voy a enviar la carta de intención firmada por nuestra dirección el próximo martes." },
+            { "participant": "p-andres", "offsetSeconds": 90, "durationSeconds": 7, "text": "Excelente, Carlos. Con la carta de intención podemos liberar el equipo de implementación." },
+            { "participant": "p-mariana", "offsetSeconds": 100, "durationSeconds": 10, "text": "Sobre el presupuesto de licencias, ya quedó listo y lo mandé ayer al correo de Carlos con el desglose por usuario." },
+            { "participant": "p-carlos", "offsetSeconds": 115, "durationSeconds": 6, "text": "Lo recibí, gracias Mariana. Los números cuadran con lo que habíamos hablado." },
+            { "participant": "p-andres", "offsetSeconds": 125, "durationSeconds": 9, "text": "Entonces se acordó que el esquema de pagos se mantiene trimestral, como estaba en la propuesta original." },
+            { "participant": "p-carlos", "offsetSeconds": 138, "durationSeconds": 5, "text": "De acuerdo, trimestral está bien para nosotros." },
+            { "participant": "p-lucia", "offsetSeconds": 146, "durationSeconds": 8, "text": "Quedamos en que la firma del contrato se hace antes de fin de mes, siempre que Jurídico no encuentre algo grave." },
+            { "participant": "p-andres", "offsetSeconds": 158, "durationSeconds": 6, "text": "Correcto, esa es la meta: firmar antes de fin de mes." },
+            { "participant": "p-mariana", "offsetSeconds": 168, "durationSeconds": 9, "text": "Una duda: ¿el onboarding de los usuarios lo arrancamos en cuanto se firme o esperamos la orden de compra?" },
+            { "participant": "p-carlos", "offsetSeconds": 180, "durationSeconds": 8, "text": "Esperemos la orden de compra, nuestro proceso interno lo exige. No debería tardar más de una semana después de la firma." },
+            { "participant": "p-andres", "offsetSeconds": 192, "durationSeconds": 7, "text": "Perfecto, entonces lo dejamos como pregunta abierta para la siguiente reunión." },
+            { "participant": "p-lucia", "offsetSeconds": 202, "durationSeconds": 8, "text": "Un riesgo que veo es que el área legal de ellos pida cambios de última hora en las penalizaciones." },
+            { "participant": "p-carlos", "offsetSeconds": 213, "durationSeconds": 6, "text": "Lo tomo en cuenta, voy a alinear a nuestro legal esta misma semana." },
+            { "participant": "p-andres", "offsetSeconds": 222, "durationSeconds": 8, "text": "Muy bien. Recapitulando: Carlos envía la carta de intención el martes, Jurídico revisa el anexo el viernes y el presupuesto ya está cerrado." },
+            { "participant": "p-mariana", "offsetSeconds": 234, "durationSeconds": 5, "text": "Confirmado. Yo doy seguimiento a la orden de compra cuando llegue." },
+            { "participant": "p-carlos", "offsetSeconds": 242, "durationSeconds": 5, "text": "Gracias a todos, quedamos en contacto." },
+            { "participant": "p-andres", "offsetSeconds": 250, "durationSeconds": 4, "text": "Gracias, buen día." }
+          ]
+        }
+      ],
+      "smartNotes": [
+        { "id": "sn-alfa-1", "state": "FILE_GENERATED", "docsDocumentId": "doc-alfa-smartnotes-001" }
+      ]
+    },
+    {
+      "name": "conferenceRecords/fake-ops-002",
+      "spaceName": "spaces/fakeOpsSpace02",
+      "meetingCode": "wxy-zabc-def",
+      "title": "Sincronización semanal Operaciones",
+      "startOffsetMinutes": -4380,
+      "durationMinutes": 32,
+      "accessibleTo": null,
+      "participants": [
+        { "id": "p-mariana", "displayName": "Mariana Solís", "email": "mariana.solis@smlxl.mx", "type": "SIGNED_IN_USER" },
+        { "id": "p-andres", "displayName": "Andrés Escandón", "email": "andres.escandon@smlxl.mx", "type": "SIGNED_IN_USER" },
+        { "id": "p-lucia", "displayName": "Lucía Ferrer", "email": "lucia.ferrer@smlxl.mx", "type": "SIGNED_IN_USER" }
+      ],
+      "transcripts": [
+        {
+          "id": "t-ops-1",
+          "state": "FILE_GENERATED",
+          "docsDocumentId": null,
+          "languageCode": "es-MX",
+          "entries": [
+            { "participant": "p-mariana", "offsetSeconds": 4, "durationSeconds": 8, "text": "Arrancamos con la revisión de operaciones de la semana. Primero el estado de la migración del servidor." },
+            { "participant": "p-andres", "offsetSeconds": 15, "durationSeconds": 9, "text": "La migración del servidor de archivos ya quedó lista desde el lunes, no hubo incidencias." },
+            { "participant": "p-mariana", "offsetSeconds": 27, "durationSeconds": 10, "text": "Perfecto. Yo voy a preparar el reporte de avance del proyecto de bodega para el jueves, con los datos de inventario." },
+            { "participant": "p-lucia", "offsetSeconds": 40, "durationSeconds": 9, "text": "Hay que revisar el inventario de la bodega norte mañana, hay diferencias entre el sistema y el conteo físico." },
+            { "participant": "p-andres", "offsetSeconds": 52, "durationSeconds": 7, "text": "Yo puedo ir mañana temprano a la bodega norte y revisar el inventario con el encargado." },
+            { "participant": "p-mariana", "offsetSeconds": 62, "durationSeconds": 8, "text": "Gracias. Y sobre el corte de nómina, acordamos mover el corte al día quince a partir del siguiente mes." },
+            { "participant": "p-lucia", "offsetSeconds": 73, "durationSeconds": 9, "text": "El proveedor de transporte sigue bloqueado, estamos esperando a que nos manden la póliza actualizada." },
+            { "participant": "p-andres", "offsetSeconds": 85, "durationSeconds": 7, "text": "Es urgente, sin la póliza no podemos liberar las rutas nuevas. Lucía, dale seguimiento diario por favor." },
+            { "participant": "p-lucia", "offsetSeconds": 95, "durationSeconds": 5, "text": "Claro, doy seguimiento diario al proveedor de transporte hasta que llegue la póliza." },
+            { "participant": "p-mariana", "offsetSeconds": 103, "durationSeconds": 8, "text": "Último punto: hay que mandar la propuesta de capacitación a Dirección antes del 20 de este mes." },
+            { "participant": "p-andres", "offsetSeconds": 114, "durationSeconds": 6, "text": "Yo la mando, ya tengo el borrador casi terminado." },
+            { "participant": "p-mariana", "offsetSeconds": 122, "durationSeconds": 4, "text": "Perfecto, cerramos aquí. Gracias." }
+          ]
+        }
+      ],
+      "smartNotes": []
+    },
+    {
+      "name": "conferenceRecords/fake-ext-003",
+      "spaceName": "spaces/externalOrgSpace99",
+      "meetingCode": "qrs-tuvw-xyz",
+      "title": "Kickoff con Proveedor Beta",
+      "startOffsetMinutes": -2880,
+      "durationMinutes": 45,
+      "accessibleTo": [],
+      "participants": [
+        { "id": "p-ana", "displayName": "Ana López", "email": "ana.lopez@proveedor-beta.example", "type": "SIGNED_IN_USER" },
+        { "id": "p-lucia", "displayName": "Lucía Ferrer", "email": "lucia.ferrer@smlxl.mx", "type": "SIGNED_IN_USER" }
+      ],
+      "transcripts": [],
+      "smartNotes": []
+    }
+  ],
+  "documents": {
+    "doc-alfa-smartnotes-001": "Notas de la reunión: Seguimiento contrato Cliente Alfa\n\nResumen\n- Se revisó la versión 3 del contrato; sólo quedan dudas en el anexo de penalizaciones (tope 15%).\n- Cliente Alfa enviará la carta de intención firmada el próximo martes (Carlos Martínez).\n- Jurídico revisará el anexo de penalizaciones para el viernes (coordina Lucía Ferrer).\n- El presupuesto de licencias ya fue enviado y validado por el cliente.\n\nAcuerdos\n- El esquema de pagos se mantiene trimestral.\n- Meta: firmar el contrato antes de fin de mes.\n\nPreguntas abiertas\n- ¿El onboarding inicia con la firma o con la orden de compra? (Cliente indica que con la orden de compra.)\n\nRiesgos\n- Cambios de última hora del área legal del cliente en penalizaciones.",
+    "doc-alfa-transcript-001": "Transcripción exportada (respaldo en Google Docs)."
+  },
+  "calendarEvents": [
+    {
+      "userEmail": "andres.escandon@smlxl.mx",
+      "calendarEventId": "cal-evt-alfa-001",
+      "title": "Seguimiento contrato Cliente Alfa",
+      "organizerEmail": "andres.escandon@smlxl.mx",
+      "attendees": ["andres.escandon@smlxl.mx", "lucia.ferrer@smlxl.mx", "mariana.solis@smlxl.mx", "carlos.martinez@cliente-alfa.example"],
+      "startOffsetMinutes": -1500,
+      "durationMinutes": 60,
+      "meetingCode": "abc-defg-hij",
+      "status": "confirmed",
+      "recurringEventId": null
+    },
+    {
+      "userEmail": "lucia.ferrer@smlxl.mx",
+      "calendarEventId": "cal-evt-pipeline-002",
+      "title": "Revisión de pipeline comercial",
+      "organizerEmail": "lucia.ferrer@smlxl.mx",
+      "attendees": ["lucia.ferrer@smlxl.mx", "andres.escandon@smlxl.mx"],
+      "startOffsetMinutes": 2880,
+      "durationMinutes": 45,
+      "meetingCode": "mno-pqrs-tuv",
+      "status": "confirmed",
+      "recurringEventId": null
+    },
+    {
+      "userEmail": "lucia.ferrer@smlxl.mx",
+      "calendarEventId": "cal-evt-beta-003",
+      "title": "Kickoff con Proveedor Beta",
+      "organizerEmail": "ana.lopez@proveedor-beta.example",
+      "attendees": ["ana.lopez@proveedor-beta.example", "lucia.ferrer@smlxl.mx"],
+      "startOffsetMinutes": 1440,
+      "durationMinutes": 45,
+      "meetingCode": "qrs-tuvw-xyz",
+      "status": "confirmed",
+      "recurringEventId": null
+    },
+    {
+      "userEmail": "andres.escandon@smlxl.mx",
+      "calendarEventId": "cal-evt-cancel-004",
+      "title": "Entrevista candidato Marketing",
+      "organizerEmail": "andres.escandon@smlxl.mx",
+      "attendees": ["andres.escandon@smlxl.mx"],
+      "startOffsetMinutes": 720,
+      "durationMinutes": 30,
+      "meetingCode": "ghi-jklm-nop",
+      "status": "cancelled",
+      "recurringEventId": null
+    },
+    {
+      "userEmail": "mariana.solis@smlxl.mx",
+      "calendarEventId": "cal-evt-ops-005_20260901T150000Z",
+      "title": "Sincronización semanal Operaciones",
+      "organizerEmail": "mariana.solis@smlxl.mx",
+      "attendees": ["mariana.solis@smlxl.mx", "andres.escandon@smlxl.mx", "lucia.ferrer@smlxl.mx"],
+      "startOffsetMinutes": -4380,
+      "durationMinutes": 30,
+      "meetingCode": "wxy-zabc-def",
+      "status": "confirmed",
+      "recurringEventId": "cal-evt-ops-005"
+    }
+  ]
+}

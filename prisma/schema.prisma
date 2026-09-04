@@ -1,0 +1,899 @@
+// ============================================================================
+// SMLXL Meeting Intelligence — esquema de persistencia (PostgreSQL 16 + Prisma)
+//
+// PostgreSQL es la fuente maestra (ADR-003). Los enums replican los del
+// dominio (@smlxl/domain/enums.ts). UUID + timestamptz en todo. Auditoría
+// independiente (AuditLog), no basada en soft delete.
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../packages/database/src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------------------------------
+// Enums (espejo del dominio)
+// ----------------------------------------------------------------------------
+
+enum ActionItemStatus {
+  PROPOSED
+  PENDING
+  IN_PROGRESS
+  BLOCKED
+  WAITING
+  COMPLETION_PROPOSED
+  COMPLETED
+  CANCELLED
+}
+
+enum ActionItemPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ActionItemType {
+  ONE_OFF
+  RECURRING
+}
+
+enum MigrationTrust {
+  PLATFORM
+  LEGACY
+}
+
+enum RelationType {
+  CREATED
+  MENTIONED
+  UPDATED
+  BLOCKED
+  COMPLETED
+  REOPENED
+}
+
+enum CompletionProposalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum ProposedByType {
+  AI
+  USER
+}
+
+enum MeetingProcessingStatus {
+  DISCOVERED
+  WAITING_FOR_ARTIFACTS
+  ARTIFACTS_AVAILABLE
+  INGESTING
+  INGESTED
+  ANALYZING
+  ANALYZED
+  REVIEW_REQUIRED
+  COMPLETED
+  FAILED
+  EXCLUDED
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  IN_PROGRESS
+  ENDED
+  CANCELLED
+}
+
+enum MeetingSource {
+  WORKSPACE_EVENT
+  CALENDAR_DISCOVERY
+  MANUAL_IMPORT
+  LEGACY_IMPORT
+}
+
+enum ArtifactStatus {
+  NOT_REQUESTED
+  PENDING
+  AVAILABLE
+  INGESTED
+  UNAVAILABLE
+  UNAVAILABLE_EXTERNAL_HOST
+  CAPABILITY_BLOCKED
+  FAILED
+}
+
+enum AiAnalysisStatus {
+  NOT_STARTED
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  SKIPPED
+}
+
+enum ConfidentialityLevel {
+  NORMAL
+  RESTRICTED
+  LEGAL
+  EXECUTIVE
+}
+
+enum ParticipantType {
+  SIGNED_IN_USER
+  ANONYMOUS_USER
+  PHONE_USER
+  UNKNOWN
+}
+
+enum TranscriptSourceType {
+  MEET_TRANSCRIPT
+  MEET_SMART_NOTES
+  MANUAL
+}
+
+enum UserRole {
+  ADMIN
+  DIRECTOR
+  MANAGER
+  MEMBER
+  AUDITOR
+}
+
+enum DecisionStatus {
+  PROPOSED
+  CONFIRMED
+  REJECTED
+}
+
+enum ReconcileDecision {
+  CREATE_NEW
+  LINK_EXISTING
+  UPDATE_EXISTING
+  MARK_DONE_CANDIDATE
+  REOPEN_CANDIDATE
+  REQUIRES_HUMAN_REVIEW
+}
+
+enum AiReviewItemStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  MERGED
+}
+
+enum AiReviewReason {
+  LOW_CONFIDENCE
+  AMBIGUOUS_OWNER
+  AMBIGUOUS_DUE_DATE
+  POSSIBLE_DUPLICATE
+  POSSIBLE_COMPLETION
+  CONFLICT_WITH_EXISTING
+}
+
+enum InboundEventProcessingStatus {
+  RECEIVED
+  QUEUED
+  PROCESSED
+  IGNORED
+  FAILED
+}
+
+enum SubscriptionState {
+  ACTIVE
+  SUSPENDED
+  EXPIRED
+  DELETED
+  ERROR
+}
+
+enum DigestAudience {
+  EXECUTIVE
+  INDIVIDUAL
+  AREA
+}
+
+enum ProcessingRunKind {
+  ANALYZE_MEETING
+  RECONCILE
+  WEEKLY_DIGEST
+  REPROCESS
+}
+
+enum ActorType {
+  USER
+  SYSTEM
+  AI
+  IMPORT
+}
+
+enum CommentSource {
+  USER
+  LEGACY_IMPORT
+  SYSTEM
+}
+
+// ----------------------------------------------------------------------------
+// Catálogos y usuarios
+// ----------------------------------------------------------------------------
+
+model Area {
+  id                 String   @id @default(uuid()) @db.Uuid
+  name               String   @unique
+  code               String?  @unique
+  isExternalCategory Boolean  @default(false)
+  active             Boolean  @default(true)
+  sortOrder          Int      @default(0)
+  createdAt          DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt          DateTime @updatedAt @db.Timestamptz(6)
+
+  users       User[]
+  projects    Project[]
+  actionItems ActionItem[]
+  meetings    Meeting[]
+
+  @@map("areas")
+}
+
+model Project {
+  id            String   @id @default(uuid()) @db.Uuid
+  canonicalName String   @unique
+  code          String?  @unique
+  active        Boolean  @default(true)
+  areaId        String?  @db.Uuid
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(6)
+
+  area        Area?          @relation(fields: [areaId], references: [id])
+  aliases     ProjectAlias[]
+  actionItems ActionItem[]
+  meetings    Meeting[]
+
+  @@map("projects")
+}
+
+model ProjectAlias {
+  id              String @id @default(uuid()) @db.Uuid
+  projectId       String @db.Uuid
+  aliasNormalized String @unique
+  source          String @default("MANUAL")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_aliases")
+}
+
+model User {
+  id                      String   @id @default(uuid()) @db.Uuid
+  googleUserId            String?  @unique
+  email                   String   @unique
+  displayName             String
+  role                    UserRole @default(MEMBER)
+  areaId                  String?  @db.Uuid
+  managerId               String?  @db.Uuid
+  active                  Boolean  @default(true)
+  monitored               Boolean  @default(false)
+  notificationPreferences Json     @default("{}")
+  createdAt               DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt               DateTime @updatedAt @db.Timestamptz(6)
+
+  area                Area?                       @relation(fields: [areaId], references: [id])
+  manager             User?                       @relation("UserManager", fields: [managerId], references: [id])
+  reports             User[]                      @relation("UserManager")
+  aliases             UserAlias[]
+  organizedMeetings   Meeting[]                   @relation("MeetingOrganizer")
+  participations      MeetingParticipant[]
+  ownedActionItems    ActionItem[]                @relation("ActionItemOwner")
+  collaborations      ActionItemCollaborator[]
+  comments            ActionItemComment[]
+  statusChanges       ActionItemStatusHistory[]
+  proposalsMade       CompletionProposal[]        @relation("ProposalProposer")
+  proposalsReviewed   CompletionProposal[]        @relation("ProposalReviewer")
+  reviewsResolved     AiReviewItem[]              @relation("ReviewResolver")
+  reviewsSuggested    AiReviewItem[]              @relation("ReviewSuggestedOwner")
+  auditEntries        AuditLog[]
+  subscriptions       GoogleWorkspaceSubscription[]
+  calendarCursors     CalendarSyncCursor[]
+  approvedSummaries   MeetingSummary[]
+  notifications       NotificationLog[]
+
+  @@index([areaId])
+  @@index([managerId])
+  @@map("users")
+}
+
+model UserAlias {
+  id              String @id @default(uuid()) @db.Uuid
+  userId          String @db.Uuid
+  aliasNormalized String @unique
+  source          String @default("MANUAL")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_aliases")
+}
+
+model ExternalAssignee {
+  id             String   @id @default(uuid()) @db.Uuid
+  displayName    String
+  nameNormalized String   @unique
+  company        String?
+  email          String?
+  phone          String?
+  source         String   @default("MANUAL")
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @db.Timestamptz(6)
+
+  actionItems ActionItem[]
+
+  @@map("external_assignees")
+}
+
+// ----------------------------------------------------------------------------
+// Reuniones y artefactos
+// ----------------------------------------------------------------------------
+
+model Meeting {
+  id                       String                  @id @default(uuid()) @db.Uuid
+  googleConferenceRecordId String?                 @unique
+  googleMeetingSpaceId     String?
+  googleMeetingCode        String?
+  googleCalendarEventId    String?                 @unique
+  title                    String
+  organizerUserId          String?                 @db.Uuid
+  organizerEmail           String?
+  isExternalHost           Boolean                 @default(false)
+  startAt                  DateTime                @db.Timestamptz(6)
+  endAt                    DateTime?               @db.Timestamptz(6)
+  durationSeconds          Int?
+  status                   MeetingStatus           @default(SCHEDULED)
+  source                   MeetingSource
+  processingStatus         MeetingProcessingStatus @default(DISCOVERED)
+  transcriptStatus         ArtifactStatus          @default(NOT_REQUESTED)
+  smartNotesStatus         ArtifactStatus          @default(NOT_REQUESTED)
+  aiAnalysisStatus         AiAnalysisStatus        @default(NOT_STARTED)
+  confidentialityLevel     ConfidentialityLevel    @default(NORMAL)
+  excludedFromAi           Boolean                 @default(false)
+  reportedLanguageCode     String?
+  detectedLanguageCode     String?
+  mixedLanguageDetected    Boolean                 @default(false)
+  lastErrorCode            String?
+  lastErrorAt              DateTime?               @db.Timestamptz(6)
+  areaId                   String?                 @db.Uuid
+  projectId                String?                 @db.Uuid
+  createdAt                DateTime                @default(now()) @db.Timestamptz(6)
+  updatedAt                DateTime                @updatedAt @db.Timestamptz(6)
+
+  organizer       User?                    @relation("MeetingOrganizer", fields: [organizerUserId], references: [id])
+  area            Area?                    @relation(fields: [areaId], references: [id])
+  project         Project?                 @relation(fields: [projectId], references: [id])
+  participants    MeetingParticipant[]
+  transcripts     Transcript[]
+  summaries       MeetingSummary[]
+  decisions       Decision[]
+  actionItemLinks ActionItemMeetingLink[]
+  createdItems    ActionItem[]             @relation("ActionItemCreatedFrom")
+  latestItems     ActionItem[]             @relation("ActionItemLatestMeeting")
+  proposals       CompletionProposal[]
+  reviewItems     AiReviewItem[]
+  processingRuns  ProcessingRun[]
+  statusHistory   ActionItemStatusHistory[]
+
+  @@index([startAt])
+  @@index([organizerUserId])
+  @@index([processingStatus])
+  @@index([googleMeetingCode])
+  @@map("meetings")
+}
+
+model MeetingParticipant {
+  id                      String          @id @default(uuid()) @db.Uuid
+  meetingId               String          @db.Uuid
+  internalUserId          String?         @db.Uuid
+  googleParticipantId     String?
+  displayName             String
+  email                   String?
+  participantType         ParticipantType @default(UNKNOWN)
+  isInternal              Boolean         @default(false)
+  joinedAt                DateTime?       @db.Timestamptz(6)
+  leftAt                  DateTime?       @db.Timestamptz(6)
+  speakingDurationSeconds Int?
+
+  meeting  Meeting             @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user     User?               @relation(fields: [internalUserId], references: [id])
+  segments TranscriptSegment[]
+
+  @@index([meetingId])
+  @@index([internalUserId])
+  @@map("meeting_participants")
+}
+
+model Transcript {
+  id                 String               @id @default(uuid()) @db.Uuid
+  meetingId          String               @db.Uuid
+  sourceType         TranscriptSourceType
+  googleTranscriptId String?
+  languageCode       String?
+  startedAt          DateTime?            @db.Timestamptz(6)
+  endedAt            DateTime?            @db.Timestamptz(6)
+  rawText            String
+  structuredPayload  Json?
+  sourceUri          String?
+  retainedUntil      DateTime?            @db.Timestamptz(6)
+  ingestionChecksum  String
+  createdAt          DateTime             @default(now()) @db.Timestamptz(6)
+
+  meeting  Meeting             @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  segments TranscriptSegment[]
+
+  @@unique([meetingId, ingestionChecksum])
+  @@index([meetingId])
+  @@map("transcripts")
+}
+
+model TranscriptSegment {
+  id            String    @id @default(uuid()) @db.Uuid
+  transcriptId  String    @db.Uuid
+  participantId String?   @db.Uuid
+  speakerLabel  String
+  text          String
+  startAt       DateTime? @db.Timestamptz(6)
+  endAt         DateTime? @db.Timestamptz(6)
+  sequence      Int
+
+  transcript  Transcript          @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
+  participant MeetingParticipant? @relation(fields: [participantId], references: [id])
+
+  @@unique([transcriptId, sequence])
+  @@map("transcript_segments")
+}
+
+model MeetingSummary {
+  id               String    @id @default(uuid()) @db.Uuid
+  meetingId        String    @db.Uuid
+  processingRunId  String    @db.Uuid
+  executiveSummary Json
+  detailedSummary  String
+  topics           Json
+  risks            Json
+  openQuestions    Json
+  aiModel          String
+  promptVersion    String
+  generatedAt      DateTime  @default(now()) @db.Timestamptz(6)
+  approvedAt       DateTime? @db.Timestamptz(6)
+  approvedByUserId String?   @db.Uuid
+
+  meeting       Meeting       @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  processingRun ProcessingRun @relation(fields: [processingRunId], references: [id])
+  approvedBy    User?         @relation(fields: [approvedByUserId], references: [id])
+
+  @@index([meetingId])
+  @@map("meeting_summaries")
+}
+
+model Decision {
+  id               String         @id @default(uuid()) @db.Uuid
+  meetingId        String         @db.Uuid
+  processingRunId  String?        @db.Uuid
+  description      String
+  decidedBy        String?
+  effectiveDate    DateTime?      @db.Date
+  confidence       Float
+  sourceSegmentIds String[]       @default([])
+  evidence         Json           @default("[]")
+  status           DecisionStatus @default(PROPOSED)
+  createdAt        DateTime       @default(now()) @db.Timestamptz(6)
+
+  meeting       Meeting        @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  processingRun ProcessingRun? @relation(fields: [processingRunId], references: [id])
+
+  @@index([meetingId])
+  @@map("decisions")
+}
+
+// ----------------------------------------------------------------------------
+// Action items
+// ----------------------------------------------------------------------------
+
+model ActionItem {
+  id                   String             @id @default(uuid()) @db.Uuid
+  sequence             Int                @unique @default(autoincrement())
+  externalKey          String             @unique
+  title                String
+  description          String?
+  type                 ActionItemType     @default(ONE_OFF)
+  ownerUserId          String?            @db.Uuid
+  externalAssigneeId   String?            @db.Uuid
+  ownerTextOriginal    String?
+  areaId               String?            @db.Uuid
+  projectId            String?            @db.Uuid
+  createdFromMeetingId String?            @db.Uuid
+  latestMeetingId      String?            @db.Uuid
+  status               ActionItemStatus   @default(PENDING)
+  priority             ActionItemPriority @default(MEDIUM)
+  dueDate              DateTime?          @db.Date
+  dueDateTextOriginal  String?
+  dateConfidence       Float?
+  startDate            DateTime?          @db.Date
+  completedAt          DateTime?          @db.Timestamptz(6)
+  cancelledAt          DateTime?          @db.Timestamptz(6)
+  confidence           Float?
+  requiresReview       Boolean            @default(false)
+  sourceEvidence       Json               @default("[]")
+  recurrence           Json?
+  parentActionItemId   String?            @db.Uuid
+  blocker              String?
+  tags                 String[]           @default([])
+  migrationTrust       MigrationTrust     @default(PLATFORM)
+  legacyId             String?
+  lastMentionedAt      DateTime?          @db.Timestamptz(6)
+  createdAt            DateTime           @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime           @updatedAt @db.Timestamptz(6)
+
+  owner            User?                     @relation("ActionItemOwner", fields: [ownerUserId], references: [id])
+  externalAssignee ExternalAssignee?         @relation(fields: [externalAssigneeId], references: [id])
+  area             Area?                     @relation(fields: [areaId], references: [id])
+  project          Project?                  @relation(fields: [projectId], references: [id])
+  createdFrom      Meeting?                  @relation("ActionItemCreatedFrom", fields: [createdFromMeetingId], references: [id])
+  latestMeeting    Meeting?                  @relation("ActionItemLatestMeeting", fields: [latestMeetingId], references: [id])
+  parent           ActionItem?               @relation("ActionItemParent", fields: [parentActionItemId], references: [id])
+  instances        ActionItem[]              @relation("ActionItemParent")
+  collaborators    ActionItemCollaborator[]
+  meetingLinks     ActionItemMeetingLink[]
+  statusHistory    ActionItemStatusHistory[]
+  comments         ActionItemComment[]
+  proposals        CompletionProposal[]
+  reviewCandidates AiReviewItem[]            @relation("ReviewCandidate")
+  reviewProposed   AiReviewItem[]            @relation("ReviewProposed")
+
+  @@index([status])
+  @@index([ownerUserId])
+  @@index([areaId])
+  @@index([projectId])
+  @@index([dueDate])
+  @@index([createdFromMeetingId])
+  @@index([legacyId])
+  @@map("action_items")
+}
+
+model ActionItemCollaborator {
+  actionItemId String @db.Uuid
+  userId       String @db.Uuid
+
+  actionItem ActionItem @relation(fields: [actionItemId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([actionItemId, userId])
+  @@map("action_item_collaborators")
+}
+
+model ActionItemMeetingLink {
+  id             String            @id @default(uuid()) @db.Uuid
+  actionItemId   String            @db.Uuid
+  meetingId      String            @db.Uuid
+  relationType   RelationType
+  evidence       Json              @default("[]")
+  previousStatus ActionItemStatus?
+  detectedStatus ActionItemStatus?
+  detectedDueDate DateTime?        @db.Date
+  createdAt      DateTime          @default(now()) @db.Timestamptz(6)
+
+  actionItem ActionItem @relation(fields: [actionItemId], references: [id], onDelete: Cascade)
+  meeting    Meeting    @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  @@index([actionItemId])
+  @@index([meetingId])
+  @@map("action_item_meeting_links")
+}
+
+model ActionItemStatusHistory {
+  id              String            @id @default(uuid()) @db.Uuid
+  actionItemId    String            @db.Uuid
+  fromStatus      ActionItemStatus?
+  toStatus        ActionItemStatus
+  changedByUserId String?           @db.Uuid
+  changedBySystem Boolean           @default(false)
+  reason          String?
+  meetingId       String?           @db.Uuid
+  changedAt       DateTime          @default(now()) @db.Timestamptz(6)
+
+  actionItem ActionItem @relation(fields: [actionItemId], references: [id], onDelete: Cascade)
+  changedBy  User?      @relation(fields: [changedByUserId], references: [id])
+  meeting    Meeting?   @relation(fields: [meetingId], references: [id])
+
+  @@index([actionItemId])
+  @@map("action_item_status_history")
+}
+
+model ActionItemComment {
+  id           String        @id @default(uuid()) @db.Uuid
+  actionItemId String        @db.Uuid
+  authorUserId String?       @db.Uuid
+  body         String
+  source       CommentSource @default(USER)
+  createdAt    DateTime      @default(now()) @db.Timestamptz(6)
+
+  actionItem ActionItem @relation(fields: [actionItemId], references: [id], onDelete: Cascade)
+  author     User?      @relation(fields: [authorUserId], references: [id])
+
+  @@index([actionItemId])
+  @@map("action_item_comments")
+}
+
+model CompletionProposal {
+  id                    String                   @id @default(uuid()) @db.Uuid
+  actionItemId          String                   @db.Uuid
+  proposedByType        ProposedByType
+  proposedByUserId      String?                  @db.Uuid
+  proposedFromMeetingId String?                  @db.Uuid
+  reason                String
+  evidenceSegmentIds    String[]                 @default([])
+  evidence              Json                     @default("[]")
+  confidence            Float
+  status                CompletionProposalStatus @default(PENDING)
+  reviewedByUserId      String?                  @db.Uuid
+  reviewedAt            DateTime?                @db.Timestamptz(6)
+  reviewComment         String?
+  createdAt             DateTime                 @default(now()) @db.Timestamptz(6)
+
+  actionItem   ActionItem @relation(fields: [actionItemId], references: [id], onDelete: Cascade)
+  proposedBy   User?      @relation("ProposalProposer", fields: [proposedByUserId], references: [id])
+  reviewedBy   User?      @relation("ProposalReviewer", fields: [reviewedByUserId], references: [id])
+  fromMeeting  Meeting?   @relation(fields: [proposedFromMeetingId], references: [id])
+
+  @@index([actionItemId, status])
+  @@map("completion_proposals")
+}
+
+model AiReviewItem {
+  id                         String             @id @default(uuid()) @db.Uuid
+  meetingId                  String             @db.Uuid
+  processingRunId            String             @db.Uuid
+  reasons                    AiReviewReason[]   @default([])
+  reconcileDecision          ReconcileDecision
+  candidateActionItemId      String?            @db.Uuid
+  candidateScore             Float?
+  proposedActionItemId       String?            @db.Uuid
+  extracted                  Json
+  suggestedOwnerUserId       String?            @db.Uuid
+  suggestedOwnerConfidence   Float?
+  suggestedDueDate           DateTime?          @db.Date
+  suggestedDueDateConfidence Float?
+  status                     AiReviewItemStatus @default(PENDING)
+  resolvedByUserId           String?            @db.Uuid
+  resolvedAt                 DateTime?          @db.Timestamptz(6)
+  resolutionNote             String?
+  createdAt                  DateTime           @default(now()) @db.Timestamptz(6)
+
+  meeting        Meeting       @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  processingRun  ProcessingRun @relation(fields: [processingRunId], references: [id])
+  candidate      ActionItem?   @relation("ReviewCandidate", fields: [candidateActionItemId], references: [id])
+  proposedItem   ActionItem?   @relation("ReviewProposed", fields: [proposedActionItemId], references: [id])
+  suggestedOwner User?         @relation("ReviewSuggestedOwner", fields: [suggestedOwnerUserId], references: [id])
+  resolvedBy     User?         @relation("ReviewResolver", fields: [resolvedByUserId], references: [id])
+
+  @@index([status])
+  @@index([meetingId])
+  @@map("ai_review_items")
+}
+
+model ProcessingRun {
+  id               String            @id @default(uuid()) @db.Uuid
+  meetingId        String            @db.Uuid
+  kind             ProcessingRunKind
+  provider         String
+  model            String
+  promptVersion    String
+  schemaVersion    String
+  temperature      Float?
+  inputTokens      Int?
+  outputTokens     Int?
+  cachedTokens     Int?
+  estimatedCostUsd Float?
+  latencyMs        Int?
+  success          Boolean           @default(false)
+  errorCode        String?
+  correlationId    String
+  startedAt        DateTime          @default(now()) @db.Timestamptz(6)
+  finishedAt       DateTime?         @db.Timestamptz(6)
+
+  meeting     Meeting          @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  summaries   MeetingSummary[]
+  decisions   Decision[]
+  reviewItems AiReviewItem[]
+
+  @@index([meetingId])
+  @@map("processing_runs")
+}
+
+// ----------------------------------------------------------------------------
+// Google integration state
+// ----------------------------------------------------------------------------
+
+model GoogleWorkspaceSubscription {
+  id                     String            @id @default(uuid()) @db.Uuid
+  monitoredUserId        String            @db.Uuid
+  monitoredUserEmail     String
+  googleSubscriptionName String            @unique
+  targetResource         String
+  eventTypes             String[]          @default([])
+  expiresAt              DateTime          @db.Timestamptz(6)
+  state                  SubscriptionState @default(ACTIVE)
+  lastRenewedAt          DateTime?         @db.Timestamptz(6)
+  lastErrorCode          String?
+  lastErrorAt            DateTime?         @db.Timestamptz(6)
+  createdAt              DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt              DateTime          @updatedAt @db.Timestamptz(6)
+
+  monitoredUser User @relation(fields: [monitoredUserId], references: [id], onDelete: Cascade)
+
+  @@unique([monitoredUserId])
+  @@index([expiresAt])
+  @@map("google_workspace_subscriptions")
+}
+
+model InboundGoogleEvent {
+  id                String                       @id @default(uuid()) @db.Uuid
+  cloudEventId      String                       @unique
+  type              String
+  source            String
+  subject           String?
+  occurredAt        DateTime?                    @db.Timestamptz(6)
+  resourceName      String?
+  rawPayloadRedacted Json
+  receivedAt        DateTime                     @default(now()) @db.Timestamptz(6)
+  processedAt       DateTime?                    @db.Timestamptz(6)
+  processingStatus  InboundEventProcessingStatus @default(RECEIVED)
+  attempts          Int                          @default(0)
+  lastErrorCode     String?
+
+  @@index([processingStatus])
+  @@index([receivedAt])
+  @@map("inbound_google_events")
+}
+
+model CalendarSyncCursor {
+  id                    String    @id @default(uuid()) @db.Uuid
+  userId                String    @db.Uuid
+  calendarId            String
+  syncToken             String?
+  lastFullSyncAt        DateTime? @db.Timestamptz(6)
+  lastIncrementalSyncAt DateTime? @db.Timestamptz(6)
+  lastError             String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, calendarId])
+  @@map("calendar_sync_cursors")
+}
+
+// ----------------------------------------------------------------------------
+// Digest, notificaciones, auditoría, configuración, migración
+// ----------------------------------------------------------------------------
+
+model WeeklyDigestConfig {
+  id                   String   @id @default(uuid()) @db.Uuid
+  enabled              Boolean  @default(true)
+  timezone             String   @default("America/Mexico_City")
+  dayOfWeek            Int      @default(5)
+  localTime            String   @default("18:00")
+  recipientUserIds     String[] @default([])
+  includeAreaIds       String[] @default([])
+  includeAllAreas      Boolean  @default(true)
+  includeExternalTasks Boolean  @default(true)
+  attachSpreadsheet    Boolean  @default(false)
+  sendEmail            Boolean  @default(true)
+  createdByUserId      String?  @db.Uuid
+  updatedByUserId      String?  @db.Uuid
+  updatedAt            DateTime @updatedAt @db.Timestamptz(6)
+
+  @@map("weekly_digest_configs")
+}
+
+model WeeklyDigest {
+  id              String         @id @default(uuid()) @db.Uuid
+  weekStart       DateTime       @db.Timestamptz(6)
+  weekEnd         DateTime       @db.Timestamptz(6)
+  generatedAt     DateTime       @default(now()) @db.Timestamptz(6)
+  audience        DigestAudience @default(EXECUTIVE)
+  payload         Json
+  sentAt          DateTime?      @db.Timestamptz(6)
+  version         Int            @default(1)
+  recipientEmails String[]       @default([])
+
+  @@unique([weekStart, audience, version])
+  @@index([weekStart])
+  @@map("weekly_digests")
+}
+
+model NotificationLog {
+  id             String   @id @default(uuid()) @db.Uuid
+  idempotencyKey String   @unique
+  type           String
+  recipientUserId String? @db.Uuid
+  recipientEmail String
+  subject        String
+  sentAt         DateTime @default(now()) @db.Timestamptz(6)
+  providerMessageId String?
+  skipped        Boolean  @default(false)
+
+  recipient User? @relation(fields: [recipientUserId], references: [id])
+
+  @@index([recipientEmail, sentAt])
+  @@map("notification_logs")
+}
+
+model AuditLog {
+  id            String    @id @default(uuid()) @db.Uuid
+  actorUserId   String?   @db.Uuid
+  actorType     ActorType @default(USER)
+  action        String
+  entity        String
+  entityId      String
+  before        Json?
+  after         Json?
+  source        String
+  correlationId String?
+  timestamp     DateTime  @default(now()) @db.Timestamptz(6)
+
+  actor User? @relation(fields: [actorUserId], references: [id])
+
+  @@index([entity, entityId])
+  @@index([actorUserId])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
+
+model PlatformSetting {
+  id              String   @id @default("default")
+  featureFlags    Json     @default("{}")
+  confidenceThresholds Json @default("{\"autoAccept\":0.9,\"proposal\":0.7}")
+  companyTimezone String   @default("America/Mexico_City")
+  companyDomain   String   @default("smlxl.mx")
+  rawTranscriptRetentionDays Int?
+  autoCaptureEnabled Boolean @default(true)
+  monitoredUserEmails String[] @default([])
+  updatedByUserId String?  @db.Uuid
+  updatedAt       DateTime @updatedAt @db.Timestamptz(6)
+
+  @@map("platform_settings")
+}
+
+model LegacyImportBatch {
+  id          String   @id @default(uuid()) @db.Uuid
+  sourceFile  String
+  mode        String
+  startedAt   DateTime @default(now()) @db.Timestamptz(6)
+  finishedAt  DateTime? @db.Timestamptz(6)
+  report      Json?
+
+  references LegacyImportReference[]
+
+  @@map("legacy_import_batches")
+}
+
+model LegacyImportReference {
+  id            String   @id @default(uuid()) @db.Uuid
+  entityType    String
+  entityId      String   @db.Uuid
+  sourceFile    String
+  sourceSheet   String
+  sourceRow     Int
+  legacyId      String?
+  rawPayload    Json
+  importBatchId String   @db.Uuid
+  importedAt    DateTime @default(now()) @db.Timestamptz(6)
+
+  batch LegacyImportBatch @relation(fields: [importBatchId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceFile, sourceSheet, sourceRow])
+  @@index([legacyId])
+  @@index([entityType, entityId])
+  @@map("legacy_import_references")
+}
