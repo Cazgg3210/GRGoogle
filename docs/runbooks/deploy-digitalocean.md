@@ -51,10 +51,9 @@ Alternativa EasyPanel: `curl -sSL https://get.easypanel.io | sh` y el panel qued
 
 1. Projects → Create → nombre `smlxl-meetings`.
 2. Add service → **Compose** → Provider GitHub (autoriza el repo privado) → rama `main`, Compose Path
-   `docker-compose.yml`, Compose Override `docker-compose.dokploy.yml` (conecta `api` y `web` a la red
-   de Traefik y quita los puertos publicados).
-3. En **Environment** pega el `.env` de producción (sección 5) y agrega `COMPOSE_PROFILES=full`
-   (sin esta variable solo arranca `postgres`).
+   `docker-compose.dokploy.yml` (archivo completo para producción: conecta `api` y `web` a la red de
+   Traefik y no publica puertos al host).
+3. En **Environment** pega el `.env` de producción (sección 5).
 4. En **Domains** asigna `reuniones.smlxl.mx` al servicio `web` (puerto 3000) y
    `api.reuniones.smlxl.mx` al servicio `api` (puerto 4000), ambos con HTTPS. Si prefieres un solo dominio,
    publica solo `web` y deja `api` interno: la web llama a la API por la red de Docker (`API_URL=http://api:4000`)

@@ -1,28 +1,143 @@
-# Override para Dokploy (Traefik). Uso:
-#   docker compose -f docker-compose.yml -f docker-compose.dokploy.yml --profile full up -d --build
-# En Dokploy: "Compose Path" = docker-compose.yml, "Compose Override" = este archivo,
-# variable de entorno COMPOSE_PROFILES=full.
-# Los dominios se asignan en la UI de Dokploy a los servicios `web` (3000) y `api` (4000);
-# Traefik los alcanza por la red externa `dokploy-network`, así que no se publican puertos al host.
+# ============================================================================
+# SMLXL Meeting Intelligence — Compose completo para Dokploy (producción).
+#
+# En Dokploy: Compose Path = docker-compose.dokploy.yml
+# Los dominios se asignan desde la UI de Dokploy a `web` (puerto 3000) y,
+# cuando haga falta, a `api` (puerto 4000). Traefik llega por la red externa
+# `dokploy-network`; no se publican puertos al host y PostgreSQL queda interno.
+# Las variables vienen del panel (pestaña Environment), nunca del repositorio.
+# ============================================================================
 services:
   postgres:
-    ports: !reset []
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-smlxl}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-smlxl}
+      TZ: America/Mexico_City
+    volumes:
+      - smlxl_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-smlxl} -d ${POSTGRES_DB:-smlxl}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - default
 
   api:
-    ports: !reset []
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT_API: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-smlxl}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-smlxl}?schema=public
+      APP_URL: ${APP_URL}
+      API_URL: ${API_URL:-http://api:4000}
+      AUTH_SECRET: ${AUTH_SECRET:?Define AUTH_SECRET}
+      AUTH_DEV_BYPASS: 'false'
+      GOOGLE_WORKSPACE_DOMAIN: ${GOOGLE_WORKSPACE_DOMAIN:-smlxl.mx}
+      COMPANY_TIMEZONE: ${COMPANY_TIMEZONE:-America/Mexico_City}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
+      GOOGLE_CLOUD_PROJECT_ID: ${GOOGLE_CLOUD_PROJECT_ID:-}
+      GOOGLE_PUBSUB_TOPIC: ${GOOGLE_PUBSUB_TOPIC:-}
+      GOOGLE_PUBSUB_SUBSCRIPTION: ${GOOGLE_PUBSUB_SUBSCRIPTION:-}
+      GOOGLE_PUBSUB_PUSH_TOKEN: ${GOOGLE_PUBSUB_PUSH_TOKEN:-}
+      GOOGLE_SERVICE_ACCOUNT_EMAIL: ${GOOGLE_SERVICE_ACCOUNT_EMAIL:-}
+      GOOGLE_SERVICE_ACCOUNT_CREDENTIALS: ${GOOGLE_SERVICE_ACCOUNT_CREDENTIALS:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      GOOGLE_GENAI_USE_VERTEXAI: ${GOOGLE_GENAI_USE_VERTEXAI:-false}
+      GOOGLE_CLOUD_LOCATION: ${GOOGLE_CLOUD_LOCATION:-us-central1}
+      GOOGLE_SHEETS_SPREADSHEET_ID: ${GOOGLE_SHEETS_SPREADSHEET_ID:-}
+      GMAIL_SENDER_EMAIL: ${GMAIL_SENDER_EMAIL:-}
+      GOOGLE_INTEGRATION_ENABLED: ${GOOGLE_INTEGRATION_ENABLED:-false}
+      GOOGLE_MEET_EVENTS_ENABLED: ${GOOGLE_MEET_EVENTS_ENABLED:-false}
+      AI_PROCESSING_ENABLED: ${AI_PROCESSING_ENABLED:-false}
+      AI_COMPLETION_PROPOSALS_ENABLED: ${AI_COMPLETION_PROPOSALS_ENABLED:-true}
+      GMAIL_NOTIFICATIONS_ENABLED: ${GMAIL_NOTIFICATIONS_ENABLED:-false}
+      SHEETS_SYNC_ENABLED: ${SHEETS_SYNC_ENABLED:-false}
+      WEEKLY_DIGEST_ENABLED: ${WEEKLY_DIGEST_ENABLED:-true}
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - default
       - dokploy-network
 
   worker:
+    build:
+      context: .
+      dockerfile: docker/worker.Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-smlxl}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-smlxl}?schema=public
+      APP_URL: ${APP_URL}
+      API_URL: ${API_URL:-http://api:4000}
+      AUTH_SECRET: ${AUTH_SECRET:?Define AUTH_SECRET}
+      AUTH_DEV_BYPASS: 'false'
+      GOOGLE_WORKSPACE_DOMAIN: ${GOOGLE_WORKSPACE_DOMAIN:-smlxl.mx}
+      COMPANY_TIMEZONE: ${COMPANY_TIMEZONE:-America/Mexico_City}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      GOOGLE_CLOUD_PROJECT_ID: ${GOOGLE_CLOUD_PROJECT_ID:-}
+      GOOGLE_PUBSUB_TOPIC: ${GOOGLE_PUBSUB_TOPIC:-}
+      GOOGLE_PUBSUB_SUBSCRIPTION: ${GOOGLE_PUBSUB_SUBSCRIPTION:-}
+      GOOGLE_PUBSUB_PUSH_TOKEN: ${GOOGLE_PUBSUB_PUSH_TOKEN:-}
+      GOOGLE_SERVICE_ACCOUNT_EMAIL: ${GOOGLE_SERVICE_ACCOUNT_EMAIL:-}
+      GOOGLE_SERVICE_ACCOUNT_CREDENTIALS: ${GOOGLE_SERVICE_ACCOUNT_CREDENTIALS:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      GOOGLE_GENAI_USE_VERTEXAI: ${GOOGLE_GENAI_USE_VERTEXAI:-false}
+      GOOGLE_CLOUD_LOCATION: ${GOOGLE_CLOUD_LOCATION:-us-central1}
+      GOOGLE_SHEETS_SPREADSHEET_ID: ${GOOGLE_SHEETS_SPREADSHEET_ID:-}
+      GMAIL_SENDER_EMAIL: ${GMAIL_SENDER_EMAIL:-}
+      GOOGLE_INTEGRATION_ENABLED: ${GOOGLE_INTEGRATION_ENABLED:-false}
+      GOOGLE_MEET_EVENTS_ENABLED: ${GOOGLE_MEET_EVENTS_ENABLED:-false}
+      AI_PROCESSING_ENABLED: ${AI_PROCESSING_ENABLED:-false}
+      AI_COMPLETION_PROPOSALS_ENABLED: ${AI_COMPLETION_PROPOSALS_ENABLED:-true}
+      GMAIL_NOTIFICATIONS_ENABLED: ${GMAIL_NOTIFICATIONS_ENABLED:-false}
+      SHEETS_SYNC_ENABLED: ${SHEETS_SYNC_ENABLED:-false}
+      WEEKLY_DIGEST_ENABLED: ${WEEKLY_DIGEST_ENABLED:-true}
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - default
 
   web:
-    ports: !reset []
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT_WEB: 3000
+      APP_URL: ${APP_URL}
+      AUTH_URL: ${APP_URL}
+      API_URL: http://api:4000
+      NEXT_PUBLIC_API_URL: ${APP_URL}
+      AUTH_SECRET: ${AUTH_SECRET:?Define AUTH_SECRET}
+      AUTH_DEV_BYPASS: 'false'
+      AUTH_TRUST_HOST: 'true'
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
+      GOOGLE_WORKSPACE_DOMAIN: ${GOOGLE_WORKSPACE_DOMAIN:-smlxl.mx}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-smlxl}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-smlxl}?schema=public
+    depends_on:
+      - api
     networks:
       - default
       - dokploy-network
+
+volumes:
+  smlxl_pgdata:
 
 networks:
   dokploy-network:
