@@ -122,6 +122,9 @@ importers:
       fastify-type-provider-zod:
         specifier: ^4.0.2
         version: 4.0.2(fastify@5.12.1)(zod@3.25.76)
+      tsx:
+        specifier: ^4.19.2
+        version: 4.23.13
       zod:
         specifier: ^3.24.1
         version: 3.25.76
@@ -135,9 +138,6 @@ importers:
       esbuild:
         specifier: ^0.24.2
         version: 0.24.2
-      tsx:
-        specifier: ^4.19.2
-        version: 4.23.13
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
@@ -268,6 +268,9 @@ importers:
       '@smlxl/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      tsx:
+        specifier: ^4.19.2
+        version: 4.23.13
       zod:
         specifier: ^3.24.1
         version: 3.25.76
@@ -281,9 +284,6 @@ importers:
       esbuild:
         specifier: ^0.24.2
         version: 0.24.2
-      tsx:
-        specifier: ^4.19.2
-        version: 4.23.13
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
