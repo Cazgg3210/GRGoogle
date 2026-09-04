@@ -51,7 +51,7 @@ RUN pnpm --filter "@smlxl/api..." run build
 # Prune a producción manteniendo los enlaces del workspace.
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
     pnpm install --frozen-lockfile --offline --prod --filter "@smlxl/api..." \
- && rm -rf /app/.turbo /app/apps/web /app/apps/worker /app/tests /app/docs /app/docker
+ && rm -rf /app/.turbo /app/apps/web /app/apps/worker /app/tests/integration /app/tests/e2e /app/docs /app/docker
 
 # ---------------------------------------------------------------------------
 FROM base AS runtime

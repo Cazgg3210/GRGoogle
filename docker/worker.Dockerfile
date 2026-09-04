@@ -41,7 +41,7 @@ RUN pnpm --filter @smlxl/database generate
 RUN pnpm --filter "@smlxl/worker..." run build
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
     pnpm install --frozen-lockfile --offline --prod --filter "@smlxl/worker..." \
- && rm -rf /app/.turbo /app/apps/web /app/apps/api /app/tests /app/docs /app/docker
+ && rm -rf /app/.turbo /app/apps/web /app/apps/api /app/tests/integration /app/tests/e2e /app/docs /app/docker
 
 # ---------------------------------------------------------------------------
 FROM base AS runtime
