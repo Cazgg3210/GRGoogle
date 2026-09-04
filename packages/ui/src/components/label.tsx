@@ -10,11 +10,18 @@ const Label = React.forwardRef<
 >(({ className, required, children, ...props }, ref) => (
   <LabelPrimitive.Root
     ref={ref}
-    className={cn('text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground peer-disabled:opacity-60', className)}
+    className={cn(
+      'text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground peer-disabled:opacity-60',
+      className,
+    )}
     {...props}
   >
     {children}
-    {required ? <span className="ml-0.5 text-danger-500" aria-hidden>*</span> : null}
+    {required ? (
+      <span className="ml-0.5 text-danger-500" aria-hidden>
+        *
+      </span>
+    ) : null}
   </LabelPrimitive.Root>
 ))
 Label.displayName = LabelPrimitive.Root.displayName

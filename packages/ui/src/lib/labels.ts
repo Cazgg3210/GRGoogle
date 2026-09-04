@@ -27,12 +27,20 @@ export interface LabelMeta {
 }
 
 export const ACTION_ITEM_STATUS_LABELS: Record<ActionItemStatus, LabelMeta> = {
-  PROPOSED: { label: 'Propuesto', tone: 'ai', description: 'Creado por IA; requiere aceptación humana.' },
+  PROPOSED: {
+    label: 'Propuesto',
+    tone: 'ai',
+    description: 'Creado por IA; requiere aceptación humana.',
+  },
   PENDING: { label: 'Pendiente', tone: 'info', description: 'Abierto y aceptado.' },
   IN_PROGRESS: { label: 'En progreso', tone: 'info' },
   BLOCKED: { label: 'Bloqueado', tone: 'danger' },
   WAITING: { label: 'Esperando', tone: 'warning', description: 'Depende de un tercero.' },
-  COMPLETION_PROPOSED: { label: 'Cierre propuesto', tone: 'signal', description: 'Requiere aprobación humana.' },
+  COMPLETION_PROPOSED: {
+    label: 'Cierre propuesto',
+    tone: 'signal',
+    description: 'Requiere aprobación humana.',
+  },
   COMPLETED: { label: 'Completado', tone: 'success' },
   CANCELLED: { label: 'Cancelado', tone: 'neutral' },
 }
@@ -56,14 +64,26 @@ export const PRIORITY_LABELS: Record<ActionItemPriority, LabelMeta> = {
 }
 
 export const PROCESSING_STATUS_LABELS: Record<MeetingProcessingStatus, LabelMeta> = {
-  DISCOVERED: { label: 'Detectada', tone: 'neutral', description: 'La reunión fue descubierta; aún sin artefactos.' },
-  WAITING_FOR_ARTIFACTS: { label: 'Esperando artefactos', tone: 'warning', description: 'Google aún no publica transcript/notas.' },
+  DISCOVERED: {
+    label: 'Detectada',
+    tone: 'neutral',
+    description: 'La reunión fue descubierta; aún sin artefactos.',
+  },
+  WAITING_FOR_ARTIFACTS: {
+    label: 'Esperando artefactos',
+    tone: 'warning',
+    description: 'Google aún no publica transcript/notas.',
+  },
   ARTIFACTS_AVAILABLE: { label: 'Artefactos disponibles', tone: 'info' },
   INGESTING: { label: 'Ingiriendo', tone: 'info' },
   INGESTED: { label: 'Ingerida', tone: 'info' },
   ANALYZING: { label: 'Analizando', tone: 'ai' },
   ANALYZED: { label: 'Analizada', tone: 'ai' },
-  REVIEW_REQUIRED: { label: 'Requiere revisión', tone: 'signal', description: 'La IA dejó elementos para revisión humana.' },
+  REVIEW_REQUIRED: {
+    label: 'Requiere revisión',
+    tone: 'signal',
+    description: 'La IA dejó elementos para revisión humana.',
+  },
   COMPLETED: { label: 'Procesada', tone: 'success' },
   FAILED: { label: 'Error', tone: 'danger' },
   EXCLUDED: { label: 'Excluida', tone: 'neutral', description: 'Excluida del análisis IA.' },
@@ -75,8 +95,16 @@ export const ARTIFACT_STATUS_LABELS: Record<ArtifactStatus, LabelMeta> = {
   AVAILABLE: { label: 'Disponible', tone: 'info' },
   INGESTED: { label: 'Ingerido', tone: 'success' },
   UNAVAILABLE: { label: 'No disponible', tone: 'neutral' },
-  UNAVAILABLE_EXTERNAL_HOST: { label: 'Host externo', tone: 'warning', description: 'Organizador externo: Google no garantiza el artefacto.' },
-  CAPABILITY_BLOCKED: { label: 'Bloqueado por política', tone: 'danger', description: 'Google rechazó la configuración automática.' },
+  UNAVAILABLE_EXTERNAL_HOST: {
+    label: 'Host externo',
+    tone: 'warning',
+    description: 'Organizador externo: Google no garantiza el artefacto.',
+  },
+  CAPABILITY_BLOCKED: {
+    label: 'Bloqueado por política',
+    tone: 'danger',
+    description: 'Google rechazó la configuración automática.',
+  },
   FAILED: { label: 'Falló', tone: 'danger' },
 }
 
@@ -114,14 +142,34 @@ export const CAPTURE_QUALITY_LABELS: Record<CaptureQualityBucket, LabelMeta> = {
 }
 
 export const ATTENTION_REASON_LABELS: Record<AttentionReason, LabelMeta> = {
-  OVERDUE_HIGH_PRIORITY: { label: 'Vencida y prioridad alta', tone: 'danger', description: 'Pasó su fecha compromiso y es de prioridad alta o urgente.' },
+  OVERDUE_HIGH_PRIORITY: {
+    label: 'Vencida y prioridad alta',
+    tone: 'danger',
+    description: 'Pasó su fecha compromiso y es de prioridad alta o urgente.',
+  },
   OVERDUE: { label: 'Vencida', tone: 'danger', description: 'Pasó su fecha compromiso.' },
-  COMPLETION_PROPOSED: { label: 'Cierre por aprobar', tone: 'signal', description: 'Hay una propuesta de cierre esperando decisión humana.' },
-  NO_OWNER: { label: 'Sin responsable', tone: 'warning', description: 'Nadie tiene asignada esta tarea.' },
+  COMPLETION_PROPOSED: {
+    label: 'Cierre por aprobar',
+    tone: 'signal',
+    description: 'Hay una propuesta de cierre esperando decisión humana.',
+  },
+  NO_OWNER: {
+    label: 'Sin responsable',
+    tone: 'warning',
+    description: 'Nadie tiene asignada esta tarea.',
+  },
   NO_DUE_DATE: { label: 'Sin fecha', tone: 'warning', description: 'No tiene fecha compromiso.' },
-  REPEATED_WITHOUT_PROGRESS: { label: 'Repetida sin avance', tone: 'warning', description: 'Se ha mencionado en varias reuniones sin cambiar de estado.' },
+  REPEATED_WITHOUT_PROGRESS: {
+    label: 'Repetida sin avance',
+    tone: 'warning',
+    description: 'Se ha mencionado en varias reuniones sin cambiar de estado.',
+  },
   BLOCKED: { label: 'Bloqueada', tone: 'danger', description: 'Marcada como bloqueada.' },
-  LOW_AI_CONFIDENCE: { label: 'Baja confianza IA', tone: 'ai', description: 'La IA la extrajo con confianza por debajo del umbral.' },
+  LOW_AI_CONFIDENCE: {
+    label: 'Baja confianza IA',
+    tone: 'ai',
+    description: 'La IA la extrajo con confianza por debajo del umbral.',
+  },
 }
 
 export const AI_REVIEW_REASON_LABELS: Record<AiReviewReason, LabelMeta> = {
@@ -151,7 +199,10 @@ export const RELATION_TYPE_LABELS: Record<RelationType, string> = {
   REOPENED: 'Reabierta en',
 }
 
-export const PROPOSAL_STATUS_LABELS: Record<'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED', LabelMeta> = {
+export const PROPOSAL_STATUS_LABELS: Record<
+  'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED',
+  LabelMeta
+> = {
   PENDING: { label: 'Pendiente de decisión', tone: 'signal' },
   APPROVED: { label: 'Aprobada', tone: 'success' },
   REJECTED: { label: 'Rechazada', tone: 'danger' },
@@ -184,15 +235,18 @@ export const MEETING_SOURCE_LABELS: Record<string, string> = {
 export const FEATURE_FLAG_META: Record<string, { label: string; description: string }> = {
   GOOGLE_INTEGRATION_ENABLED: {
     label: 'Integración Google',
-    description: 'Habilita llamadas reales a Google Workspace (Meet, Calendar, Drive). Apagado = adapters fake.',
+    description:
+      'Habilita llamadas reales a Google Workspace (Meet, Calendar, Drive). Apagado = adapters fake.',
   },
   GOOGLE_MEET_EVENTS_ENABLED: {
     label: 'Eventos de Meet (Workspace Events)',
-    description: 'Suscripciones Pub/Sub por usuario monitoreado para detectar reuniones y artefactos.',
+    description:
+      'Suscripciones Pub/Sub por usuario monitoreado para detectar reuniones y artefactos.',
   },
   AI_PROCESSING_ENABLED: {
     label: 'Procesamiento IA',
-    description: 'Resumen, decisiones y compromisos con Gemini. Apagado = análisis fake determinista.',
+    description:
+      'Resumen, decisiones y compromisos con Gemini. Apagado = análisis fake determinista.',
   },
   AI_COMPLETION_PROPOSALS_ENABLED: {
     label: 'Propuestas de cierre por IA',
@@ -204,7 +258,8 @@ export const FEATURE_FLAG_META: Record<string, { label: string; description: str
   },
   SHEETS_SYNC_ENABLED: {
     label: 'Sincronización a Google Sheets',
-    description: 'Exporta pendientes y reuniones a la hoja de seguimiento (sin usar la fila como id).',
+    description:
+      'Exporta pendientes y reuniones a la hoja de seguimiento (sin usar la fila como id).',
   },
   WEEKLY_DIGEST_ENABLED: {
     label: 'Digest semanal',
@@ -225,7 +280,10 @@ export const ACTION_ITEM_VIEW_LABELS: Record<string, string> = {
   proposed: 'Propuestos',
 }
 
-export function labelFor<K extends string>(map: Record<K, LabelMeta>, key: K | string | null | undefined): LabelMeta {
+export function labelFor<K extends string>(
+  map: Record<K, LabelMeta>,
+  key: K | string | null | undefined,
+): LabelMeta {
   if (!key) return { label: '—', tone: 'neutral' }
   return (map as Record<string, LabelMeta>)[key] ?? { label: key, tone: 'neutral' }
 }

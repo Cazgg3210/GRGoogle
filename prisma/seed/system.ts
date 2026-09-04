@@ -13,7 +13,16 @@ import {
 import { jsonSafe, type PrismaClient } from '../../packages/database/src/index.js'
 import { ITEMS, itemId, type ActionItemsResult } from './action-items.js'
 import { MONITORED_EMAILS, USERS, type Catalogs } from './catalogs.js'
-import { NOW, TZ, addMinutes, daysAgo, hoursFromNow, lastIsoWeek, stableId, ymd } from './helpers.js'
+import {
+  NOW,
+  TZ,
+  addMinutes,
+  daysAgo,
+  hoursFromNow,
+  lastIsoWeek,
+  stableId,
+  ymd,
+} from './helpers.js'
 import type { MeetingKey, MeetingsResult } from './meetings.js'
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -88,7 +97,14 @@ export async function seedSystem(
   const week = lastIsoWeek()
   const weekMeetings = await db.meeting.findMany({
     where: { startAt: { gte: week.weekStart, lte: week.weekEnd } },
-    select: { id: true, title: true, processingStatus: true, transcriptStatus: true, smartNotesStatus: true, isExternalHost: true },
+    select: {
+      id: true,
+      title: true,
+      processingStatus: true,
+      transcriptStatus: true,
+      smartNotesStatus: true,
+      isExternalHost: true,
+    },
   })
   const processedStatuses: MeetingProcessingStatus[] = [
     MeetingProcessingStatus.ANALYZED,
@@ -97,19 +113,29 @@ export async function seedSystem(
   ]
   const usableArtifacts = new Set(['AVAILABLE', 'INGESTED'])
   const allItems = await db.actionItem.findMany({
-    include: { owner: { select: { displayName: true } }, area: { select: { name: true } }, project: { select: { canonicalName: true } } },
+    include: {
+      owner: { select: { displayName: true } },
+      area: { select: { name: true } },
+      project: { select: { canonicalName: true } },
+    },
     orderBy: { sequence: 'asc' },
   })
   const openStatuses = new Set<string>(OPEN_ACTION_ITEM_STATUSES)
   const today = ymd(NOW)
   const inWeek = (d: Date | null): boolean => !!d && d >= week.weekStart && d <= week.weekEnd
   const newItems = allItems.filter((i) => inWeek(i.createdAt))
-  const overdue = allItems.filter((i) => i.dueDate && openStatuses.has(i.status) && ymd(i.dueDate) < today)
+  const overdue = allItems.filter(
+    (i) => i.dueDate && openStatuses.has(i.status) && ymd(i.dueDate) < today,
+  )
   const noDate = allItems.filter((i) => !i.dueDate && openStatuses.has(i.status))
-  const noOwner = allItems.filter((i) => !i.ownerUserId && !i.externalAssigneeId && openStatuses.has(i.status))
+  const noOwner = allItems.filter(
+    (i) => !i.ownerUserId && !i.externalAssigneeId && openStatuses.has(i.status),
+  )
   const blocked = allItems.filter((i) => i.status === ActionItemStatus.BLOCKED)
   const proposals = allItems.filter((i) => i.status === ActionItemStatus.COMPLETION_PROPOSED)
-  const completedInWeek = allItems.filter((i) => i.status === ActionItemStatus.COMPLETED && inWeek(i.completedAt))
+  const completedInWeek = allItems.filter(
+    (i) => i.status === ActionItemStatus.COMPLETED && inWeek(i.completedAt),
+  )
   const backlog = allItems.filter((i) => openStatuses.has(i.status) && i.createdAt < week.weekStart)
   const mentionCounts = await db.actionItemMeetingLink.groupBy({
     by: ['actionItemId'],
@@ -134,11 +160,16 @@ export async function seedSystem(
     sections: {
       A_resumenEjecutivo: {
         reunionesDetectadas: weekMeetings.length,
-        reunionesProcesadas: weekMeetings.filter((x) => processedStatuses.includes(x.processingStatus)).length,
-        reunionesSinArtefactos: weekMeetings.filter(
-          (x) => !usableArtifacts.has(x.transcriptStatus) && !usableArtifacts.has(x.smartNotesStatus),
+        reunionesProcesadas: weekMeetings.filter((x) =>
+          processedStatuses.includes(x.processingStatus),
         ).length,
-        reunionesConError: weekMeetings.filter((x) => x.processingStatus === MeetingProcessingStatus.FAILED).length,
+        reunionesSinArtefactos: weekMeetings.filter(
+          (x) =>
+            !usableArtifacts.has(x.transcriptStatus) && !usableArtifacts.has(x.smartNotesStatus),
+        ).length,
+        reunionesConError: weekMeetings.filter(
+          (x) => x.processingStatus === MeetingProcessingStatus.FAILED,
+        ).length,
         tareasNuevas: newItems.length,
         propuestasDeCierrePendientes: proposals.length,
         tareasCompletadas: completedInWeek.length,
@@ -160,19 +191,44 @@ export async function seedSystem(
         repetidasVariasReuniones: allItems.filter((i) => repeated.includes(i.id)).map(brief),
         reunionesNoCapturadas: weekMeetings
           .filter((x) => x.isExternalHost || x.processingStatus === MeetingProcessingStatus.FAILED)
-          .map((x) => ({ title: x.title, motivo: x.isExternalHost ? 'Organizador externo' : 'Artefactos no disponibles' })),
+          .map((x) => ({
+            title: x.title,
+            motivo: x.isExternalHost ? 'Organizador externo' : 'Artefactos no disponibles',
+          })),
       },
       E_cambiosDetectados: [
-        { key: 'ACT-000001', tipo: 'FECHA_PROPUESTA', detalle: 'Nueva fecha sugerida por IA: próximo martes' },
-        { key: 'ACT-000002', tipo: 'POSIBLE_FINALIZACION', detalle: 'Propuesta de cierre generada desde "Seguimiento contrato Cliente Alfa"' },
-        { key: 'ACT-000006', tipo: 'POSIBLE_DUPLICADO', detalle: 'Coincidencia con compromiso extraído del comité' },
+        {
+          key: 'ACT-000001',
+          tipo: 'FECHA_PROPUESTA',
+          detalle: 'Nueva fecha sugerida por IA: próximo martes',
+        },
+        {
+          key: 'ACT-000002',
+          tipo: 'POSIBLE_FINALIZACION',
+          detalle: 'Propuesta de cierre generada desde "Seguimiento contrato Cliente Alfa"',
+        },
+        {
+          key: 'ACT-000006',
+          tipo: 'POSIBLE_DUPLICADO',
+          detalle: 'Coincidencia con compromiso extraído del comité',
+        },
       ],
       F_bandejaAprobacion: proposals.map((i) => ({ ...brief(i), url: `/action-items/${i.id}` })),
       G_proximaSemana: {
         vencimientosProximos: allItems
-          .filter((i) => i.dueDate && openStatuses.has(i.status) && ymd(i.dueDate) >= today && daysBetween(NOW, i.dueDate) <= 7)
+          .filter(
+            (i) =>
+              i.dueDate &&
+              openStatuses.has(i.status) &&
+              ymd(i.dueDate) >= today &&
+              daysBetween(NOW, i.dueDate) <= 7,
+          )
           .map(brief),
-        altaPrioridad: allItems.filter((i) => openStatuses.has(i.status) && (i.priority === 'HIGH' || i.priority === 'URGENT')).map(brief),
+        altaPrioridad: allItems
+          .filter(
+            (i) => openStatuses.has(i.status) && (i.priority === 'HIGH' || i.priority === 'URGENT'),
+          )
+          .map(brief),
         recurrentes: allItems.filter((i) => i.type === 'RECURRING').map(brief),
       },
     },
@@ -188,7 +244,11 @@ export async function seedSystem(
     version: 1,
     recipientEmails: [cat.userEmails.direccion, cat.userEmails.gestora],
   }
-  await db.weeklyDigest.upsert({ where: { id: digestId }, create: { id: digestId, ...digestData }, update: digestData })
+  await db.weeklyDigest.upsert({
+    where: { id: digestId },
+    create: { id: digestId, ...digestData },
+    update: digestData,
+  })
   counts.digests++
 
   // --- Estado de integración Google (fake) ---------------------------------
@@ -236,8 +296,16 @@ export async function seedSystem(
     { meeting: 'alfa', type: GoogleMeetEventType.TRANSCRIPT_FILE_GENERATED, minutesAfterStart: 47 },
     { meeting: 'alfa', type: GoogleMeetEventType.SMART_NOTE_FILE_GENERATED, minutesAfterStart: 48 },
     { meeting: 'comite', type: GoogleMeetEventType.CONFERENCE_ENDED, minutesAfterStart: 55 },
-    { meeting: 'comite', type: GoogleMeetEventType.TRANSCRIPT_FILE_GENERATED, minutesAfterStart: 61 },
-    { meeting: 'kickoffBeta', type: GoogleMeetEventType.TRANSCRIPT_FILE_GENERATED, minutesAfterStart: 66 },
+    {
+      meeting: 'comite',
+      type: GoogleMeetEventType.TRANSCRIPT_FILE_GENERATED,
+      minutesAfterStart: 61,
+    },
+    {
+      meeting: 'kickoffBeta',
+      type: GoogleMeetEventType.TRANSCRIPT_FILE_GENERATED,
+      minutesAfterStart: 66,
+    },
     { meeting: 'syncOps', type: GoogleMeetEventType.CONFERENCE_STARTED, minutesAfterStart: 0 },
     { meeting: 'syncOps', type: GoogleMeetEventType.CONFERENCE_ENDED, minutesAfterStart: 30 },
   ]
@@ -251,7 +319,11 @@ export async function seedSystem(
       subject: resourceName,
       occurredAt,
       resourceName,
-      rawPayloadRedacted: { conferenceRecord: { name: resourceName }, redacted: true, meetingId: m.ids[e.meeting] },
+      rawPayloadRedacted: {
+        conferenceRecord: { name: resourceName },
+        redacted: true,
+        meetingId: m.ids[e.meeting],
+      },
       receivedAt: addMinutes(occurredAt, 1),
       processedAt: addMinutes(occurredAt, 2),
       processingStatus: InboundEventProcessingStatus.PROCESSED,
@@ -305,12 +377,42 @@ export async function seedSystem(
       ago: a.ago,
     })
   }
-  const statusChanges: Array<{ seq: number; by: keyof Catalogs['users']; from: ActionItemStatus; to: ActionItemStatus; ago: number }> = [
-    { seq: 6, by: 'direccion', from: ActionItemStatus.PENDING, to: ActionItemStatus.IN_PROGRESS, ago: 1 },
-    { seq: 9, by: 'operaciones', from: ActionItemStatus.IN_PROGRESS, to: ActionItemStatus.BLOCKED, ago: 6 },
-    { seq: 25, by: 'finanzas', from: ActionItemStatus.PENDING, to: ActionItemStatus.BLOCKED, ago: 12 },
+  const statusChanges: Array<{
+    seq: number
+    by: keyof Catalogs['users']
+    from: ActionItemStatus
+    to: ActionItemStatus
+    ago: number
+  }> = [
+    {
+      seq: 6,
+      by: 'direccion',
+      from: ActionItemStatus.PENDING,
+      to: ActionItemStatus.IN_PROGRESS,
+      ago: 1,
+    },
+    {
+      seq: 9,
+      by: 'operaciones',
+      from: ActionItemStatus.IN_PROGRESS,
+      to: ActionItemStatus.BLOCKED,
+      ago: 6,
+    },
+    {
+      seq: 25,
+      by: 'finanzas',
+      from: ActionItemStatus.PENDING,
+      to: ActionItemStatus.BLOCKED,
+      ago: 12,
+    },
     { seq: 46, by: 'andres', from: ActionItemStatus.PENDING, to: ActionItemStatus.BLOCKED, ago: 9 },
-    { seq: 41, by: 'finanzas', from: ActionItemStatus.PENDING, to: ActionItemStatus.CANCELLED, ago: 4 },
+    {
+      seq: 41,
+      by: 'finanzas',
+      from: ActionItemStatus.PENDING,
+      to: ActionItemStatus.CANCELLED,
+      ago: 4,
+    },
   ]
   for (const s of statusChanges) {
     audits.push({
@@ -426,14 +528,23 @@ export async function seedSystem(
       correlationId: `corr-seed-${String(i + 1).padStart(3, '0')}`,
       timestamp: daysAgo(a.ago),
     }
-    await db.auditLog.upsert({ where: { id: auditId }, create: { id: auditId, ...auditData }, update: auditData })
+    await db.auditLog.upsert({
+      where: { id: auditId },
+      create: { id: auditId, ...auditData },
+      update: auditData,
+    })
     counts.auditLogs++
   }
 
   // --- Lote de migración legado (traza de los items con legacyId) ----------
   const legacyItems = ITEMS.filter((i) => i.legacyId)
   const batchId = stableId('legacy-batch:seed')
-  const batchReport = { mode: 'commit', imported: legacyItems.length, skipped: 0, note: 'Lote demostrativo del seed' }
+  const batchReport = {
+    mode: 'commit',
+    imported: legacyItems.length,
+    skipped: 0,
+    note: 'Lote demostrativo del seed',
+  }
   const batchData = {
     sourceFile: 'seed-demo-legado.xlsx',
     mode: 'commit',
@@ -441,7 +552,11 @@ export async function seedSystem(
     finishedAt: addMinutes(daysAgo(30), 2),
     report: jsonSafe(batchReport),
   }
-  await db.legacyImportBatch.upsert({ where: { id: batchId }, create: { id: batchId, ...batchData }, update: batchData })
+  await db.legacyImportBatch.upsert({
+    where: { id: batchId },
+    create: { id: batchId, ...batchData },
+    update: batchData,
+  })
   counts.legacyBatches++
   for (const [i, it] of legacyItems.entries()) {
     const refId = stableId(`legacy-ref:${it.seq}`)
@@ -463,7 +578,11 @@ export async function seedSystem(
       importBatchId: batchId,
       importedAt: addMinutes(daysAgo(30), 1),
     }
-    await db.legacyImportReference.upsert({ where: { id: refId }, create: { id: refId, ...refData }, update: refData })
+    await db.legacyImportReference.upsert({
+      where: { id: refId },
+      create: { id: refId, ...refData },
+      update: refData,
+    })
     counts.legacyReferences++
   }
 

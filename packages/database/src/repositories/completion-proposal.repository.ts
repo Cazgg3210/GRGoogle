@@ -2,7 +2,10 @@ import type { CompletionProposal, CompletionProposalRepository, Id } from '@smlx
 import { proposalToDb, toProposal } from '../mappers/action-items.js'
 import { BaseRepository } from './base.js'
 
-export class PrismaCompletionProposalRepository extends BaseRepository implements CompletionProposalRepository {
+export class PrismaCompletionProposalRepository
+  extends BaseRepository
+  implements CompletionProposalRepository
+{
   async findById(id: Id): Promise<CompletionProposal | null> {
     const row = await this.db.completionProposal.findUnique({ where: { id } })
     return row ? toProposal(row) : null
@@ -16,7 +19,9 @@ export class PrismaCompletionProposalRepository extends BaseRepository implement
     return row ? toProposal(row) : null
   }
 
-  async listPending(filter: { actionItemIds?: Id[]; limit?: number } = {}): Promise<CompletionProposal[]> {
+  async listPending(
+    filter: { actionItemIds?: Id[]; limit?: number } = {},
+  ): Promise<CompletionProposal[]> {
     const rows = await this.db.completionProposal.findMany({
       where: {
         status: 'PENDING',

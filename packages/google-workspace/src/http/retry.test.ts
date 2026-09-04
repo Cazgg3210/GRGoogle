@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { DomainErrorCode, isDomainError } from '@smlxl/domain'
 import { mapGoogleError, withGoogleRetry } from './retry.js'
 
-function gaxiosError(status: number, message = `HTTP ${status}`): Error & { response: { status: number }; status: number } {
+function gaxiosError(
+  status: number,
+  message = `HTTP ${status}`,
+): Error & { response: { status: number }; status: number } {
   const err = new Error(message) as Error & { response: { status: number }; status: number }
   err.name = 'GaxiosError'
   err.response = { status }
@@ -47,7 +50,14 @@ describe('withGoogleRetry', () => {
         if (calls < 3) throw gaxiosError(calls === 1 ? 429 : 503)
         return 'ok'
       },
-      { retries: 3, baseDelayMs: 100, random: () => 0.5, sleep: async (ms) => { delays.push(ms) } },
+      {
+        retries: 3,
+        baseDelayMs: 100,
+        random: () => 0.5,
+        sleep: async (ms) => {
+          delays.push(ms)
+        },
+      },
     )
     expect(result).toBe('ok')
     expect(calls).toBe(3)
@@ -57,22 +67,32 @@ describe('withGoogleRetry', () => {
   it('no reintenta en 403 y lanza DomainError', async () => {
     let calls = 0
     await expect(
-      withGoogleRetry(async () => {
-        calls += 1
-        throw gaxiosError(403)
-      }, { retries: 3, ...noSleep }),
-    ).rejects.toSatisfy((e: unknown) => isDomainError(e) && e.code === DomainErrorCode.GOOGLE_PERMISSION_DENIED)
+      withGoogleRetry(
+        async () => {
+          calls += 1
+          throw gaxiosError(403)
+        },
+        { retries: 3, ...noSleep },
+      ),
+    ).rejects.toSatisfy(
+      (e: unknown) => isDomainError(e) && e.code === DomainErrorCode.GOOGLE_PERMISSION_DENIED,
+    )
     expect(calls).toBe(1)
   })
 
   it('agota reintentos y lanza el último error mapeado', async () => {
     let calls = 0
     await expect(
-      withGoogleRetry(async () => {
-        calls += 1
-        throw gaxiosError(500)
-      }, { retries: 2, ...noSleep }),
-    ).rejects.toSatisfy((e: unknown) => isDomainError(e) && e.code === DomainErrorCode.GOOGLE_UNAVAILABLE)
+      withGoogleRetry(
+        async () => {
+          calls += 1
+          throw gaxiosError(500)
+        },
+        { retries: 2, ...noSleep },
+      ),
+    ).rejects.toSatisfy(
+      (e: unknown) => isDomainError(e) && e.code === DomainErrorCode.GOOGLE_UNAVAILABLE,
+    )
     expect(calls).toBe(3)
   })
 
@@ -89,6 +109,8 @@ describe('withGoogleRetry', () => {
           }),
         { timeoutMs: 20, retries: 0 },
       ),
-    ).rejects.toSatisfy((e: unknown) => isDomainError(e) && e.code === DomainErrorCode.GOOGLE_TIMEOUT)
+    ).rejects.toSatisfy(
+      (e: unknown) => isDomainError(e) && e.code === DomainErrorCode.GOOGLE_TIMEOUT,
+    )
   })
 })

@@ -84,15 +84,38 @@ export function parseFlag(value: unknown): boolean | null {
   if (typeof value === 'number') return value !== 0
   const t = normalizeText(String(value))
   if (t === '') return null
-  if (['1', 'si', 's', 'x', 'true', 'yes', 'y', 'completa', 'completo', 'ok'].includes(t)) return true
+  if (['1', 'si', 's', 'x', 'true', 'yes', 'y', 'completa', 'completo', 'ok'].includes(t))
+    return true
   if (['0', 'no', 'n', 'false', 'pendiente'].includes(t)) return false
   return null
 }
 
 const MONTHS: Record<string, number> = {
-  ene: 1, enero: 1, feb: 2, febrero: 2, mar: 3, marzo: 3, abr: 4, abril: 4, may: 5, mayo: 5, jun: 6, junio: 6,
-  jul: 7, julio: 7, ago: 8, agosto: 8, sep: 9, sept: 9, septiembre: 9, oct: 10, octubre: 10, nov: 11, noviembre: 11,
-  dic: 12, diciembre: 12,
+  ene: 1,
+  enero: 1,
+  feb: 2,
+  febrero: 2,
+  mar: 3,
+  marzo: 3,
+  abr: 4,
+  abril: 4,
+  may: 5,
+  mayo: 5,
+  jun: 6,
+  junio: 6,
+  jul: 7,
+  julio: 7,
+  ago: 8,
+  agosto: 8,
+  sep: 9,
+  sept: 9,
+  septiembre: 9,
+  oct: 10,
+  octubre: 10,
+  nov: 11,
+  noviembre: 11,
+  dic: 12,
+  diciembre: 12,
 }
 
 function ymd(y: number, m: number, d: number): string | null {
@@ -130,7 +153,11 @@ export function parseLegacyDate(value: unknown): string | null {
   return null
 }
 
-const BLANK_TRACKED_FIELDS: Array<{ key: keyof RawRow['cells']; label: string; onlyInternal?: boolean }> = [
+const BLANK_TRACKED_FIELDS: Array<{
+  key: keyof RawRow['cells']
+  label: string
+  onlyInternal?: boolean
+}> = [
   { key: 'id', label: 'ID' },
   { key: 'owner', label: 'Responsable' },
   { key: 'department', label: 'Departamento', onlyInternal: true },
@@ -146,12 +173,18 @@ export function normalizeRow(raw: RawRow): NormalizedRow {
   const issues: RowIssue[] = []
 
   const title = cellText(c.title) ?? ''
-  if (isBlankLike(title)) issues.push({ code: 'MISSING_TITLE', field: 'Pendiente', detail: 'Fila sin texto de pendiente' })
+  if (isBlankLike(title))
+    issues.push({
+      code: 'MISSING_TITLE',
+      field: 'Pendiente',
+      detail: 'Fila sin texto de pendiente',
+    })
 
   for (const f of BLANK_TRACKED_FIELDS) {
     if (f.onlyInternal && isExternalSheet) continue
     if (!(f.key in c)) continue
-    if (isBlankLike(c[f.key])) issues.push({ code: 'BLANK_FIELD', field: f.label, detail: `Valor vacío/0 en ${f.label}` })
+    if (isBlankLike(c[f.key]))
+      issues.push({ code: 'BLANK_FIELD', field: f.label, detail: `Valor vacío/0 en ${f.label}` })
   }
 
   const ownerText = isBlankLike(c.owner) ? null : cellText(c.owner)
@@ -159,16 +192,29 @@ export function normalizeRow(raw: RawRow): NormalizedRow {
   const statusRaw = isBlankLike(c.status) ? null : cellText(c.status)
   const statusInfo = initialStatusFromLegacy(statusRaw)
   if (statusRaw && !statusInfo.recognized)
-    issues.push({ code: 'UNRECOGNIZED_STATUS', field: 'Status', detail: `Status "${statusRaw}" no reconocido; se usa PENDING` })
+    issues.push({
+      code: 'UNRECOGNIZED_STATUS',
+      field: 'Status',
+      detail: `Status "${statusRaw}" no reconocido; se usa PENDING`,
+    })
 
   const priorityRaw = isBlankLike(c.priority) ? null : cellText(c.priority)
   const priority = normalizePriority(priorityRaw)
   if (priorityRaw && !priority)
-    issues.push({ code: 'UNRECOGNIZED_PRIORITY', field: 'Prioridad', detail: `Prioridad "${priorityRaw}" no reconocida; se usa MEDIUM` })
+    issues.push({
+      code: 'UNRECOGNIZED_PRIORITY',
+      field: 'Prioridad',
+      detail: `Prioridad "${priorityRaw}" no reconocida; se usa MEDIUM`,
+    })
 
   const completedFlag = parseFlag(c.completed)
   const statusSaysDone = statusInfo.status === ActionItemStatus.COMPLETED
-  if (completedFlag === true && statusInfo.recognized && !statusSaysDone && statusInfo.status !== ActionItemStatus.COMPLETION_PROPOSED) {
+  if (
+    completedFlag === true &&
+    statusInfo.recognized &&
+    !statusSaysDone &&
+    statusInfo.status !== ActionItemStatus.COMPLETION_PROPOSED
+  ) {
     issues.push({
       code: 'CONTRADICTION_COMPLETED_FLAG',
       field: 'Completada',
@@ -185,7 +231,11 @@ export function normalizeRow(raw: RawRow): NormalizedRow {
   const meetingDateRaw = c.meetingDate ?? null
   const meetingDate = parseLegacyDate(isBlankLike(meetingDateRaw) ? null : meetingDateRaw)
   if (!isBlankLike(meetingDateRaw) && !meetingDate)
-    issues.push({ code: 'INVALID_DATE', field: 'Fecha de la junta', detail: `Fecha "${String(meetingDateRaw)}" no reconocida` })
+    issues.push({
+      code: 'INVALID_DATE',
+      field: 'Fecha de la junta',
+      detail: `Fecha "${String(meetingDateRaw)}" no reconocida`,
+    })
 
   const overdueRaw = isBlankLike(c.overdue) ? null : cellText(c.overdue)
   const comments = isBlankLike(c.comments) ? null : cellText(c.comments)
@@ -219,7 +269,9 @@ export function normalizeRow(raw: RawRow): NormalizedRow {
     comments,
     company: isBlankLike(c.company) ? null : cellText(c.company),
     contact: isBlankLike(c.contact) ? null : cellText(c.contact),
-    recurrence: recurrence ? { frequency: recurrence.frequency, textOriginal: recurrence.textOriginal } : null,
+    recurrence: recurrence
+      ? { frequency: recurrence.frequency, textOriginal: recurrence.textOriginal }
+      : null,
     issues,
     rawPayload: raw.raw,
   }
@@ -235,7 +287,10 @@ export interface DuplicateCandidate {
 }
 
 /** Duplicados semánticos dentro de la misma área (tokenJaccard ≥ umbral). Sólo se reportan (§16.8). */
-export function findSemanticDuplicates(rows: NormalizedRow[], threshold = 0.8): DuplicateCandidate[] {
+export function findSemanticDuplicates(
+  rows: NormalizedRow[],
+  threshold = 0.8,
+): DuplicateCandidate[] {
   const out: DuplicateCandidate[] = []
   const bySheet = new Map<SourceSheet, NormalizedRow[]>()
   for (const r of rows) {
@@ -251,7 +306,14 @@ export function findSemanticDuplicates(rows: NormalizedRow[], threshold = 0.8): 
         const b = list[j] as NormalizedRow
         const score = tokenJaccard(a.title, b.title)
         if (score >= threshold) {
-          out.push({ sheet, rowA: a.sourceRow, rowB: b.sourceRow, titleA: a.title, titleB: b.title, score: Number(score.toFixed(3)) })
+          out.push({
+            sheet,
+            rowA: a.sourceRow,
+            rowB: b.sourceRow,
+            titleA: a.title,
+            titleB: b.title,
+            score: Number(score.toFixed(3)),
+          })
         }
       }
     }
@@ -274,6 +336,7 @@ export function findDuplicateIds(rows: NormalizedRow[]): DuplicateId[] {
     map.set(key, list)
   }
   const out: DuplicateId[] = []
-  for (const [legacyId, occurrences] of map) if (occurrences.length > 1) out.push({ legacyId, occurrences })
+  for (const [legacyId, occurrences] of map)
+    if (occurrences.length > 1) out.push({ legacyId, occurrences })
   return out
 }

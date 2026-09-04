@@ -72,7 +72,15 @@ import { ActionItemQuickActions } from '@/components/action-items/quick-actions'
 import { TranscriptView } from './transcript-view'
 import { MeetingAudit } from './meeting-audit'
 
-const TABS = ['resumen', 'compromisos', 'decisiones', 'transcripcion', 'participantes', 'historial-ia', 'auditoria'] as const
+const TABS = [
+  'resumen',
+  'compromisos',
+  'decisiones',
+  'transcripcion',
+  'participantes',
+  'historial-ia',
+  'auditoria',
+] as const
 type TabKey = (typeof TABS)[number]
 
 export function MeetingDetailView({
@@ -90,8 +98,12 @@ export function MeetingDetailView({
 }) {
   const session = useAppSession()
   const url = useUrlState()
-  const tab: TabKey = (TABS as readonly string[]).includes(initialTab ?? '') ? (initialTab as TabKey) : 'resumen'
-  const [evidence, setEvidence] = React.useState<{ title: string; quotes: EvidenceQuote[] } | null>(null)
+  const tab: TabKey = (TABS as readonly string[]).includes(initialTab ?? '')
+    ? (initialTab as TabKey)
+    : 'resumen'
+  const [evidence, setEvidence] = React.useState<{ title: string; quotes: EvidenceQuote[] } | null>(
+    null,
+  )
   const [reprocessOpen, setReprocessOpen] = React.useState(false)
   const [settingsOpen, setSettingsOpen] = React.useState(false)
 
@@ -112,7 +124,10 @@ export function MeetingDetailView({
 
   return (
     <div className="flex flex-col gap-6">
-      <Link href="/reuniones" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+      <Link
+        href="/reuniones"
+        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft className="size-3" />
         Reuniones
       </Link>
@@ -136,9 +151,13 @@ export function MeetingDetailView({
                   Host externo
                 </Badge>
               ) : null}
-              <span className="text-xs text-muted-foreground">{MEETING_SOURCE_LABELS[meeting.source] ?? meeting.source}</span>
+              <span className="text-xs text-muted-foreground">
+                {MEETING_SOURCE_LABELS[meeting.source] ?? meeting.source}
+              </span>
             </div>
-            <h1 className="mt-3 font-display text-3xl leading-tight tracking-tight text-ink-950">{meeting.title}</h1>
+            <h1 className="mt-3 font-display text-3xl leading-tight tracking-tight text-ink-950">
+              {meeting.title}
+            </h1>
             <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1">
                 <Clock className="size-3.5" />
@@ -148,7 +167,9 @@ export function MeetingDetailView({
                 <Users className="size-3.5" />
                 {meeting.participantCount} participantes
               </span>
-              {meeting.organizerName || meeting.organizerEmail ? <span>Organiza {meeting.organizerName ?? meeting.organizerEmail}</span> : null}
+              {meeting.organizerName || meeting.organizerEmail ? (
+                <span>Organiza {meeting.organizerName ?? meeting.organizerEmail}</span>
+              ) : null}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -160,7 +181,12 @@ export function MeetingDetailView({
               </Button>
             ) : null}
             {canReprocess ? (
-              <Button variant="outline" size="sm" onClick={() => setReprocessOpen(true)} disabled={meeting.excludedFromAi}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setReprocessOpen(true)}
+                disabled={meeting.excludedFromAi}
+              >
                 <RefreshCw />
                 Reprocesar
               </Button>
@@ -183,7 +209,9 @@ export function MeetingDetailView({
           </DetailRow>
           <DetailRow label="Idioma">
             {meeting.detectedLanguageCode ?? meeting.reportedLanguageCode ?? '—'}
-            {meeting.mixedLanguageDetected ? <span className="ml-1 text-xs text-warning-800">(mixto)</span> : null}
+            {meeting.mixedLanguageDetected ? (
+              <span className="ml-1 text-xs text-warning-800">(mixto)</span>
+            ) : null}
           </DetailRow>
         </dl>
         {meeting.lastErrorCode ? (
@@ -191,14 +219,22 @@ export function MeetingDetailView({
             <span className="font-mono text-xs">{meeting.lastErrorCode}</span>
           </InlineNotice>
         ) : null}
-        {meeting.isExternalHost && (meeting.transcriptStatus === 'UNAVAILABLE_EXTERNAL_HOST' || meeting.smartNotesStatus === 'UNAVAILABLE_EXTERNAL_HOST') ? (
+        {meeting.isExternalHost &&
+        (meeting.transcriptStatus === 'UNAVAILABLE_EXTERNAL_HOST' ||
+          meeting.smartNotesStatus === 'UNAVAILABLE_EXTERNAL_HOST') ? (
           <InlineNotice tone="warning" className="mt-4">
-            Esta reunión fue organizada por un host externo: Google no garantiza que se generen transcripción ni notas para cuentas
-            invitadas. Puedes importar la transcripción manualmente si la tienes.
+            Esta reunión fue organizada por un host externo: Google no garantiza que se generen
+            transcripción ni notas para cuentas invitadas. Puedes importar la transcripción
+            manualmente si la tienes.
           </InlineNotice>
         ) : null}
         {pendingReviews.length > 0 ? (
-          <InlineNotice tone="ai" icon={Sparkles} className="mt-4" title={`${pendingReviews.length} elemento(s) esperan revisión humana`}>
+          <InlineNotice
+            tone="ai"
+            icon={Sparkles}
+            className="mt-4"
+            title={`${pendingReviews.length} elemento(s) esperan revisión humana`}
+          >
             <Link href={`/revision-ia?meetingId=${meeting.id}`} className="underline">
               Ir a Revisión IA
             </Link>
@@ -210,10 +246,16 @@ export function MeetingDetailView({
         <TabsList>
           <TabsTrigger value="resumen">Resumen</TabsTrigger>
           <TabsTrigger value="compromisos">
-            Compromisos <span className="font-mono text-[11px] text-muted-foreground">{actionItems.length}</span>
+            Compromisos{' '}
+            <span className="font-mono text-[11px] text-muted-foreground">
+              {actionItems.length}
+            </span>
           </TabsTrigger>
           <TabsTrigger value="decisiones">
-            Decisiones <span className="font-mono text-[11px] text-muted-foreground">{meeting.decisions.length}</span>
+            Decisiones{' '}
+            <span className="font-mono text-[11px] text-muted-foreground">
+              {meeting.decisions.length}
+            </span>
           </TabsTrigger>
           <TabsTrigger value="transcripcion">Transcripción</TabsTrigger>
           <TabsTrigger value="participantes">Participantes</TabsTrigger>
@@ -227,7 +269,9 @@ export function MeetingDetailView({
 
         <TabsContent value="compromisos">
           {actionItemsError ? (
-            <InlineNotice tone="danger">No se pudieron cargar los compromisos ({actionItemsError}).</InlineNotice>
+            <InlineNotice tone="danger">
+              No se pudieron cargar los compromisos ({actionItemsError}).
+            </InlineNotice>
           ) : actionItems.length === 0 ? (
             <EmptyState
               title="Sin compromisos extraídos"
@@ -257,12 +301,18 @@ export function MeetingDetailView({
                   {actionItems.map((it) => (
                     <TableRow key={it.id}>
                       <TableCell>
-                        <Link href={`/pendientes/${it.id}`} className="font-mono text-xs text-info-700 hover:underline">
+                        <Link
+                          href={`/pendientes/${it.id}`}
+                          className="font-mono text-xs text-info-700 hover:underline"
+                        >
                           {it.externalKey}
                         </Link>
                       </TableCell>
                       <TableCell className="max-w-[380px]">
-                        <Link href={`/pendientes/${it.id}`} className="block truncate font-medium hover:underline">
+                        <Link
+                          href={`/pendientes/${it.id}`}
+                          className="block truncate font-medium hover:underline"
+                        >
                           {it.title}
                         </Link>
                         <div className="mt-0.5 flex items-center gap-1">
@@ -274,7 +324,9 @@ export function MeetingDetailView({
                         <StatusBadge status={it.status} />
                       </TableCell>
                       <TableCell className="text-sm">
-                        {it.ownerName ?? it.externalAssigneeName ?? <span className="text-warning-800">Sin responsable</span>}
+                        {it.ownerName ?? it.externalAssigneeName ?? (
+                          <span className="text-warning-800">Sin responsable</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <DueDate value={it.dueDate} isOverdue={it.isOverdue} status={it.status} />
@@ -283,8 +335,17 @@ export function MeetingDetailView({
                         <ConfidenceIndicator value={it.confidence} variant="inline" />
                       </TableCell>
                       <TableCell>
-                        <Button variant="link" size="sm" className="px-0" disabled={it.sourceEvidence.length === 0} onClick={() => setEvidence({ title: it.title, quotes: it.sourceEvidence })}>
-                          Ver evidencia{it.sourceEvidence.length ? ` (${it.sourceEvidence.length})` : ''}
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="px-0"
+                          disabled={it.sourceEvidence.length === 0}
+                          onClick={() =>
+                            setEvidence({ title: it.title, quotes: it.sourceEvidence })
+                          }
+                        >
+                          Ver evidencia
+                          {it.sourceEvidence.length ? ` (${it.sourceEvidence.length})` : ''}
                         </Button>
                       </TableCell>
                       <TableCell>
@@ -300,16 +361,34 @@ export function MeetingDetailView({
 
         <TabsContent value="decisiones">
           {meeting.decisions.length === 0 ? (
-            <EmptyState title="Sin decisiones registradas" description="La IA no detectó decisiones explícitas o la reunión aún no se analiza." />
+            <EmptyState
+              title="Sin decisiones registradas"
+              description="La IA no detectó decisiones explícitas o la reunión aún no se analiza."
+            />
           ) : (
             <ul className="flex flex-col gap-3">
               {meeting.decisions.map((d) => (
-                <li key={d.id} className="rounded-lg border border-border bg-surface p-4 shadow-card">
+                <li
+                  key={d.id}
+                  className="rounded-lg border border-border bg-surface p-4 shadow-card"
+                >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <p className="max-w-3xl font-medium">{d.description}</p>
                     <div className="flex items-center gap-2">
-                      <Badge tone={d.status === 'CONFIRMED' ? 'success' : d.status === 'REJECTED' ? 'danger' : 'ai'}>
-                        {d.status === 'CONFIRMED' ? 'Confirmada' : d.status === 'REJECTED' ? 'Rechazada' : 'Propuesta'}
+                      <Badge
+                        tone={
+                          d.status === 'CONFIRMED'
+                            ? 'success'
+                            : d.status === 'REJECTED'
+                              ? 'danger'
+                              : 'ai'
+                        }
+                      >
+                        {d.status === 'CONFIRMED'
+                          ? 'Confirmada'
+                          : d.status === 'REJECTED'
+                            ? 'Rechazada'
+                            : 'Propuesta'}
                       </Badge>
                       <ConfidenceIndicator value={d.confidence} variant="dots" />
                     </div>
@@ -317,7 +396,13 @@ export function MeetingDetailView({
                   <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                     {d.decidedBy ? <span>Decidió: {d.decidedBy}</span> : null}
                     {d.effectiveDate ? <span>Vigente desde {d.effectiveDate}</span> : null}
-                    <Button variant="link" size="sm" className="h-auto px-0 text-xs" disabled={d.evidence.length === 0} onClick={() => setEvidence({ title: d.description, quotes: d.evidence })}>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto px-0 text-xs"
+                      disabled={d.evidence.length === 0}
+                      onClick={() => setEvidence({ title: d.description, quotes: d.evidence })}
+                    >
                       Ver evidencia{d.evidence.length ? ` (${d.evidence.length})` : ''}
                     </Button>
                   </div>
@@ -329,7 +414,11 @@ export function MeetingDetailView({
 
         <TabsContent value="transcripcion">
           {canTranscript ? (
-            <TranscriptView meetingId={meeting.id} meetingStartAt={meeting.startAt} active={tab === 'transcripcion'} />
+            <TranscriptView
+              meetingId={meeting.id}
+              meetingStartAt={meeting.startAt}
+              active={tab === 'transcripcion'}
+            />
           ) : (
             <InlineNotice tone="warning">Tu rol no permite leer transcripciones.</InlineNotice>
           )}
@@ -358,14 +447,28 @@ export function MeetingDetailView({
                         <span className="inline-flex items-center gap-2">
                           <UserAvatar name={p.displayName} size="sm" />
                           <span className="font-medium">{p.displayName}</span>
-                          {p.isInternal ? <Badge tone="info">Interno</Badge> : <Badge tone="neutral">Externo</Badge>}
+                          {p.isInternal ? (
+                            <Badge tone="info">Interno</Badge>
+                          ) : (
+                            <Badge tone="neutral">Externo</Badge>
+                          )}
                         </span>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{p.email ?? '—'}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{p.participantType}</TableCell>
-                      <TableCell className="font-mono text-xs">{p.joinedAt ? formatDateTime(p.joinedAt) : '—'}</TableCell>
-                      <TableCell className="font-mono text-xs">{p.leftAt ? formatDateTime(p.leftAt) : '—'}</TableCell>
-                      <TableCell className="text-right font-mono text-xs tabular">{formatDuration(p.speakingDurationSeconds)}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {p.email ?? '—'}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {p.participantType}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {p.joinedAt ? formatDateTime(p.joinedAt) : '—'}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {p.leftAt ? formatDateTime(p.leftAt) : '—'}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-xs tabular">
+                        {formatDuration(p.speakingDurationSeconds)}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -383,7 +486,11 @@ export function MeetingDetailView({
               <CardContent className="px-0 pb-0">
                 {meeting.processingRuns.length === 0 ? (
                   <div className="px-5 pb-5">
-                    <EmptyState compact title="Sin ejecuciones" description="Aún no se ha ejecutado análisis para esta reunión." />
+                    <EmptyState
+                      compact
+                      title="Sin ejecuciones"
+                      description="Aún no se ha ejecutado análisis para esta reunión."
+                    />
                   </div>
                 ) : (
                   <Table>
@@ -402,7 +509,9 @@ export function MeetingDetailView({
                     <TableBody>
                       {meeting.processingRuns.map((r) => (
                         <TableRow key={r.id}>
-                          <TableCell className="whitespace-nowrap font-mono text-xs">{formatDateTime(r.startedAt)}</TableCell>
+                          <TableCell className="whitespace-nowrap font-mono text-xs">
+                            {formatDateTime(r.startedAt)}
+                          </TableCell>
                           <TableCell className="text-sm">{r.kind}</TableCell>
                           <TableCell className="text-xs">
                             {r.provider} · <span className="font-mono">{r.model}</span>
@@ -413,10 +522,18 @@ export function MeetingDetailView({
                           <TableCell className="text-right font-mono text-xs tabular">
                             {formatNumber(r.inputTokens)} → {formatNumber(r.outputTokens)}
                           </TableCell>
-                          <TableCell className="text-right font-mono text-xs tabular">{formatCurrencyUsd(r.estimatedCostUsd)}</TableCell>
-                          <TableCell className="text-right font-mono text-xs tabular">{r.latencyMs !== null ? `${formatNumber(r.latencyMs)} ms` : '—'}</TableCell>
+                          <TableCell className="text-right font-mono text-xs tabular">
+                            {formatCurrencyUsd(r.estimatedCostUsd)}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-xs tabular">
+                            {r.latencyMs !== null ? `${formatNumber(r.latencyMs)} ms` : '—'}
+                          </TableCell>
                           <TableCell>
-                            {r.success ? <Badge tone="success">OK</Badge> : <Badge tone="danger">{r.errorCode ?? 'Error'}</Badge>}
+                            {r.success ? (
+                              <Badge tone="success">OK</Badge>
+                            ) : (
+                              <Badge tone="danger">{r.errorCode ?? 'Error'}</Badge>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -430,33 +547,57 @@ export function MeetingDetailView({
                 <CardTitle>Elementos de revisión IA</CardTitle>
                 {pendingReviews.length > 0 ? (
                   <Button variant="outline" size="sm" asChild>
-                    <Link href={`/revision-ia?meetingId=${meeting.id}`}>Resolver en Revisión IA</Link>
+                    <Link href={`/revision-ia?meetingId=${meeting.id}`}>
+                      Resolver en Revisión IA
+                    </Link>
                   </Button>
                 ) : null}
               </CardHeader>
               <CardContent>
                 {reviewItems.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">La IA no dejó elementos para revisión en esta reunión.</p>
+                  <p className="text-sm text-muted-foreground">
+                    La IA no dejó elementos para revisión en esta reunión.
+                  </p>
                 ) : (
                   <ul className="divide-y divide-border">
                     {reviewItems.map((r) => (
                       <li key={r.id} className="flex flex-wrap items-center gap-2 py-2 text-sm">
-                        <Badge tone={r.status === 'PENDING' ? 'signal' : r.status === 'REJECTED' ? 'danger' : 'success'}>
-                          {r.status === 'PENDING' ? 'Pendiente' : r.status === 'APPROVED' ? 'Aprobado' : r.status === 'MERGED' ? 'Fusionado' : 'Descartado'}
+                        <Badge
+                          tone={
+                            r.status === 'PENDING'
+                              ? 'signal'
+                              : r.status === 'REJECTED'
+                                ? 'danger'
+                                : 'success'
+                          }
+                        >
+                          {r.status === 'PENDING'
+                            ? 'Pendiente'
+                            : r.status === 'APPROVED'
+                              ? 'Aprobado'
+                              : r.status === 'MERGED'
+                                ? 'Fusionado'
+                                : 'Descartado'}
                         </Badge>
                         <span className="flex flex-wrap gap-1">
                           {r.reasons.map((reason) => (
-                            <Badge key={reason} tone={labelFor(AI_REVIEW_REASON_LABELS, reason).tone}>
+                            <Badge
+                              key={reason}
+                              tone={labelFor(AI_REVIEW_REASON_LABELS, reason).tone}
+                            >
                               {labelFor(AI_REVIEW_REASON_LABELS, reason).label}
                             </Badge>
                           ))}
                         </span>
                         {r.candidateActionItemKey ? (
                           <span className="text-xs text-muted-foreground">
-                            coincide con <span className="font-mono">{r.candidateActionItemKey}</span>
+                            coincide con{' '}
+                            <span className="font-mono">{r.candidateActionItemKey}</span>
                           </span>
                         ) : null}
-                        <span className="ml-auto text-xs text-muted-foreground">{formatDateTime(r.createdAt)}</span>
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          {formatDateTime(r.createdAt)}
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -472,7 +613,15 @@ export function MeetingDetailView({
       </Tabs>
 
       {evidence ? (
-        <EvidenceDrawer open onOpenChange={(o) => !o && setEvidence(null)} title={evidence.title} meetingId={meeting.id} meetingTitle={meeting.title} meetingStartAt={meeting.startAt} evidence={evidence.quotes} />
+        <EvidenceDrawer
+          open
+          onOpenChange={(o) => !o && setEvidence(null)}
+          title={evidence.title}
+          meetingId={meeting.id}
+          meetingTitle={meeting.title}
+          meetingStartAt={meeting.startAt}
+          evidence={evidence.quotes}
+        />
       ) : null}
 
       <ConfirmDialog
@@ -485,7 +634,13 @@ export function MeetingDetailView({
         onConfirm={() => reprocess.mutate()}
       />
 
-      <MeetingSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} meeting={meeting} canExclude={canExclude} canConfidentiality={canConfidentiality} />
+      <MeetingSettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        meeting={meeting}
+        canExclude={canExclude}
+        canConfidentiality={canConfidentiality}
+      />
     </div>
   )
 }
@@ -520,7 +675,10 @@ function SummaryTab({ meeting }: { meeting: MeetingDetailDto }) {
             <ul className="flex flex-col gap-2">
               {s.executiveSummary.map((line, i) => (
                 <li key={i} className="flex gap-3 text-[15px] leading-relaxed">
-                  <span className="mt-[9px] size-1.5 shrink-0 rounded-full bg-signal-500" aria-hidden />
+                  <span
+                    className="mt-[9px] size-1.5 shrink-0 rounded-full bg-signal-500"
+                    aria-hidden
+                  />
                   {line}
                 </li>
               ))}
@@ -533,7 +691,9 @@ function SummaryTab({ meeting }: { meeting: MeetingDetailDto }) {
               <CardTitle>Resumen detallado</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/90">{s.detailedSummary}</p>
+              <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/90">
+                {s.detailedSummary}
+              </p>
             </CardContent>
           </Card>
         ) : null}
@@ -590,7 +750,8 @@ function SummaryTab({ meeting }: { meeting: MeetingDetailDto }) {
           </CardContent>
         </Card>
         <p className="text-xs text-muted-foreground">
-          Generado {formatDateTime(s.generatedAt)} · <span className="font-mono">{s.aiModel}</span> · prompt {s.promptVersion}
+          Generado {formatDateTime(s.generatedAt)} · <span className="font-mono">{s.aiModel}</span>{' '}
+          · prompt {s.promptVersion}
           {s.approvedAt ? ` · aprobado ${formatDateTime(s.approvedAt)}` : ''}
         </p>
       </div>
@@ -630,7 +791,10 @@ function MeetingSettingsDialog({
       <DialogContent size="sm">
         <DialogHeader>
           <DialogTitle>Confidencialidad y análisis IA</DialogTitle>
-          <DialogDescription>Las reuniones jurídicas/ejecutivas restringen el acceso; excluir de IA detiene cualquier análisis aunque exista transcripción.</DialogDescription>
+          <DialogDescription>
+            Las reuniones jurídicas/ejecutivas restringen el acceso; excluir de IA detiene cualquier
+            análisis aunque exista transcripción.
+          </DialogDescription>
         </DialogHeader>
         {canConfidentiality ? (
           <Field label="Nivel de confidencialidad" htmlFor="m-level">
@@ -639,7 +803,9 @@ function MeetingSettingsDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {(Object.keys(CONFIDENTIALITY_LABELS) as Array<keyof typeof CONFIDENTIALITY_LABELS>).map((k) => (
+                {(
+                  Object.keys(CONFIDENTIALITY_LABELS) as Array<keyof typeof CONFIDENTIALITY_LABELS>
+                ).map((k) => (
                   <SelectItem key={k} value={k}>
                     {CONFIDENTIALITY_LABELS[k].label}
                   </SelectItem>
@@ -652,9 +818,15 @@ function MeetingSettingsDialog({
           <div className="flex items-center justify-between rounded-md border border-border p-3">
             <div>
               <p className="text-sm font-medium">Excluir del análisis IA</p>
-              <p className="text-xs text-muted-foreground">No se generarán resúmenes ni compromisos.</p>
+              <p className="text-xs text-muted-foreground">
+                No se generarán resúmenes ni compromisos.
+              </p>
             </div>
-            <Switch checked={excluded} onCheckedChange={setExcluded} aria-label="Excluir del análisis IA" />
+            <Switch
+              checked={excluded}
+              onCheckedChange={setExcluded}
+              aria-label="Excluir del análisis IA"
+            />
           </div>
         ) : null}
         <DialogFooter>
@@ -679,5 +851,9 @@ function MeetingSettingsDialog({
 }
 
 export function useMeetingQuery(id: string, initial: MeetingDetailDto) {
-  return useQuery({ queryKey: qk.meeting(id), queryFn: () => clientApi.get<MeetingDetailDto>(`/meetings/${id}`), initialData: initial })
+  return useQuery({
+    queryKey: qk.meeting(id),
+    queryFn: () => clientApi.get<MeetingDetailDto>(`/meetings/${id}`),
+    initialData: initial,
+  })
 }

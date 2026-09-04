@@ -10,9 +10,17 @@ import { ReviewList } from './review-list'
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Revisión IA' }
 
-export default async function AiReviewPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+export default async function AiReviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>
+}) {
   const sp = await searchParams
-  const query = { page: firstInt(sp, 'page', 1), pageSize: firstInt(sp, 'pageSize', 25), meetingId: first(sp, 'meetingId') }
+  const query = {
+    page: firstInt(sp, 'page', 1),
+    pageSize: firstInt(sp, 'pageSize', 25),
+    meetingId: first(sp, 'meetingId'),
+  }
   const result = await safe(api.get<Page<AiReviewItemDto>>('/ai-review', { query }))
   return (
     <>
@@ -21,7 +29,11 @@ export default async function AiReviewPage({ searchParams }: { searchParams: Pro
         title="Revisión IA"
         description="Sólo aparecen extracciones con confianza baja, responsable o fecha ambiguos, posibles duplicados, posibles cierres o conflictos. Nada de esto se aplica sin tu decisión."
       />
-      {result.ok ? <ReviewList page={result.data} reason={first(sp, 'reason')} meetingId={query.meetingId} /> : <PageError error={result.error} retryHref="/revision-ia" />}
+      {result.ok ? (
+        <ReviewList page={result.data} reason={first(sp, 'reason')} meetingId={query.meetingId} />
+      ) : (
+        <PageError error={result.error} retryHref="/revision-ia" />
+      )}
     </>
   )
 }

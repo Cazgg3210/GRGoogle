@@ -1,5 +1,12 @@
 import { googleMode } from '@smlxl/config'
-import { ALL_GOOGLE_MEET_EVENT_TYPES, DomainError, DomainErrorCode, SubscriptionState, isDomainError, type GoogleWorkspaceSubscription } from '@smlxl/domain'
+import {
+  ALL_GOOGLE_MEET_EVENT_TYPES,
+  DomainError,
+  DomainErrorCode,
+  SubscriptionState,
+  isDomainError,
+  type GoogleWorkspaceSubscription,
+} from '@smlxl/domain'
 import type { AppContext } from '../../context.js'
 import { audit } from '../../shared.js'
 
@@ -17,9 +24,17 @@ export interface EnsureSubscriptionsResult {
 
 const RENEW_THRESHOLD_MS = 48 * 60 * 60 * 1000
 
-export async function ensureWorkspaceSubscriptions(ctx: AppContext): Promise<EnsureSubscriptionsResult> {
+export async function ensureWorkspaceSubscriptions(
+  ctx: AppContext,
+): Promise<EnsureSubscriptionsResult> {
   const settings = await ctx.getSettings()
-  const result: EnsureSubscriptionsResult = { users: 0, created: 0, renewed: 0, unchanged: 0, errors: [] }
+  const result: EnsureSubscriptionsResult = {
+    users: 0,
+    created: 0,
+    renewed: 0,
+    unchanged: 0,
+    errors: [],
+  }
   // En modo REAL la automatización debe poder deshabilitarse (§45.13); en FAKE siempre se simula.
   if (googleMode(ctx.env) === 'REAL' && !settings.featureFlags.GOOGLE_MEET_EVENTS_ENABLED) {
     ctx.logger.info('GOOGLE_MEET_EVENTS_ENABLED desactivado; no se gestionan suscripciones')
@@ -41,7 +56,10 @@ export async function ensureWorkspaceSubscriptions(ctx: AppContext): Promise<Ens
       if (needsCreate) {
         const resourceName = await ctx.directory.resolveUserResourceName(user.email)
         if (!resourceName) {
-          throw new DomainError(DomainErrorCode.GOOGLE_NOT_FOUND, `Usuario ${user.email} no encontrado en Directory`)
+          throw new DomainError(
+            DomainErrorCode.GOOGLE_NOT_FOUND,
+            `Usuario ${user.email} no encontrado en Directory`,
+          )
         }
         const created = await ctx.workspaceEvents.createUserSubscription({
           userEmail: user.email,
@@ -66,16 +84,40 @@ export async function ensureWorkspaceSubscriptions(ctx: AppContext): Promise<Ens
         }
         await ctx.uow.run(async (repos) => {
           await repos.googleSubscriptions.save(sub)
-          await audit(repos, ctx, { actorType: 'SYSTEM', action: 'google.subscription.created', entity: 'GoogleWorkspaceSubscription', entityId: sub.id, after: { name: sub.googleSubscriptionName, expiresAt: sub.expiresAt } })
+          await audit(repos, ctx, {
+            actorType: 'SYSTEM',
+            action: 'google.subscription.created',
+            entity: 'GoogleWorkspaceSubscription',
+            entityId: sub.id,
+            after: { name: sub.googleSubscriptionName, expiresAt: sub.expiresAt },
+          })
         })
         result.created += 1
         continue
       }
       if (existing.expiresAt.getTime() - now.getTime() < RENEW_THRESHOLD_MS) {
-        const renewed = await ctx.workspaceEvents.renewSubscription(existing.googleSubscriptionName, user.email)
+        const renewed = await ctx.workspaceEvents.renewSubscription(
+          existing.googleSubscriptionName,
+          user.email,
+        )
         await ctx.uow.run(async (repos) => {
-          await repos.googleSubscriptions.save({ ...existing, expiresAt: renewed.expiresAt, state: SubscriptionState.ACTIVE, lastRenewedAt: now, lastErrorCode: null, lastErrorAt: null, updatedAt: now })
-          await audit(repos, ctx, { actorType: 'SYSTEM', action: 'google.subscription.renewed', entity: 'GoogleWorkspaceSubscription', entityId: existing.id, before: { expiresAt: existing.expiresAt }, after: { expiresAt: renewed.expiresAt } })
+          await repos.googleSubscriptions.save({
+            ...existing,
+            expiresAt: renewed.expiresAt,
+            state: SubscriptionState.ACTIVE,
+            lastRenewedAt: now,
+            lastErrorCode: null,
+            lastErrorAt: null,
+            updatedAt: now,
+          })
+          await audit(repos, ctx, {
+            actorType: 'SYSTEM',
+            action: 'google.subscription.renewed',
+            entity: 'GoogleWorkspaceSubscription',
+            entityId: existing.id,
+            before: { expiresAt: existing.expiresAt },
+            after: { expiresAt: renewed.expiresAt },
+          })
         })
         result.renewed += 1
         continue
@@ -83,10 +125,19 @@ export async function ensureWorkspaceSubscriptions(ctx: AppContext): Promise<Ens
       result.unchanged += 1
     } catch (err) {
       const code = isDomainError(err) ? err.code : DomainErrorCode.INTERNAL_ERROR
-      ctx.logger.error({ userId: user.id, errorCode: code }, 'Error gestionando suscripción de Workspace Events')
+      ctx.logger.error(
+        { userId: user.id, errorCode: code },
+        'Error gestionando suscripción de Workspace Events',
+      )
       result.errors.push({ userEmail: user.email, code })
       if (existing) {
-        await ctx.repos.googleSubscriptions.save({ ...existing, state: SubscriptionState.ERROR, lastErrorCode: code, lastErrorAt: now, updatedAt: now })
+        await ctx.repos.googleSubscriptions.save({
+          ...existing,
+          state: SubscriptionState.ERROR,
+          lastErrorCode: code,
+          lastErrorAt: now,
+          updatedAt: now,
+        })
       } else {
         await ctx.repos.googleSubscriptions.save({
           id: ctx.ids.next(),

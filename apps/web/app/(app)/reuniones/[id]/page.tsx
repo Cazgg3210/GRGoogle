@@ -8,13 +8,23 @@ import { MeetingDetailView } from './meeting-detail'
 
 export const dynamic = 'force-dynamic'
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
   const { id } = await params
   const result = await safe(api.get<MeetingDetailDto>(`/meetings/${id}`))
   return { title: result.ok ? result.data.title : 'Reunión' }
 }
 
-export default async function MeetingPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<SearchParams> }) {
+export default async function MeetingPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<SearchParams>
+}) {
   const [{ id }, sp] = await Promise.all([params, searchParams])
   const [detail, actionItems, reviewItems] = await Promise.all([
     safe(api.get<MeetingDetailDto>(`/meetings/${id}`)),

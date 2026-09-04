@@ -25,9 +25,23 @@ export function MeetingAudit({ meetingId, active }: { meetingId: string; active:
   }
   if (query.isError) {
     const d = describeError(query.error)
-    return <ErrorState title={d.title} message={d.message} code={d.code} compact onRetry={() => void query.refetch()} />
+    return (
+      <ErrorState
+        title={d.title}
+        message={d.message}
+        code={d.code}
+        compact
+        onRetry={() => void query.refetch()}
+      />
+    )
   }
   const entries = query.data ?? []
-  if (entries.length === 0) return <EmptyState title="Sin eventos de auditoría" description="Las mutaciones sensibles sobre esta reunión aparecerán aquí." />
+  if (entries.length === 0)
+    return (
+      <EmptyState
+        title="Sin eventos de auditoría"
+        description="Las mutaciones sensibles sobre esta reunión aparecerán aquí."
+      />
+    )
   return <AuditTable entries={entries} />
 }

@@ -49,20 +49,39 @@ export interface QueuedJob {
  */
 export class InMemoryQueue implements JobQueuePort {
   readonly jobs: QueuedJob[] = []
-  readonly schedules: Array<{ name: string; cron: string; payload: unknown; timezone?: string }> = []
+  readonly schedules: Array<{ name: string; cron: string; payload: unknown; timezone?: string }> =
+    []
   private readonly handlers = new Map<string, JobHandler<unknown>>()
   private seq = 0
   started = false
 
-  async enqueue<TPayload>(name: string, payload: TPayload, options?: EnqueueOptions): Promise<string | null> {
-    if (options?.singletonKey && this.jobs.some((j) => j.status === 'pending' && j.name === name && j.options?.singletonKey === options.singletonKey)) return null
+  async enqueue<TPayload>(
+    name: string,
+    payload: TPayload,
+    options?: EnqueueOptions,
+  ): Promise<string | null> {
+    if (
+      options?.singletonKey &&
+      this.jobs.some(
+        (j) =>
+          j.status === 'pending' &&
+          j.name === name &&
+          j.options?.singletonKey === options.singletonKey,
+      )
+    )
+      return null
     this.seq += 1
     const id = `job-${this.seq}`
     this.jobs.push({ id, name, payload, options, status: 'pending' })
     return id
   }
 
-  async schedule<TPayload>(name: string, cron: string, payload: TPayload, options?: { timezone?: string }): Promise<void> {
+  async schedule<TPayload>(
+    name: string,
+    cron: string,
+    payload: TPayload,
+    options?: { timezone?: string },
+  ): Promise<void> {
     const existing = this.schedules.findIndex((s) => s.name === name)
     const entry = { name, cron, payload, timezone: options?.timezone }
     if (existing >= 0) this.schedules[existing] = entry
@@ -86,7 +105,9 @@ export class InMemoryQueue implements JobQueuePort {
   }
 
   /** Ejecuta los jobs pendientes en orden hasta vaciar la cola (máx. `maxIterations`). */
-  async runAll(options: { maxIterations?: number; throwOnError?: boolean } = {}): Promise<{ executed: number; failed: number }> {
+  async runAll(
+    options: { maxIterations?: number; throwOnError?: boolean } = {},
+  ): Promise<{ executed: number; failed: number }> {
     const max = options.maxIterations ?? 200
     let executed = 0
     let failed = 0
@@ -101,7 +122,11 @@ export class InMemoryQueue implements JobQueuePort {
         continue
       }
       try {
-        await handler(job.payload, { jobId: job.id, correlationId: job.options?.correlationId ?? job.id, attempt: 1 })
+        await handler(job.payload, {
+          jobId: job.id,
+          correlationId: job.options?.correlationId ?? job.id,
+          attempt: 1,
+        })
         job.status = 'done'
         executed += 1
       } catch (err) {

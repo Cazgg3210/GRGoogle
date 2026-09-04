@@ -1,6 +1,10 @@
 import type { Repositories, UnitOfWork } from '@smlxl/domain'
 import type { Prisma, PrismaClient } from './generated/client/index.js'
-import { createRepositories, type PrismaRepositories, type RepositoryDefaults } from './repositories/index.js'
+import {
+  createRepositories,
+  type PrismaRepositories,
+  type RepositoryDefaults,
+} from './repositories/index.js'
 
 export interface UnitOfWorkOptions {
   /** Máximo de espera para adquirir la conexión (ms). */
@@ -32,14 +36,13 @@ export class PrismaUnitOfWork implements UnitOfWork {
   }
 
   /** Variante con los tipos concretos de Prisma y acceso al `tx` (para scripts internos). */
-  runWithPrisma<T>(fn: (repos: PrismaRepositories, tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
-    return this.client.$transaction(
-      async (tx) => fn(createRepositories(tx, this.defaults), tx),
-      {
-        maxWait: this.options.maxWait ?? DEFAULT_OPTIONS.maxWait,
-        timeout: this.options.timeout ?? DEFAULT_OPTIONS.timeout,
-        ...(this.options.isolationLevel ? { isolationLevel: this.options.isolationLevel } : {}),
-      },
-    )
+  runWithPrisma<T>(
+    fn: (repos: PrismaRepositories, tx: Prisma.TransactionClient) => Promise<T>,
+  ): Promise<T> {
+    return this.client.$transaction(async (tx) => fn(createRepositories(tx, this.defaults), tx), {
+      maxWait: this.options.maxWait ?? DEFAULT_OPTIONS.maxWait,
+      timeout: this.options.timeout ?? DEFAULT_OPTIONS.timeout,
+      ...(this.options.isolationLevel ? { isolationLevel: this.options.isolationLevel } : {}),
+    })
   }
 }

@@ -204,7 +204,10 @@ export interface ActionItemRepository {
   list(filter: ActionItemFilter, page: PageRequest): Promise<Page<ActionItem>>
   listAll(filter: ActionItemFilter): Promise<ActionItem[]>
   /** Búsqueda full-text (PostgreSQL) sobre título/descripción, limitada a abiertos si se indica. */
-  searchFullText(query: string, options: { openOnly: boolean; limit: number }): Promise<ActionItem[]>
+  searchFullText(
+    query: string,
+    options: { openOnly: boolean; limit: number },
+  ): Promise<ActionItem[]>
   nextSequence(): Promise<number>
   save(item: ActionItem): Promise<ActionItem>
   addLink(link: ActionItemMeetingLink): Promise<ActionItemMeetingLink>
@@ -237,7 +240,10 @@ export interface ProcessingRunRepository {
   findById(id: Id): Promise<ProcessingRun | null>
   listByMeeting(meetingId: Id): Promise<ProcessingRun[]>
   save(run: ProcessingRun): Promise<ProcessingRun>
-  usageSummary(from: Date, to: Date): Promise<{
+  usageSummary(
+    from: Date,
+    to: Date,
+  ): Promise<{
     runs: number
     inputTokens: number
     outputTokens: number
@@ -273,7 +279,9 @@ export interface GoogleSubscriptionRepository {
 export interface InboundEventRepository {
   findByCloudEventId(cloudEventId: string): Promise<InboundGoogleEvent | null>
   /** Inserta si no existe; devuelve `created=false` cuando ya estaba (idempotencia §13.5). */
-  insertIfAbsent(event: InboundGoogleEvent): Promise<{ created: boolean; event: InboundGoogleEvent }>
+  insertIfAbsent(
+    event: InboundGoogleEvent,
+  ): Promise<{ created: boolean; event: InboundGoogleEvent }>
   save(event: InboundGoogleEvent): Promise<InboundGoogleEvent>
   listRecent(limit: number): Promise<InboundGoogleEvent[]>
   listFailed(limit: number): Promise<InboundGoogleEvent[]>
@@ -287,7 +295,11 @@ export interface CalendarSyncCursorRepository {
 
 export interface LegacyImportRepository {
   saveMany(refs: LegacyImportReference[]): Promise<void>
-  findByLegacyKey(sourceSheet: string, sourceRow: number, sourceFile: string): Promise<LegacyImportReference | null>
+  findByLegacyKey(
+    sourceSheet: string,
+    sourceRow: number,
+    sourceFile: string,
+  ): Promise<LegacyImportReference | null>
   listByBatch(batchId: Id): Promise<LegacyImportReference[]>
 }
 
@@ -357,9 +369,22 @@ export interface JobHandlerContext {
 export type JobHandler<TPayload> = (payload: TPayload, ctx: JobHandlerContext) => Promise<void>
 
 export interface JobQueuePort {
-  enqueue<TPayload>(name: string, payload: TPayload, options?: EnqueueOptions): Promise<string | null>
-  schedule<TPayload>(name: string, cron: string, payload: TPayload, options?: { timezone?: string }): Promise<void>
-  work<TPayload>(name: string, handler: JobHandler<TPayload>, options?: { concurrency?: number }): Promise<void>
+  enqueue<TPayload>(
+    name: string,
+    payload: TPayload,
+    options?: EnqueueOptions,
+  ): Promise<string | null>
+  schedule<TPayload>(
+    name: string,
+    cron: string,
+    payload: TPayload,
+    options?: { timezone?: string },
+  ): Promise<void>
+  work<TPayload>(
+    name: string,
+    handler: JobHandler<TPayload>,
+    options?: { concurrency?: number },
+  ): Promise<void>
   start(): Promise<void>
   stop(): Promise<void>
 }
@@ -427,7 +452,10 @@ export interface MeetingCapturePort {
     asUser: string,
   ): Promise<{ applied: boolean; blockedReason?: string }>
   getConferenceRecord(name: string, asUser: string): Promise<MeetConferenceRecord | null>
-  listConferenceRecordsByMeetingCode(meetingCode: string, asUser: string): Promise<MeetConferenceRecord[]>
+  listConferenceRecordsByMeetingCode(
+    meetingCode: string,
+    asUser: string,
+  ): Promise<MeetConferenceRecord[]>
   listParticipants(conferenceRecordName: string, asUser: string): Promise<MeetParticipant[]>
   listTranscripts(conferenceRecordName: string, asUser: string): Promise<MeetTranscriptMeta[]>
   listTranscriptEntries(transcriptName: string, asUser: string): Promise<MeetTranscriptEntry[]>
@@ -443,7 +471,10 @@ export interface WorkspaceEventsPort {
   }): Promise<{ subscriptionName: string; expiresAt: Date }>
   renewSubscription(subscriptionName: string, asUser: string): Promise<{ expiresAt: Date }>
   deleteSubscription(subscriptionName: string, asUser: string): Promise<void>
-  getSubscription(subscriptionName: string, asUser: string): Promise<{ state: string; expiresAt: Date } | null>
+  getSubscription(
+    subscriptionName: string,
+    asUser: string,
+  ): Promise<{ state: string; expiresAt: Date } | null>
 }
 
 export interface CalendarEventSummary {
@@ -472,11 +503,19 @@ export interface CalendarPort {
     syncToken: string | null
     timeMin?: Date
     timeMax?: Date
-  }): Promise<{ events: CalendarEventSummary[]; nextSyncToken: string | null; fullSyncRequired: boolean }>
+  }): Promise<{
+    events: CalendarEventSummary[]
+    nextSyncToken: string | null
+    fullSyncRequired: boolean
+  }>
 }
 
 export interface DirectoryPort {
-  listDomainUsers(domain: string): Promise<Array<{ googleUserId: string; email: string; displayName: string; suspended: boolean }>>
+  listDomainUsers(
+    domain: string,
+  ): Promise<
+    Array<{ googleUserId: string; email: string; displayName: string; suspended: boolean }>
+  >
   resolveUserResourceName(email: string): Promise<string | null>
 }
 

@@ -33,7 +33,11 @@ function cell(v: unknown): string {
   return JSON.stringify(v)
 }
 
-function PreviewTable({ table }: { table: { columns: string[]; rows: Array<Record<string, unknown>> } }) {
+function PreviewTable({
+  table,
+}: {
+  table: { columns: string[]; rows: Array<Record<string, unknown>> }
+}) {
   if (table.rows.length === 0) return <EmptyState compact title="Sin filas" />
   return (
     <div className="max-h-96 overflow-auto rounded-md border border-border scrollbar-thin">
@@ -69,9 +73,12 @@ export function SheetsPanel({ compact }: { compact?: boolean }) {
   const [confirm, setConfirm] = React.useState(false)
   const [tab, setTab] = React.useState<'pendientes' | 'reuniones'>('pendientes')
   const sync = useApiMutation<SheetsSyncResultDto, boolean>({
-    mutationFn: (dryRun) => clientApi.post<SheetsSyncResultDto>('/integrations/google/sheets/sync', { dryRun }),
+    mutationFn: (dryRun) =>
+      clientApi.post<SheetsSyncResultDto>('/integrations/google/sheets/sync', { dryRun }),
     successMessage: (d, dryRun) =>
-      dryRun ? 'Vista previa generada (sin escribir en la hoja)' : `Sincronizado: ${d.pendientes.inserted + d.reuniones.inserted} nuevas, ${d.pendientes.updated + d.reuniones.updated} actualizadas`,
+      dryRun
+        ? 'Vista previa generada (sin escribir en la hoja)'
+        : `Sincronizado: ${d.pendientes.inserted + d.reuniones.inserted} nuevas, ${d.pendientes.updated + d.reuniones.updated} actualizadas`,
     refresh: false,
     onSuccess: (d, dryRun) => {
       setResult(d)
@@ -87,13 +94,25 @@ export function SheetsPanel({ compact }: { compact?: boolean }) {
             <SheetIcon className="size-4 text-success-600" />
             Google Sheets
           </CardTitle>
-          <p className="mt-1 text-xs text-muted-foreground">Exporta pendientes y reuniones a la hoja de seguimiento. Cada fila se identifica por clave, nunca por posición.</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Exporta pendientes y reuniones a la hoja de seguimiento. Cada fila se identifica por
+            clave, nunca por posición.
+          </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => sync.mutate(true)} loading={sync.isPending && sync.variables === true}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => sync.mutate(true)}
+            loading={sync.isPending && sync.variables === true}
+          >
             Vista previa
           </Button>
-          <Button size="sm" onClick={() => setConfirm(true)} loading={sync.isPending && sync.variables === false}>
+          <Button
+            size="sm"
+            onClick={() => setConfirm(true)}
+            loading={sync.isPending && sync.variables === false}
+          >
             <RefreshCw />
             Sincronizar
           </Button>
@@ -102,34 +121,58 @@ export function SheetsPanel({ compact }: { compact?: boolean }) {
       {result ? (
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            <Badge tone={wasDry ? 'info' : 'success'}>{wasDry ? 'Dry-run' : 'Escrito en la hoja'}</Badge>
+            <Badge tone={wasDry ? 'info' : 'success'}>
+              {wasDry ? 'Dry-run' : 'Escrito en la hoja'}
+            </Badge>
             <span>
-              Pendientes: <span className="font-mono">{result.pendientes.inserted}</span> nuevas · <span className="font-mono">{result.pendientes.updated}</span> actualizadas
+              Pendientes: <span className="font-mono">{result.pendientes.inserted}</span> nuevas ·{' '}
+              <span className="font-mono">{result.pendientes.updated}</span> actualizadas
             </span>
             <span>
-              Reuniones: <span className="font-mono">{result.reuniones.inserted}</span> nuevas · <span className="font-mono">{result.reuniones.updated}</span> actualizadas
+              Reuniones: <span className="font-mono">{result.reuniones.inserted}</span> nuevas ·{' '}
+              <span className="font-mono">{result.reuniones.updated}</span> actualizadas
             </span>
             {result.spreadsheetId ? (
-              <a href={`https://docs.google.com/spreadsheets/d/${result.spreadsheetId}`} target="_blank" rel="noreferrer" className="ml-auto text-info-700 hover:underline">
+              <a
+                href={`https://docs.google.com/spreadsheets/d/${result.spreadsheetId}`}
+                target="_blank"
+                rel="noreferrer"
+                className="ml-auto text-info-700 hover:underline"
+              >
                 Abrir hoja
               </a>
             ) : (
-              <span className="ml-auto text-muted-foreground">Sin GOOGLE_SHEETS_SPREADSHEET_ID (modo fake)</span>
+              <span className="ml-auto text-muted-foreground">
+                Sin GOOGLE_SHEETS_SPREADSHEET_ID (modo fake)
+              </span>
             )}
           </div>
           {!compact ? (
             <Tabs value={tab} onValueChange={(v) => setTab(v as 'pendientes' | 'reuniones')}>
               <SegmentedList>
-                <SegmentedTrigger value="pendientes">Pendientes ({result.preview.pendientes.rows.length})</SegmentedTrigger>
-                <SegmentedTrigger value="reuniones">Reuniones ({result.preview.reuniones.rows.length})</SegmentedTrigger>
+                <SegmentedTrigger value="pendientes">
+                  Pendientes ({result.preview.pendientes.rows.length})
+                </SegmentedTrigger>
+                <SegmentedTrigger value="reuniones">
+                  Reuniones ({result.preview.reuniones.rows.length})
+                </SegmentedTrigger>
               </SegmentedList>
-              <div className="mt-3">{tab === 'pendientes' ? <PreviewTable table={result.preview.pendientes} /> : <PreviewTable table={result.preview.reuniones} />}</div>
+              <div className="mt-3">
+                {tab === 'pendientes' ? (
+                  <PreviewTable table={result.preview.pendientes} />
+                ) : (
+                  <PreviewTable table={result.preview.reuniones} />
+                )}
+              </div>
             </Tabs>
           ) : null}
         </CardContent>
       ) : (
         <CardContent>
-          <InlineNotice tone="neutral">Genera una vista previa para ver exactamente qué filas se insertarían o actualizarían antes de sincronizar.</InlineNotice>
+          <InlineNotice tone="neutral">
+            Genera una vista previa para ver exactamente qué filas se insertarían o actualizarían
+            antes de sincronizar.
+          </InlineNotice>
         </CardContent>
       )}
       <ConfirmDialog

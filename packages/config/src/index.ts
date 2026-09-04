@@ -8,7 +8,9 @@ import { DEFAULT_COMPANY_TIMEZONE, FEATURE_FLAG_NAMES, type FeatureFlags } from 
 
 const bool = z
   .union([z.boolean(), z.string()])
-  .transform((v) => (typeof v === 'boolean' ? v : ['1', 'true', 'yes', 'on'].includes(v.trim().toLowerCase())))
+  .transform((v) =>
+    typeof v === 'boolean' ? v : ['1', 'true', 'yes', 'on'].includes(v.trim().toLowerCase()),
+  )
 
 export const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),

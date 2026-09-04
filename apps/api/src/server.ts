@@ -4,7 +4,12 @@ import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
-import { jsonSchemaTransform, serializerCompiler, validatorCompiler, type ZodTypeProvider } from 'fastify-type-provider-zod'
+import {
+  jsonSchemaTransform,
+  serializerCompiler,
+  validatorCompiler,
+  type ZodTypeProvider,
+} from 'fastify-type-provider-zod'
 import { newCorrelationId, type Logger } from '@smlxl/observability'
 import type { Env } from '@smlxl/config'
 import type { UserRepository } from '@smlxl/domain'
@@ -17,7 +22,13 @@ export interface ServerDeps {
   users: UserRepository
 }
 
-export type AppServer = FastifyInstance<import('node:http').Server, import('node:http').IncomingMessage, import('node:http').ServerResponse, Logger, ZodTypeProvider>
+export type AppServer = FastifyInstance<
+  import('node:http').Server,
+  import('node:http').IncomingMessage,
+  import('node:http').ServerResponse,
+  Logger,
+  ZodTypeProvider
+>
 
 /**
  * Construye el servidor Fastify con validación Zod, OpenAPI, seguridad básica,
@@ -26,7 +37,10 @@ export type AppServer = FastifyInstance<import('node:http').Server, import('node
 export async function buildServer(deps: ServerDeps): Promise<AppServer> {
   const app = Fastify({
     loggerInstance: deps.logger,
-    genReqId: (req) => (typeof req.headers['x-correlation-id'] === 'string' ? req.headers['x-correlation-id'] : newCorrelationId()),
+    genReqId: (req) =>
+      typeof req.headers['x-correlation-id'] === 'string'
+        ? req.headers['x-correlation-id']
+        : newCorrelationId(),
     requestIdHeader: 'x-correlation-id',
     trustProxy: true,
     bodyLimit: 5 * 1024 * 1024,
@@ -46,9 +60,15 @@ export async function buildServer(deps: ServerDeps): Promise<AppServer> {
   await app.register(swagger, {
     openapi: {
       openapi: '3.1.0',
-      info: { title: 'SMLXL Meeting Intelligence API', version: '0.1.0', description: 'API interna /api/v1 (ver docs/api/endpoints.md)' },
+      info: {
+        title: 'SMLXL Meeting Intelligence API',
+        version: '0.1.0',
+        description: 'API interna /api/v1 (ver docs/api/endpoints.md)',
+      },
       servers: [{ url: deps.env.API_URL }],
-      components: { securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' } } },
+      components: {
+        securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' } },
+      },
       security: [{ bearerAuth: [] }],
     },
     transform: jsonSchemaTransform,
@@ -61,7 +81,16 @@ export async function buildServer(deps: ServerDeps): Promise<AppServer> {
   registerAuth(base, { env: deps.env, users: deps.users })
 
   app.addHook('onResponse', async (request, reply) => {
-    request.log.info({ method: request.method, url: request.url, statusCode: reply.statusCode, durationMs: Math.round(reply.elapsedTime), userId: request.principal?.id ?? null }, 'request')
+    request.log.info(
+      {
+        method: request.method,
+        url: request.url,
+        statusCode: reply.statusCode,
+        durationMs: Math.round(reply.elapsedTime),
+        userId: request.principal?.id ?? null,
+      },
+      'request',
+    )
   })
 
   app.get('/api/v1/openapi.json', { schema: { hide: true } }, async () => app.swagger())

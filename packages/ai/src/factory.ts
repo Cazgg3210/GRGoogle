@@ -3,7 +3,11 @@ import { aiMode, type Env } from '@smlxl/config'
 import type { AiMeetingAnalyzer } from '@smlxl/domain'
 import type { Logger } from '@smlxl/observability'
 import { FakeMeetingAnalyzer, type FakeAnalyzerOptions } from './fake/analyzer.js'
-import { GeminiMeetingAnalyzer, type GenAiClientLike, type GeminiAnalyzerOptions } from './gemini/analyzer.js'
+import {
+  GeminiMeetingAnalyzer,
+  type GenAiClientLike,
+  type GeminiAnalyzerOptions,
+} from './gemini/analyzer.js'
 
 export interface CreateAiAnalyzerDeps {
   logger?: Logger
@@ -15,7 +19,11 @@ export interface CreateAiAnalyzerDeps {
 
 export function createGeminiClient(env: Env): GenAiClientLike {
   if (env.GOOGLE_GENAI_USE_VERTEXAI) {
-    return new GoogleGenAI({ vertexai: true, project: env.GOOGLE_CLOUD_PROJECT_ID, location: env.GOOGLE_CLOUD_LOCATION }) as unknown as GenAiClientLike
+    return new GoogleGenAI({
+      vertexai: true,
+      project: env.GOOGLE_CLOUD_PROJECT_ID,
+      location: env.GOOGLE_CLOUD_LOCATION,
+    }) as unknown as GenAiClientLike
   }
   return new GoogleGenAI({ apiKey: env.GEMINI_API_KEY }) as unknown as GenAiClientLike
 }

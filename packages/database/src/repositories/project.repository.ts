@@ -37,7 +37,11 @@ export class PrismaProjectRepository extends BaseRepository implements ProjectRe
   async addAlias(alias: Omit<ProjectAlias, 'id'>): Promise<ProjectAlias> {
     const row = await this.db.projectAlias.upsert({
       where: { aliasNormalized: alias.aliasNormalized },
-      create: { projectId: alias.projectId, aliasNormalized: alias.aliasNormalized, source: alias.source },
+      create: {
+        projectId: alias.projectId,
+        aliasNormalized: alias.aliasNormalized,
+        source: alias.source,
+      },
       update: { projectId: alias.projectId, source: alias.source },
     })
     return toProjectAlias(row)

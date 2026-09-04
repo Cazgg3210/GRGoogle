@@ -17,7 +17,11 @@ export default async function IntegrationsPage() {
         title="Integraciones"
         description="Estado de Google Workspace (eventos de Meet, Calendar, Sheets, Gmail) y consumo de IA. Con los flags apagados la plataforma corre con adapters fake."
       />
-      {status.ok ? <IntegrationsPanel initial={status.data} /> : <PageError error={status.error} retryHref="/integraciones" />}
+      {status.ok ? (
+        <IntegrationsPanel initial={status.data} />
+      ) : (
+        <PageError error={status.error} retryHref="/integraciones" />
+      )}
     </>
   )
 }

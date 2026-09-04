@@ -25,11 +25,18 @@ const ERROR_TEXT: Record<string, string> = {
 async function loadDemoUsers(): Promise<{ users: UserDto[]; error: string | null }> {
   try {
     const email = env.AUTH_DEV_BOOTSTRAP_EMAIL
-    const token = await mintApiToken({ sub: email, email, role: 'MEMBER', name: 'bootstrap' }, env.AUTH_SECRET, 120)
+    const token = await mintApiToken(
+      { sub: email, email, role: 'MEMBER', name: 'bootstrap' },
+      env.AUTH_SECRET,
+      120,
+    )
     const users = await bootstrapApi(email, token).get<UserDto[]>('/team/users')
     return { users: users.filter((u) => u.active), error: null }
   } catch {
-    return { users: [], error: 'La API no respondió; escribe un correo corporativo para entrar como MEMBER.' }
+    return {
+      users: [],
+      error: 'La API no respondió; escribe un correo corporativo para entrar como MEMBER.',
+    }
   }
 }
 
@@ -39,7 +46,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const sp = await searchParams
   const callbackUrl = first(sp, 'callbackUrl') ?? '/inicio'
   const errorKey = first(sp, 'error')
-  const errorText = errorKey ? (ERROR_TEXT[errorKey] ?? 'No se pudo iniciar sesión. Inténtalo de nuevo.') : null
+  const errorText = errorKey
+    ? (ERROR_TEXT[errorKey] ?? 'No se pudo iniciar sesión. Inténtalo de nuevo.')
+    : null
   const demo = devBypassEnabled ? await loadDemoUsers() : null
 
   return (
@@ -56,20 +65,26 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           aria-hidden
         />
         <div className="relative flex items-center gap-3">
-          <span className="flex size-9 items-center justify-center rounded-sm bg-signal-500 font-display text-2xl leading-none">S</span>
+          <span className="flex size-9 items-center justify-center rounded-sm bg-signal-500 font-display text-2xl leading-none">
+            S
+          </span>
           <span className="font-display text-2xl tracking-tight">SMLXL</span>
-          <span className="ml-2 text-[11px] font-medium uppercase tracking-[0.2em] text-ink-400">Meeting Intelligence</span>
+          <span className="ml-2 text-[11px] font-medium uppercase tracking-[0.2em] text-ink-400">
+            Meeting Intelligence
+          </span>
         </div>
         <div className="relative max-w-xl animate-fade-up">
-          <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-signal-300">Reuniones → compromisos → seguimiento</p>
+          <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-signal-300">
+            Reuniones → compromisos → seguimiento
+          </p>
           <h1 className="font-display text-5xl leading-[1.05] tracking-tight xl:text-6xl">
             Cada compromiso,
             <br />
             <em className="text-signal-200">con evidencia.</em>
           </h1>
           <p className="mt-6 max-w-md text-base leading-relaxed text-ink-200">
-            La plataforma escucha las reuniones de Google Meet, propone acuerdos y pendientes, y deja que una persona
-            decida. Nada se cierra sin aprobación humana.
+            La plataforma escucha las reuniones de Google Meet, propone acuerdos y pendientes, y
+            deja que una persona decida. Nada se cierra sin aprobación humana.
           </p>
         </div>
         <dl className="relative grid grid-cols-3 gap-6 border-t border-ink-800 pt-6 text-sm">
@@ -79,7 +94,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           </div>
           <div>
             <dt className="text-ink-400">Control</dt>
-            <dd className="mt-1 text-paper-100">La IA propone; la gestora o el gerente aprueban.</dd>
+            <dd className="mt-1 text-paper-100">
+              La IA propone; la gestora o el gerente aprueban.
+            </dd>
           </div>
           <div>
             <dt className="text-ink-400">Auditoría</dt>
@@ -95,7 +112,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           </div>
           <h2 className="font-display text-3xl tracking-tight text-ink-950">Iniciar sesión</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Acceso exclusivo para cuentas <span className="font-medium text-foreground">@{env.GOOGLE_WORKSPACE_DOMAIN}</span> autorizadas.
+            Acceso exclusivo para cuentas{' '}
+            <span className="font-medium text-foreground">@{env.GOOGLE_WORKSPACE_DOMAIN}</span>{' '}
+            autorizadas.
           </p>
 
           {errorText ? (
@@ -113,7 +132,12 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
                   Acceso de desarrollo
                   <span className="h-px flex-1 bg-border" />
                 </div>
-                <DevUserPicker users={demo.users} loadError={demo.error} callbackUrl={callbackUrl} domain={env.GOOGLE_WORKSPACE_DOMAIN} />
+                <DevUserPicker
+                  users={demo.users}
+                  loadError={demo.error}
+                  callbackUrl={callbackUrl}
+                  domain={env.GOOGLE_WORKSPACE_DOMAIN}
+                />
               </>
             ) : null}
           </div>

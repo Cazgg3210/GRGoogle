@@ -1,6 +1,12 @@
 import { timingSafeEqual } from 'node:crypto'
 import { z } from 'zod'
-import { PubSubPushEnvelopeSchema, WorkspaceCloudEventSchema, type ErrorResponseDto, type PubSubPushEnvelope, type WorkspaceCloudEvent } from '@smlxl/contracts'
+import {
+  PubSubPushEnvelopeSchema,
+  WorkspaceCloudEventSchema,
+  type ErrorResponseDto,
+  type PubSubPushEnvelope,
+  type WorkspaceCloudEvent,
+} from '@smlxl/contracts'
 import { DomainError, DomainErrorCode, isDomainError } from '@smlxl/domain'
 import type { AppServer } from '../server.js'
 import type { RouteDeps } from './common.js'
@@ -57,27 +63,58 @@ export function cloudEventFromPubSub(envelope: PubSubPushEnvelope): WorkspaceClo
 export function registerWebhookRoutes(app: AppServer, deps: RouteDeps): void {
   app.post(
     '/api/v1/webhooks/google/pubsub',
-    { schema: { tags: ['webhooks'], security: [], querystring: TokenQuery, body: PubSubPushEnvelopeSchema } },
+    {
+      schema: {
+        tags: ['webhooks'],
+        security: [],
+        querystring: TokenQuery,
+        body: PubSubPushEnvelopeSchema,
+      },
+    },
     async (request, reply) => {
       if (!tokenMatches(request.query.token, deps.env.GOOGLE_PUBSUB_PUSH_TOKEN)) {
         throw new DomainError(DomainErrorCode.UNAUTHORIZED, 'Token de push inválido')
       }
       const event = cloudEventFromPubSub(request.body)
       if (!event) {
-        request.log.warn({ messageId: request.body.message.messageId }, 'mensaje Pub/Sub sin CloudEvent interpretable; se descarta')
+        request.log.warn(
+          { messageId: request.body.message.messageId },
+          'mensaje Pub/Sub sin CloudEvent interpretable; se descarta',
+        )
         return reply.status(204).send()
       }
       try {
-        const result = await deps.application.google.processInboundGoogleEvent(event, { correlationId: request.id })
-        request.log.info({ googleEventId: event.id, type: event.type, duplicate: result.duplicate, status: result.status, meetingId: result.meetingId }, 'evento Google recibido')
+        const result = await deps.application.google.processInboundGoogleEvent(event, {
+          correlationId: request.id,
+        })
+        request.log.info(
+          {
+            googleEventId: event.id,
+            type: event.type,
+            duplicate: result.duplicate,
+            status: result.status,
+            meetingId: result.meetingId,
+          },
+          'evento Google recibido',
+        )
         return reply.status(204).send()
       } catch (err) {
         if (isDomainError(err) && !err.retryable) {
-          request.log.warn({ googleEventId: event.id, errorCode: err.code }, 'evento Google falló de forma no reintentable; se confirma la entrega')
+          request.log.warn(
+            { googleEventId: event.id, errorCode: err.code },
+            'evento Google falló de forma no reintentable; se confirma la entrega',
+          )
           return reply.status(204).send()
         }
-        request.log.error({ err, googleEventId: event.id }, 'evento Google falló; se solicita reintento a Pub/Sub')
-        const body: ErrorResponseDto = { code: isDomainError(err) ? err.code : DomainErrorCode.INTERNAL_ERROR, message: 'Error transitorio procesando el evento', correlationId: request.id }
+        request.log.error(
+          { err, googleEventId: event.id },
+          'evento Google falló; se solicita reintento a Pub/Sub',
+        )
+        const body: ErrorResponseDto = {
+          code: isDomainError(err) ? err.code : DomainErrorCode.INTERNAL_ERROR,
+          message: 'Error transitorio procesando el evento',
+          correlationId: request.id,
+        }
         return reply.status(500).send(body)
       }
     },

@@ -28,14 +28,26 @@ function useOptions(kind: 'users' | 'areas' | 'projects'): { options: Option[]; 
     if (kind === 'areas') {
       return {
         loading: areas.isLoading,
-        options: (areas.data ?? []).filter((a) => a.active).map((a) => ({ value: a.id, label: a.name, hint: a.code })),
+        options: (areas.data ?? [])
+          .filter((a) => a.active)
+          .map((a) => ({ value: a.id, label: a.name, hint: a.code })),
       }
     }
     return {
       loading: projects.isLoading,
-      options: (projects.data ?? []).filter((p) => p.active).map((p) => ({ value: p.id, label: p.canonicalName, hint: p.code })),
+      options: (projects.data ?? [])
+        .filter((p) => p.active)
+        .map((p) => ({ value: p.id, label: p.canonicalName, hint: p.code })),
     }
-  }, [kind, users.data, users.isLoading, areas.data, areas.isLoading, projects.data, projects.isLoading])
+  }, [
+    kind,
+    users.data,
+    users.isLoading,
+    areas.data,
+    areas.isLoading,
+    projects.data,
+    projects.isLoading,
+  ])
 }
 
 export function CatalogSelect({
@@ -64,14 +76,20 @@ export function CatalogSelect({
   ariaLabel?: string
 }) {
   const { options, loading } = useOptions(kind)
-  const defaultPlaceholder = kind === 'users' ? 'Responsable' : kind === 'areas' ? 'Área' : 'Proyecto'
+  const defaultPlaceholder =
+    kind === 'users' ? 'Responsable' : kind === 'areas' ? 'Área' : 'Proyecto'
   return (
     <Select
       value={value ?? (allowEmpty ? NONE_VALUE : '')}
       onValueChange={(v) => onChange(v === NONE_VALUE ? null : v)}
       disabled={disabled}
     >
-      <SelectTrigger id={id} size={size} className={className} aria-label={ariaLabel ?? placeholder ?? defaultPlaceholder}>
+      <SelectTrigger
+        id={id}
+        size={size}
+        className={className}
+        aria-label={ariaLabel ?? placeholder ?? defaultPlaceholder}
+      >
         <SelectValue placeholder={loading ? 'Cargando…' : (placeholder ?? defaultPlaceholder)} />
       </SelectTrigger>
       <SelectContent>

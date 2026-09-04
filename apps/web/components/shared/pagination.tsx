@@ -1,7 +1,15 @@
 'use client'
 
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, formatNumber } from '@smlxl/ui'
+import {
+  Button,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  formatNumber,
+} from '@smlxl/ui'
 
 export function Pagination({
   page,
@@ -43,13 +51,25 @@ export function Pagination({
             </SelectContent>
           </Select>
         ) : null}
-        <Button variant="outline" size="icon-sm" disabled={page <= 1} onClick={() => onPageChange(page - 1)} aria-label="Página anterior">
+        <Button
+          variant="outline"
+          size="icon-sm"
+          disabled={page <= 1}
+          onClick={() => onPageChange(page - 1)}
+          aria-label="Página anterior"
+        >
           <ChevronLeft />
         </Button>
         <span className="tabular">
           {page} / {pages}
         </span>
-        <Button variant="outline" size="icon-sm" disabled={page >= pages} onClick={() => onPageChange(page + 1)} aria-label="Página siguiente">
+        <Button
+          variant="outline"
+          size="icon-sm"
+          disabled={page >= pages}
+          onClick={() => onPageChange(page + 1)}
+          aria-label="Página siguiente"
+        >
           <ChevronRight />
         </Button>
       </div>

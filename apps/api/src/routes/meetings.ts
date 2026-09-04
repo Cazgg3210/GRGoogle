@@ -34,31 +34,55 @@ export function registerMeetingRoutes(app: AppServer, deps: RouteDeps): void {
 
   app.get(
     '/api/v1/meetings',
-    { schema: { tags, querystring: MeetingListQuerySchema, response: { 200: pageSchema(MeetingListItemSchema) } }, preHandler: requirePermission(Permission.MEETING_READ) },
+    {
+      schema: {
+        tags,
+        querystring: MeetingListQuerySchema,
+        response: { 200: pageSchema(MeetingListItemSchema) },
+      },
+      preHandler: requirePermission(Permission.MEETING_READ),
+    },
     async (request) => application.meetings.listMeetings(requirePrincipal(request), request.query),
   )
 
   app.post(
     '/api/v1/meetings/manual',
-    { schema: { tags, body: ManualMeetingBodySchema, response: { 201: MeetingDetailSchema } }, preHandler: requirePermission(Permission.ACTION_ITEM_CREATE) },
+    {
+      schema: { tags, body: ManualMeetingBodySchema, response: { 201: MeetingDetailSchema } },
+      preHandler: requirePermission(Permission.ACTION_ITEM_CREATE),
+    },
     async (request, reply) => {
       const principal = requirePrincipal(request)
       const { meetingId } = await application.meetings.createManualMeeting(principal, request.body)
-      return reply.status(201).send(await application.meetings.getMeetingDetail(principal, meetingId))
+      return reply
+        .status(201)
+        .send(await application.meetings.getMeetingDetail(principal, meetingId))
     },
   )
 
   app.get(
     '/api/v1/meetings/:id',
-    { schema: { tags, params: IdParams, response: { 200: MeetingDetailSchema } }, preHandler: authenticated },
-    async (request) => application.meetings.getMeetingDetail(requirePrincipal(request), request.params.id),
+    {
+      schema: { tags, params: IdParams, response: { 200: MeetingDetailSchema } },
+      preHandler: authenticated,
+    },
+    async (request) =>
+      application.meetings.getMeetingDetail(requirePrincipal(request), request.params.id),
   )
 
   app.patch(
     '/api/v1/meetings/:id',
     {
-      schema: { tags, params: IdParams, body: UpdateMeetingBodySchema, response: { 200: MeetingDetailSchema } },
-      preHandler: requireAnyPermission(Permission.MEETING_SET_CONFIDENTIALITY, Permission.MEETING_EXCLUDE),
+      schema: {
+        tags,
+        params: IdParams,
+        body: UpdateMeetingBodySchema,
+        response: { 200: MeetingDetailSchema },
+      },
+      preHandler: requireAnyPermission(
+        Permission.MEETING_SET_CONFIDENTIALITY,
+        Permission.MEETING_EXCLUDE,
+      ),
     },
     async (request) => {
       const principal = requirePrincipal(request)
@@ -69,34 +93,56 @@ export function registerMeetingRoutes(app: AppServer, deps: RouteDeps): void {
 
   app.post(
     '/api/v1/meetings/:id/reprocess',
-    { schema: { tags, params: IdParams, response: { 200: ReprocessResponseSchema } }, preHandler: requirePermission(Permission.MEETING_REPROCESS) },
+    {
+      schema: { tags, params: IdParams, response: { 200: ReprocessResponseSchema } },
+      preHandler: requirePermission(Permission.MEETING_REPROCESS),
+    },
     async (request) => {
-      const { jobId } = await application.meetings.reprocessMeeting(requirePrincipal(request), request.params.id)
+      const { jobId } = await application.meetings.reprocessMeeting(
+        requirePrincipal(request),
+        request.params.id,
+      )
       return { queued: true as const, jobId }
     },
   )
 
   app.get(
     '/api/v1/meetings/:id/transcript',
-    { schema: { tags, params: IdParams, response: { 200: TranscriptResponseSchema } }, preHandler: requirePermission(Permission.MEETING_READ_TRANSCRIPT) },
-    async (request) => application.meetings.getMeetingTranscript(requirePrincipal(request), request.params.id),
+    {
+      schema: { tags, params: IdParams, response: { 200: TranscriptResponseSchema } },
+      preHandler: requirePermission(Permission.MEETING_READ_TRANSCRIPT),
+    },
+    async (request) =>
+      application.meetings.getMeetingTranscript(requirePrincipal(request), request.params.id),
   )
 
   app.get(
     '/api/v1/meetings/:id/action-items',
-    { schema: { tags, params: IdParams, response: { 200: z.array(ActionItemDtoSchema) } }, preHandler: authenticated },
-    async (request) => application.meetings.listActionItemsByMeeting(requirePrincipal(request), request.params.id),
+    {
+      schema: { tags, params: IdParams, response: { 200: z.array(ActionItemDtoSchema) } },
+      preHandler: authenticated,
+    },
+    async (request) =>
+      application.meetings.listActionItemsByMeeting(requirePrincipal(request), request.params.id),
   )
 
   app.get(
     '/api/v1/meetings/:id/review-items',
-    { schema: { tags, params: IdParams, response: { 200: z.array(AiReviewItemDtoSchema) } }, preHandler: authenticated },
-    async (request) => application.meetings.listReviewItemsByMeeting(requirePrincipal(request), request.params.id),
+    {
+      schema: { tags, params: IdParams, response: { 200: z.array(AiReviewItemDtoSchema) } },
+      preHandler: authenticated,
+    },
+    async (request) =>
+      application.meetings.listReviewItemsByMeeting(requirePrincipal(request), request.params.id),
   )
 
   app.get(
     '/api/v1/meetings/:id/audit',
-    { schema: { tags, params: IdParams, response: { 200: z.array(AuditEntryDtoSchema) } }, preHandler: authenticated },
-    async (request) => application.meetings.listMeetingAudit(requirePrincipal(request), request.params.id),
+    {
+      schema: { tags, params: IdParams, response: { 200: z.array(AuditEntryDtoSchema) } },
+      preHandler: authenticated,
+    },
+    async (request) =>
+      application.meetings.listMeetingAudit(requirePrincipal(request), request.params.id),
   )
 }

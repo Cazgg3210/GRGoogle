@@ -4,7 +4,10 @@ import { BaseRepository } from './base.js'
 
 export class PrismaTranscriptRepository extends BaseRepository implements TranscriptRepository {
   async findByMeeting(meetingId: Id): Promise<Transcript[]> {
-    const rows = await this.db.transcript.findMany({ where: { meetingId }, orderBy: { createdAt: 'asc' } })
+    const rows = await this.db.transcript.findMany({
+      where: { meetingId },
+      orderBy: { createdAt: 'asc' },
+    })
     return rows.map(toTranscript)
   }
 

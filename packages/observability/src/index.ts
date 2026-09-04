@@ -44,7 +44,12 @@ export function createLogger(options: LoggerOptions): Logger {
     timestamp: pino.stdTimeFunctions.isoTime,
     redact: { paths: REDACT_PATHS, censor: '[REDACTED]' },
     ...(pretty
-      ? { transport: { target: 'pino-pretty', options: { colorize: true, translateTime: 'SYS:HH:MM:ss', ignore: 'pid,hostname' } } }
+      ? {
+          transport: {
+            target: 'pino-pretty',
+            options: { colorize: true, translateTime: 'SYS:HH:MM:ss', ignore: 'pid,hostname' },
+          },
+        }
       : {}),
   })
 }
@@ -106,11 +111,15 @@ class MetricsRegistry {
     this.histograms.set(key, h)
   }
 
-  snapshot(): { counters: Record<string, number>; histograms: Record<string, { count: number; sum: number; max: number; avg: number }> } {
+  snapshot(): {
+    counters: Record<string, number>
+    histograms: Record<string, { count: number; sum: number; max: number; avg: number }>
+  } {
     const counters: Record<string, number> = {}
     for (const [k, v] of this.counters) counters[k] = v
     const histograms: Record<string, { count: number; sum: number; max: number; avg: number }> = {}
-    for (const [k, h] of this.histograms) histograms[k] = { ...h, avg: h.count ? h.sum / h.count : 0 }
+    for (const [k, h] of this.histograms)
+      histograms[k] = { ...h, avg: h.count ? h.sum / h.count : 0 }
     return { counters, histograms }
   }
 
@@ -144,7 +153,11 @@ class MetricsRegistry {
 export const metrics = new MetricsRegistry()
 
 /** Mide la duración de una operación y la registra como histograma. */
-export async function timed<T>(name: string, fn: () => Promise<T>, labels?: Record<string, string>): Promise<T> {
+export async function timed<T>(
+  name: string,
+  fn: () => Promise<T>,
+  labels?: Record<string, string>,
+): Promise<T> {
   const start = Date.now()
   try {
     return await fn()

@@ -1,7 +1,12 @@
 import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { ActionItemStatus, MigrationTrust, normalizeText } from '@smlxl/domain'
-import { createPrismaClient, createRepositories, type PrismaClient, type RepositoryDefaults } from '@smlxl/database'
+import {
+  createPrismaClient,
+  createRepositories,
+  type PrismaClient,
+  type RepositoryDefaults,
+} from '@smlxl/database'
 import { buildFixtureWorkbook } from './generate-fixture.js'
 import { runLegacyImport, type ImportCreated } from './importer.js'
 import { readWorkbookFromBook, SOURCE_SHEETS } from './reader.js'
@@ -52,9 +57,12 @@ describe.skipIf(!DATABASE_URL)('importador legado (integración)', () => {
 
   afterAll(async () => {
     for (const c of createdByCommit) {
-      if (c.actionItemIds.length) await client.actionItem.deleteMany({ where: { id: { in: c.actionItemIds } } })
-      if (c.meetingIds.length) await client.meeting.deleteMany({ where: { id: { in: c.meetingIds } } })
-      if (c.projectIds.length) await client.project.deleteMany({ where: { id: { in: c.projectIds } } })
+      if (c.actionItemIds.length)
+        await client.actionItem.deleteMany({ where: { id: { in: c.actionItemIds } } })
+      if (c.meetingIds.length)
+        await client.meeting.deleteMany({ where: { id: { in: c.meetingIds } } })
+      if (c.projectIds.length)
+        await client.project.deleteMany({ where: { id: { in: c.projectIds } } })
       if (c.externalAssigneeIds.length)
         await client.externalAssignee.deleteMany({ where: { id: { in: c.externalAssigneeIds } } })
       if (c.areaIds.length) await client.area.deleteMany({ where: { id: { in: c.areaIds } } })
@@ -63,14 +71,17 @@ describe.skipIf(!DATABASE_URL)('importador legado (integración)', () => {
         await client.legacyImportBatch.deleteMany({ where: { id: c.batchId } })
       }
     }
-    if (createdAreaIds.length) await client.area.deleteMany({ where: { id: { in: createdAreaIds } } })
+    if (createdAreaIds.length)
+      await client.area.deleteMany({ where: { id: { in: createdAreaIds } } })
     await client.$disconnect()
   })
 
   it('dry-run analiza y reporta sin escribir nada', async () => {
     const batchesBefore = await client.legacyImportBatch.count()
     const itemsBefore = await client.actionItem.count()
-    const { report, created } = await runLegacyImport(client, defaults, workbook, { mode: 'dry-run' })
+    const { report, created } = await runLegacyImport(client, defaults, workbook, {
+      mode: 'dry-run',
+    })
     expect(report.mode).toBe('dry-run')
     expect(report.batchId).toBeNull()
     expect(created.actionItemIds).toEqual([])
@@ -79,7 +90,9 @@ describe.skipIf(!DATABASE_URL)('importador legado (integración)', () => {
     expect(report.totals.imported).toBe(28)
     expect(report.totals.internalRows).toBe(25)
     expect(report.totals.externalRows).toBe(3)
-    expect(report.sheets.find((s) => s.sheet === 'Operaciones y Proyectos')?.blankRowsSkipped).toBe(2)
+    expect(report.sheets.find((s) => s.sheet === 'Operaciones y Proyectos')?.blankRowsSkipped).toBe(
+      2,
+    )
     expect(report.sheetsIgnored).toEqual(['Dashboard', 'Maestro', 'Listas'])
     expect(report.contradictions.length).toBeGreaterThanOrEqual(2)
     expect(report.duplicateIds.some((d) => d.legacyId === 'ju 01')).toBe(true)
@@ -87,7 +100,8 @@ describe.skipIf(!DATABASE_URL)('importador legado (integración)', () => {
     expect(report.recurring.map((r) => r.frequency).sort()).toEqual(['DAILY', 'WEEKLY'])
     // El proyecto "Nuevo Frente Logística" es nuevo salvo que otra corrida (p. ej. el CLI) ya lo haya creado.
     const logistica = await repos.projects.findByAlias(normalizeText('Nuevo Frente Logística'))
-    if (logistica) expect(report.newProjects.map((p) => p.name)).not.toContain('Nuevo Frente Logística')
+    if (logistica)
+      expect(report.newProjects.map((p) => p.name)).not.toContain('Nuevo Frente Logística')
     else expect(report.newProjects.map((p) => p.name)).toContain('Nuevo Frente Logística')
     expect(report.statusDistribution[ActionItemStatus.COMPLETION_PROPOSED]).toBe(2)
     expect(report.baseline.differences.length).toBeGreaterThan(0)
@@ -98,13 +112,17 @@ describe.skipIf(!DATABASE_URL)('importador legado (integración)', () => {
   })
 
   it('commit importa en una transacción y deja trazabilidad', async () => {
-    const { report, created } = await runLegacyImport(client, defaults, workbook, { mode: 'commit' })
+    const { report, created } = await runLegacyImport(client, defaults, workbook, {
+      mode: 'commit',
+    })
     createdByCommit.push(created)
     expect(report.batchId).not.toBeNull()
     expect(created.actionItemIds).toHaveLength(28)
     // Cada reunión planificada se creó o ya existía (una por hoja+fecha, reutilizable entre corridas).
     expect(report.meetings.length).toBeGreaterThan(0)
-    expect(created.meetingIds.length + report.meetings.filter((m) => m.existing).length).toBe(report.meetings.length)
+    expect(created.meetingIds.length + report.meetings.filter((m) => m.existing).length).toBe(
+      report.meetings.length,
+    )
 
     const batch = await repos.legacyImports.findBatch(report.batchId as string)
     expect(batch?.finishedAt).not.toBeNull()
@@ -145,7 +163,9 @@ describe.skipIf(!DATABASE_URL)('importador legado (integración)', () => {
     const recurring = mine.filter((i) => i.type === 'RECURRING')
     expect(recurring).toHaveLength(2)
 
-    const withComment = mine.find((i) => i.legacyId === 'JU-01' && i.title.startsWith('Revisar contrato'))
+    const withComment = mine.find(
+      (i) => i.legacyId === 'JU-01' && i.title.startsWith('Revisar contrato'),
+    )
     expect(withComment).toBeDefined()
     const comments = await repos.actionItems.listComments(withComment?.id as string)
     expect(comments.some((c) => c.source === 'LEGACY_IMPORT')).toBe(true)
@@ -163,7 +183,9 @@ describe.skipIf(!DATABASE_URL)('importador legado (integración)', () => {
   })
 
   it('un segundo commit del mismo archivo omite todas las filas ya importadas', async () => {
-    const { report, created } = await runLegacyImport(client, defaults, workbook, { mode: 'commit' })
+    const { report, created } = await runLegacyImport(client, defaults, workbook, {
+      mode: 'commit',
+    })
     createdByCommit.push(created)
     expect(report.totals.imported).toBe(0)
     expect(report.totals.alreadyImported).toBe(28)

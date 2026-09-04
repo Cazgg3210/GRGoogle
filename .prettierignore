@@ -1,0 +1,10 @@
+node_modules
+dist
+.next
+.turbo
+coverage
+pnpm-lock.yaml
+packages/database/src/generated
+prisma/migrations
+tests/fixtures
+SMLXL_MASTER_PROMPT_PLATAFORMA_REUNIONES_IA_v1.0.md

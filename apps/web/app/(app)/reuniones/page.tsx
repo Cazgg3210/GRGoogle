@@ -14,7 +14,11 @@ import { MeetingsTable, type MeetingsQuery } from './meetings-table'
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Reuniones' }
 
-export default async function MeetingsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+export default async function MeetingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>
+}) {
   const sp = await searchParams
   const session = await getAppSession()
   const query: MeetingsQuery = {
@@ -51,7 +55,15 @@ export default async function MeetingsPage({ searchParams }: { searchParams: Pro
           ) : null
         }
       />
-      {result.ok ? <MeetingsTable page={result.data} query={query} /> : <MeetingsTable page={null} query={query} error={<PageError error={result.error} retryHref="/reuniones" />} />}
+      {result.ok ? (
+        <MeetingsTable page={result.data} query={query} />
+      ) : (
+        <MeetingsTable
+          page={null}
+          query={query}
+          error={<PageError error={result.error} retryHref="/reuniones" />}
+        />
+      )}
     </>
   )
 }

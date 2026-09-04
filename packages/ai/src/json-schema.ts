@@ -41,7 +41,12 @@ export function zodToJsonSchema(schema: ZodTypeAny): JsonSchema {
         properties[key] = zodToJsonSchema(value)
         if (!value.isOptional()) required.push(key)
       }
-      const out: JsonSchema = { type: 'object', properties, additionalProperties: false, propertyOrdering: Object.keys(shape) }
+      const out: JsonSchema = {
+        type: 'object',
+        properties,
+        additionalProperties: false,
+        propertyOrdering: Object.keys(shape),
+      }
       if (required.length > 0) out.required = required
       return withDescription(out, description)
     }
@@ -69,14 +74,20 @@ export function zodToJsonSchema(schema: ZodTypeAny): JsonSchema {
       return { type: 'null' }
     case z.ZodFirstPartyTypeKind.ZodLiteral: {
       const value = (schema as z.ZodLiteral<string | number>)._def.value
-      return withDescription({ type: typeof value === 'number' ? 'number' : 'string', enum: [value] }, description)
+      return withDescription(
+        { type: typeof value === 'number' ? 'number' : 'string', enum: [value] },
+        description,
+      )
     }
     case z.ZodFirstPartyTypeKind.ZodEnum:
-      return withDescription({ type: 'string', enum: [...(schema as z.ZodEnum<[string, ...string[]]>)._def.values] }, description)
-    case z.ZodFirstPartyTypeKind.ZodNativeEnum: {
-      const values = Object.values((schema as z.ZodNativeEnum<Record<string, string>>)._def.values).filter(
-        (v): v is string => typeof v === 'string',
+      return withDescription(
+        { type: 'string', enum: [...(schema as z.ZodEnum<[string, ...string[]]>)._def.values] },
+        description,
       )
+    case z.ZodFirstPartyTypeKind.ZodNativeEnum: {
+      const values = Object.values(
+        (schema as z.ZodNativeEnum<Record<string, string>>)._def.values,
+      ).filter((v): v is string => typeof v === 'string')
       return withDescription({ type: 'string', enum: values }, description)
     }
     case z.ZodFirstPartyTypeKind.ZodArray: {
@@ -91,11 +102,20 @@ export function zodToJsonSchema(schema: ZodTypeAny): JsonSchema {
       return withDescription({ anyOf: [inner, { type: 'null' }] }, description)
     }
     case z.ZodFirstPartyTypeKind.ZodOptional:
-      return withDescription(zodToJsonSchema((schema as z.ZodOptional<ZodTypeAny>)._def.innerType), description)
+      return withDescription(
+        zodToJsonSchema((schema as z.ZodOptional<ZodTypeAny>)._def.innerType),
+        description,
+      )
     case z.ZodFirstPartyTypeKind.ZodDefault:
-      return withDescription(zodToJsonSchema((schema as z.ZodDefault<ZodTypeAny>)._def.innerType), description)
+      return withDescription(
+        zodToJsonSchema((schema as z.ZodDefault<ZodTypeAny>)._def.innerType),
+        description,
+      )
     case z.ZodFirstPartyTypeKind.ZodEffects:
-      return withDescription(zodToJsonSchema((schema as z.ZodEffects<ZodTypeAny>)._def.schema), description)
+      return withDescription(
+        zodToJsonSchema((schema as z.ZodEffects<ZodTypeAny>)._def.schema),
+        description,
+      )
     case z.ZodFirstPartyTypeKind.ZodUnion: {
       const options = (schema as z.ZodUnion<[ZodTypeAny, ...ZodTypeAny[]]>)._def.options
       return withDescription({ anyOf: options.map((o) => zodToJsonSchema(o)) }, description)

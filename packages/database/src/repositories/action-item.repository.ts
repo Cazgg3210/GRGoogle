@@ -193,7 +193,10 @@ export class PrismaActionItemRepository extends BaseRepository implements Action
    */
   async save(item: ActionItem): Promise<ActionItem> {
     const scalars = actionItemScalarsToDb(item, this.ctx)
-    const existing = await this.db.actionItem.findUnique({ where: { id: item.id }, select: { id: true } })
+    const existing = await this.db.actionItem.findUnique({
+      where: { id: item.id },
+      select: { id: true },
+    })
     if (existing) {
       await this.db.actionItem.update({ where: { id: item.id }, data: scalars })
     } else {

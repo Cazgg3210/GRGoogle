@@ -69,7 +69,10 @@ async function main(): Promise<number> {
       console.log(`Reporte JSON escrito en ${written}`)
     }
     if (mode === 'dry-run') console.log('Modo dry-run: no se escribió nada en la base de datos.')
-    else console.log(`Modo commit: ${report.totals.imported} fila(s) importadas${report.batchId ? ` (lote ${report.batchId})` : ' (sin cambios)'}.`)
+    else
+      console.log(
+        `Modo commit: ${report.totals.imported} fila(s) importadas${report.batchId ? ` (lote ${report.batchId})` : ' (sin cambios)'}.`,
+      )
     return report.errors.length > 0 ? 2 : 0
   } finally {
     await client.$disconnect()

@@ -28,7 +28,10 @@ export function createFakeConferenceEndedEvent(
   const fixtures = options.fixtures ?? loadDefaultFixtures()
   const name = resolveRecordName(meetingCodeOrConferenceRecordName, fixtures)
   const record = fixtures.conferenceRecords.find((c) => c.name === name)
-  const subject = options.subscribedUserEmail ?? record?.participants.find((p) => p.email?.endsWith('@smlxl.mx'))?.email ?? 'unknown@smlxl.mx'
+  const subject =
+    options.subscribedUserEmail ??
+    record?.participants.find((p) => p.email?.endsWith('@smlxl.mx'))?.email ??
+    'unknown@smlxl.mx'
   return {
     id: options.id ?? randomUUID(),
     type: GoogleMeetEventType.CONFERENCE_ENDED,

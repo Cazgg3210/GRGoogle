@@ -2,7 +2,17 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { CalendarDays, ClipboardList, Gavel, Search } from 'lucide-react'
 import type { SearchResultDto } from '@smlxl/contracts'
-import { Badge, Card, CardContent, CardHeader, CardTitle, EmptyState, PageHeader, StatusBadge, formatDateTime } from '@smlxl/ui'
+import {
+  Badge,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  EmptyState,
+  PageHeader,
+  StatusBadge,
+  formatDateTime,
+} from '@smlxl/ui'
 import { api, safe } from '@/lib/api.server'
 import { first, type SearchParams } from '@/lib/search-params'
 import { PageError } from '@/components/shared/page-error'
@@ -10,21 +20,37 @@ import { PageError } from '@/components/shared/page-error'
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Búsqueda' }
 
-export default async function SearchPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+export default async function SearchPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>
+}) {
   const sp = await searchParams
   const q = (first(sp, 'q') ?? '').trim()
   if (q.length < 2) {
     return (
       <>
-        <PageHeader eyebrow="Búsqueda corporativa" title="Buscar" description="Reuniones, pendientes y decisiones. Fase 1: búsqueda estructurada; las respuestas siempre citan las reuniones fuente." />
-        <EmptyState icon={Search} title="Escribe al menos dos caracteres" description="Prueba: “qué quedó pendiente con el contrato Alfa”, “pendientes de Andrés”, “cliente Beta”." />
+        <PageHeader
+          eyebrow="Búsqueda corporativa"
+          title="Buscar"
+          description="Reuniones, pendientes y decisiones. Fase 1: búsqueda estructurada; las respuestas siempre citan las reuniones fuente."
+        />
+        <EmptyState
+          icon={Search}
+          title="Escribe al menos dos caracteres"
+          description="Prueba: “qué quedó pendiente con el contrato Alfa”, “pendientes de Andrés”, “cliente Beta”."
+        />
       </>
     )
   }
   const result = await safe(api.get<SearchResultDto>('/search', { query: { q, limit: 30 } }))
   return (
     <>
-      <PageHeader eyebrow="Búsqueda corporativa" title={<>Resultados para “{q}”</>} description="Cada resultado indica su reunión fuente. La búsqueda semántica (RAG) llegará en fase 2." />
+      <PageHeader
+        eyebrow="Búsqueda corporativa"
+        title={<>Resultados para “{q}”</>}
+        description="Cada resultado indica su reunión fuente. La búsqueda semántica (RAG) llegará en fase 2."
+      />
       {!result.ok ? (
         <PageError error={result.error} retryHref={`/buscar?q=${encodeURIComponent(q)}`} />
       ) : (
@@ -37,7 +63,13 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 function SearchResults({ data }: { data: SearchResultDto }) {
   const total = data.meetings.length + data.actionItems.length + data.decisions.length
   if (total === 0) {
-    return <EmptyState icon={Search} title="Sin resultados" description="Intenta con otras palabras clave o el nombre de una persona/proyecto." />
+    return (
+      <EmptyState
+        icon={Search}
+        title="Sin resultados"
+        description="Intenta con otras palabras clave o el nombre de una persona/proyecto."
+      />
+    )
   }
   const sourceMeetings = new Map(data.meetings.map((m) => [m.id, m]))
   return (
@@ -74,7 +106,9 @@ function SearchResults({ data }: { data: SearchResultDto }) {
                       {m.title}
                     </Link>
                     <p className="text-xs text-muted-foreground">{formatDateTime(m.startAt)}</p>
-                    {m.snippet ? <p className="mt-1 line-clamp-3 text-sm text-foreground/80">{m.snippet}</p> : null}
+                    {m.snippet ? (
+                      <p className="mt-1 line-clamp-3 text-sm text-foreground/80">{m.snippet}</p>
+                    ) : null}
                   </li>
                 ))}
               </ul>
@@ -96,16 +130,26 @@ function SearchResults({ data }: { data: SearchResultDto }) {
                 {data.actionItems.map((a) => (
                   <li key={a.id} className="px-5 py-3">
                     <div className="flex items-center gap-2">
-                      <Link href={`/pendientes/${a.id}`} className="font-mono text-xs text-info-700 hover:underline">
+                      <Link
+                        href={`/pendientes/${a.id}`}
+                        className="font-mono text-xs text-info-700 hover:underline"
+                      >
                         {a.externalKey}
                       </Link>
                       <StatusBadge status={a.status} />
                     </div>
-                    <Link href={`/pendientes/${a.id}`} className="mt-0.5 block font-medium hover:underline">
+                    <Link
+                      href={`/pendientes/${a.id}`}
+                      className="mt-0.5 block font-medium hover:underline"
+                    >
                       {a.title}
                     </Link>
-                    <p className="text-xs text-muted-foreground">{a.ownerName ?? 'Sin responsable'}</p>
-                    {a.snippet ? <p className="mt-1 line-clamp-3 text-sm text-foreground/80">{a.snippet}</p> : null}
+                    <p className="text-xs text-muted-foreground">
+                      {a.ownerName ?? 'Sin responsable'}
+                    </p>
+                    {a.snippet ? (
+                      <p className="mt-1 line-clamp-3 text-sm text-foreground/80">{a.snippet}</p>
+                    ) : null}
                   </li>
                 ))}
               </ul>
@@ -129,7 +173,10 @@ function SearchResults({ data }: { data: SearchResultDto }) {
                     <p className="text-sm">{d.description}</p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       Fuente:{' '}
-                      <Link href={`/reuniones/${d.meetingId}?tab=decisiones`} className="text-info-700 hover:underline">
+                      <Link
+                        href={`/reuniones/${d.meetingId}?tab=decisiones`}
+                        className="text-info-700 hover:underline"
+                      >
                         {d.meetingTitle}
                       </Link>
                     </p>

@@ -29,7 +29,10 @@ const FormSchema = z.object({
   endAt: z.string().optional(),
   organizerEmail: z.string().email('Correo inválido').optional().or(z.literal('')),
   participantEmails: z.string().optional(),
-  transcriptText: z.string().min(20, 'La transcripción debe tener al menos 20 caracteres').max(500000),
+  transcriptText: z
+    .string()
+    .min(20, 'La transcripción debe tener al menos 20 caracteres')
+    .max(500000),
   smartNotesText: z.string().max(100000).optional(),
   confidentialityLevel: z.enum(['NORMAL', 'RESTRICTED', 'LEGAL', 'EXECUTIVE']).default('NORMAL'),
 })
@@ -49,7 +52,16 @@ export function ManualMeetingForm() {
   const router = useRouter()
   const form = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
-    defaultValues: { title: '', startAt: '', endAt: '', organizerEmail: '', participantEmails: '', transcriptText: '', smartNotesText: '', confidentialityLevel: 'NORMAL' },
+    defaultValues: {
+      title: '',
+      startAt: '',
+      endAt: '',
+      organizerEmail: '',
+      participantEmails: '',
+      transcriptText: '',
+      smartNotesText: '',
+      confidentialityLevel: 'NORMAL',
+    },
   })
   const create = useApiMutation<MeetingDetailDto, z.infer<typeof ManualMeetingBodySchema>>({
     mutationFn: (body) => clientApi.post<MeetingDetailDto>('/meetings/manual', body),
@@ -82,14 +94,20 @@ export function ManualMeetingForm() {
             })
             if (!parsed.success) {
               const issue = parsed.error.issues[0]
-              toast.error('Datos inválidos', { description: issue ? `${issue.path.join('.')}: ${issue.message}` : undefined })
+              toast.error('Datos inválidos', {
+                description: issue ? `${issue.path.join('.')}: ${issue.message}` : undefined,
+              })
               return
             }
             create.mutate(parsed.data)
           })}
         >
           <Field label="Título" htmlFor="m-title" required error={errors.title?.message}>
-            <Input id="m-title" {...register('title')} placeholder="Seguimiento contrato Cliente Alfa" />
+            <Input
+              id="m-title"
+              {...register('title')}
+              placeholder="Seguimiento contrato Cliente Alfa"
+            />
           </Field>
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Inicio" htmlFor="m-start" required error={errors.startAt?.message}>
@@ -108,7 +126,11 @@ export function ManualMeetingForm() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {(Object.keys(CONFIDENTIALITY_LABELS) as Array<keyof typeof CONFIDENTIALITY_LABELS>).map((k) => (
+                      {(
+                        Object.keys(CONFIDENTIALITY_LABELS) as Array<
+                          keyof typeof CONFIDENTIALITY_LABELS
+                        >
+                      ).map((k) => (
                         <SelectItem key={k} value={k}>
                           {CONFIDENTIALITY_LABELS[k].label}
                         </SelectItem>
@@ -120,17 +142,54 @@ export function ManualMeetingForm() {
             </Field>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Correo del organizador" htmlFor="m-org" error={errors.organizerEmail?.message} hint="Si es externo al dominio, la reunión se marca como host externo.">
-              <Input id="m-org" type="email" {...register('organizerEmail')} placeholder="gestora@smlxl.mx" />
+            <Field
+              label="Correo del organizador"
+              htmlFor="m-org"
+              error={errors.organizerEmail?.message}
+              hint="Si es externo al dominio, la reunión se marca como host externo."
+            >
+              <Input
+                id="m-org"
+                type="email"
+                {...register('organizerEmail')}
+                placeholder="gestora@smlxl.mx"
+              />
             </Field>
-            <Field label="Participantes" htmlFor="m-part" hint="Correos separados por coma o salto de línea.">
-              <Textarea id="m-part" rows={2} {...register('participantEmails')} placeholder="carlos@smlxl.mx, andres@smlxl.mx" />
+            <Field
+              label="Participantes"
+              htmlFor="m-part"
+              hint="Correos separados por coma o salto de línea."
+            >
+              <Textarea
+                id="m-part"
+                rows={2}
+                {...register('participantEmails')}
+                placeholder="carlos@smlxl.mx, andres@smlxl.mx"
+              />
             </Field>
           </div>
-          <Field label="Transcripción" htmlFor="m-transcript" required error={errors.transcriptText?.message} hint="Formato libre. Recomendado: una línea por intervención “Nombre: texto”. Se conservará como evidencia.">
-            <Textarea id="m-transcript" rows={14} className="font-mono text-xs" {...register('transcriptText')} placeholder={'Carlos Martínez: Yo envío la carta el próximo martes.\nAndrés López: Perfecto, entonces queda pendiente…'} />
+          <Field
+            label="Transcripción"
+            htmlFor="m-transcript"
+            required
+            error={errors.transcriptText?.message}
+            hint="Formato libre. Recomendado: una línea por intervención “Nombre: texto”. Se conservará como evidencia."
+          >
+            <Textarea
+              id="m-transcript"
+              rows={14}
+              className="font-mono text-xs"
+              {...register('transcriptText')}
+              placeholder={
+                'Carlos Martínez: Yo envío la carta el próximo martes.\nAndrés López: Perfecto, entonces queda pendiente…'
+              }
+            />
           </Field>
-          <Field label="Smart Notes (opcional)" htmlFor="m-notes" error={errors.smartNotesText?.message}>
+          <Field
+            label="Smart Notes (opcional)"
+            htmlFor="m-notes"
+            error={errors.smartNotesText?.message}
+          >
             <Textarea id="m-notes" rows={5} {...register('smartNotesText')} />
           </Field>
           <div className="flex justify-end gap-2">

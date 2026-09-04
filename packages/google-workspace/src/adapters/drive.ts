@@ -12,13 +12,19 @@ import type { AuthClient, GoogleAdapterDeps } from './shared.js'
  */
 export interface DocsApiClient {
   documents: {
-    get(params: docs_v1.Params$Resource$Documents$Get, options?: { signal?: AbortSignal }): Promise<{ data: docs_v1.Schema$Document }>
+    get(
+      params: docs_v1.Params$Resource$Documents$Get,
+      options?: { signal?: AbortSignal },
+    ): Promise<{ data: docs_v1.Schema$Document }>
   }
 }
 
 export interface DriveApiClient {
   files: {
-    export(params: drive_v3.Params$Resource$Files$Export, options?: { signal?: AbortSignal }): Promise<{ data: unknown }>
+    export(
+      params: drive_v3.Params$Resource$Files$Export,
+      options?: { signal?: AbortSignal },
+    ): Promise<{ data: unknown }>
   }
 }
 
@@ -63,17 +69,24 @@ export class GoogleDriveAdapter implements DrivePort {
   private readonly driveFactory: (auth: AuthClient) => DriveApiClient
 
   constructor(private readonly deps: DriveAdapterDeps) {
-    this.docsFactory = deps.docsFactory ?? ((auth) => google.docs({ version: 'v1', auth }) as unknown as DocsApiClient)
-    this.driveFactory = deps.driveFactory ?? ((auth) => google.drive({ version: 'v3', auth }) as unknown as DriveApiClient)
+    this.docsFactory =
+      deps.docsFactory ??
+      ((auth) => google.docs({ version: 'v1', auth }) as unknown as DocsApiClient)
+    this.driveFactory =
+      deps.driveFactory ??
+      ((auth) => google.drive({ version: 'v3', auth }) as unknown as DriveApiClient)
   }
 
   async exportDocumentText(documentId: string, asUser: string): Promise<string | null> {
     const auth = this.deps.auth.for(asUser, SCOPES)
     try {
-      const res = await withGoogleRetry((signal) => this.docsFactory(auth).documents.get({ documentId }, { signal }), {
-        ...this.deps.retry,
-        operation: 'docs.documents.get',
-      })
+      const res = await withGoogleRetry(
+        (signal) => this.docsFactory(auth).documents.get({ documentId }, { signal }),
+        {
+          ...this.deps.retry,
+          operation: 'docs.documents.get',
+        },
+      )
       const text = extractDocumentText(res.data)
       if (text) return text
     } catch (err) {
@@ -82,7 +95,11 @@ export class GoogleDriveAdapter implements DrivePort {
     }
     try {
       const res = await withGoogleRetry(
-        (signal) => this.driveFactory(auth).files.export({ fileId: documentId, mimeType: 'text/plain' }, { signal }),
+        (signal) =>
+          this.driveFactory(auth).files.export(
+            { fileId: documentId, mimeType: 'text/plain' },
+            { signal },
+          ),
         { ...this.deps.retry, operation: 'drive.files.export' },
       )
       const data = res.data

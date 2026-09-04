@@ -64,10 +64,29 @@ export type PendientesQuery = {
   search?: string
 }
 
-const VIEW_KEYS = ['all', 'mine', 'team', 'overdue', 'thisWeek', 'noDueDate', 'noOwner', 'blocked', 'completed', 'proposed'] as const
+const VIEW_KEYS = [
+  'all',
+  'mine',
+  'team',
+  'overdue',
+  'thisWeek',
+  'noDueDate',
+  'noOwner',
+  'blocked',
+  'completed',
+  'proposed',
+] as const
 const COLUMNS_STORAGE = 'smlxl.pendientes.columns'
 const MODE_STORAGE = 'smlxl.pendientes.mode'
-const KANBAN_COLUMNS = ['PROPOSED', 'PENDING', 'IN_PROGRESS', 'BLOCKED', 'WAITING', 'COMPLETION_PROPOSED', 'COMPLETED'] as const
+const KANBAN_COLUMNS = [
+  'PROPOSED',
+  'PENDING',
+  'IN_PROGRESS',
+  'BLOCKED',
+  'WAITING',
+  'COMPLETION_PROPOSED',
+  'COMPLETED',
+] as const
 
 const col = createColumnHelper<ActionItemDto>()
 
@@ -80,14 +99,24 @@ const DEFAULT_VISIBILITY: VisibilityState = {
   meeting: false,
 }
 
-export function PendientesBoard({ page, query, error }: { page: Page<ActionItemDto> | null; query: PendientesQuery; error?: React.ReactNode }) {
+export function PendientesBoard({
+  page,
+  query,
+  error,
+}: {
+  page: Page<ActionItemDto> | null
+  query: PendientesQuery
+  error?: React.ReactNode
+}) {
   const url = useUrlState()
   const router = useRouter()
   const [mode, setMode] = React.useState<'table' | 'kanban'>('table')
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [visibility, setVisibility] = React.useState<VisibilityState>(DEFAULT_VISIBILITY)
   const [search, setSearch] = React.useState(query.search ?? '')
-  const [filtersOpen, setFiltersOpen] = React.useState(Boolean(query.ownerUserId || query.areaId || query.projectId || query.priority))
+  const [filtersOpen, setFiltersOpen] = React.useState(
+    Boolean(query.ownerUserId || query.areaId || query.projectId || query.priority),
+  )
 
   React.useEffect(() => {
     try {
@@ -100,17 +129,20 @@ export function PendientesBoard({ page, query, error }: { page: Page<ActionItemD
     }
   }, [])
 
-  const updateVisibility = React.useCallback((updater: VisibilityState | ((old: VisibilityState) => VisibilityState)) => {
-    setVisibility((old) => {
-      const next = typeof updater === 'function' ? updater(old) : updater
-      try {
-        window.localStorage.setItem(COLUMNS_STORAGE, JSON.stringify(next))
-      } catch {
-        /* sin storage */
-      }
-      return next
-    })
-  }, [])
+  const updateVisibility = React.useCallback(
+    (updater: VisibilityState | ((old: VisibilityState) => VisibilityState)) => {
+      setVisibility((old) => {
+        const next = typeof updater === 'function' ? updater(old) : updater
+        try {
+          window.localStorage.setItem(COLUMNS_STORAGE, JSON.stringify(next))
+        } catch {
+          /* sin storage */
+        }
+        return next
+      })
+    },
+    [],
+  )
 
   const changeMode = (m: 'table' | 'kanban') => {
     setMode(m)
@@ -128,7 +160,11 @@ export function PendientesBoard({ page, query, error }: { page: Page<ActionItemD
         header: 'Clave',
         size: 96,
         cell: (c) => (
-          <Link href={`/pendientes/${c.row.original.id}`} className="font-mono text-xs text-info-700 hover:underline" onClick={(e) => e.stopPropagation()}>
+          <Link
+            href={`/pendientes/${c.row.original.id}`}
+            className="font-mono text-xs text-info-700 hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
             {c.getValue()}
           </Link>
         ),
@@ -142,7 +178,9 @@ export function PendientesBoard({ page, query, error }: { page: Page<ActionItemD
               {c.getValue()}
             </p>
             <div className="mt-0.5 flex flex-wrap items-center gap-1">
-              {c.row.original.migrationTrust === 'LEGACY' ? <Badge tone="neutral">Legado</Badge> : null}
+              {c.row.original.migrationTrust === 'LEGACY' ? (
+                <Badge tone="neutral">Legado</Badge>
+              ) : null}
               {c.row.original.requiresReview ? <Badge tone="ai">Revisión</Badge> : null}
               {c.row.original.blocker ? (
                 <span className="truncate text-xs text-danger-700" title={c.row.original.blocker}>
@@ -153,8 +191,18 @@ export function PendientesBoard({ page, query, error }: { page: Page<ActionItemD
           </div>
         ),
       }),
-      col.accessor('status', { id: 'status', header: 'Estado', size: 130, cell: (c) => <StatusBadge status={c.getValue()} /> }),
-      col.accessor('priority', { id: 'priority', header: 'Prioridad', size: 96, cell: (c) => <PriorityBadge priority={c.getValue()} /> }),
+      col.accessor('status', {
+        id: 'status',
+        header: 'Estado',
+        size: 130,
+        cell: (c) => <StatusBadge status={c.getValue()} />,
+      }),
+      col.accessor('priority', {
+        id: 'priority',
+        header: 'Prioridad',
+        size: 96,
+        cell: (c) => <PriorityBadge priority={c.getValue()} />,
+      }),
       col.accessor('ownerName', {
         id: 'owner',
         header: 'Responsable',
@@ -173,7 +221,9 @@ export function PendientesBoard({ page, query, error }: { page: Page<ActionItemD
             <span className="inline-flex items-center gap-2">
               <UserAvatar name={name} size="xs" />
               <span className="truncate text-sm">{name}</span>
-              {it.externalAssigneeName && !it.ownerName ? <Badge tone="neutral">Externo</Badge> : null}
+              {it.externalAssigneeName && !it.ownerName ? (
+                <Badge tone="neutral">Externo</Badge>
+              ) : null}
             </span>
           )
         },
@@ -182,32 +232,72 @@ export function PendientesBoard({ page, query, error }: { page: Page<ActionItemD
         id: 'dueDate',
         header: 'Fecha',
         size: 140,
-        cell: (c) => <DueDate value={c.getValue()} isOverdue={c.row.original.isOverdue} status={c.row.original.status} />,
+        cell: (c) => (
+          <DueDate
+            value={c.getValue()}
+            isOverdue={c.row.original.isOverdue}
+            status={c.row.original.status}
+          />
+        ),
       }),
-      col.accessor('areaName', { id: 'area', header: 'Área', size: 140, cell: (c) => c.getValue() ?? <span className="text-muted-foreground">—</span> }),
-      col.accessor('projectName', { id: 'project', header: 'Proyecto', size: 160, cell: (c) => c.getValue() ?? <span className="text-muted-foreground">—</span> }),
+      col.accessor('areaName', {
+        id: 'area',
+        header: 'Área',
+        size: 140,
+        cell: (c) => c.getValue() ?? <span className="text-muted-foreground">—</span>,
+      }),
+      col.accessor('projectName', {
+        id: 'project',
+        header: 'Proyecto',
+        size: 160,
+        cell: (c) => c.getValue() ?? <span className="text-muted-foreground">—</span>,
+      }),
       col.accessor('attentionReasons', {
         id: 'attention',
         header: 'Atención',
         cell: (c) => <AttentionReasonList reasons={c.getValue()} compact max={2} />,
       }),
-      col.accessor('confidence', { id: 'confidence', header: 'Confianza', size: 110, cell: (c) => <ConfidenceIndicator value={c.getValue()} variant="inline" /> }),
-      col.accessor('daysOpen', { id: 'daysOpen', header: 'Días abierto', size: 90, cell: (c) => <span className="font-mono text-xs tabular">{c.getValue()}</span> }),
-      col.accessor('lastMentionedAt', { id: 'lastMentioned', header: 'Última mención', size: 130, cell: (c) => <RelativeDate value={c.getValue()} className="text-xs" /> }),
+      col.accessor('confidence', {
+        id: 'confidence',
+        header: 'Confianza',
+        size: 110,
+        cell: (c) => <ConfidenceIndicator value={c.getValue()} variant="inline" />,
+      }),
+      col.accessor('daysOpen', {
+        id: 'daysOpen',
+        header: 'Días abierto',
+        size: 90,
+        cell: (c) => <span className="font-mono text-xs tabular">{c.getValue()}</span>,
+      }),
+      col.accessor('lastMentionedAt', {
+        id: 'lastMentioned',
+        header: 'Última mención',
+        size: 130,
+        cell: (c) => <RelativeDate value={c.getValue()} className="text-xs" />,
+      }),
       col.accessor('createdFromMeetingTitle', {
         id: 'meeting',
         header: 'Reunión origen',
         size: 200,
         cell: (c) =>
           c.row.original.createdFromMeetingId ? (
-            <Link href={`/reuniones/${c.row.original.createdFromMeetingId}`} className="truncate text-xs text-info-700 hover:underline" onClick={(e) => e.stopPropagation()}>
+            <Link
+              href={`/reuniones/${c.row.original.createdFromMeetingId}`}
+              className="truncate text-xs text-info-700 hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
               {c.getValue() ?? 'Ver reunión'}
             </Link>
           ) : (
             <span className="text-xs text-muted-foreground">Manual</span>
           ),
       }),
-      col.accessor('updatedAt', { id: 'updatedAt', header: 'Actualizado', size: 120, cell: (c) => <RelativeDate value={c.getValue()} className="text-xs" withTime /> }),
+      col.accessor('updatedAt', {
+        id: 'updatedAt',
+        header: 'Actualizado',
+        size: 120,
+        cell: (c) => <RelativeDate value={c.getValue()} className="text-xs" withTime />,
+      }),
       col.display({
         id: 'actions',
         header: '',
@@ -248,7 +338,13 @@ export function PendientesBoard({ page, query, error }: { page: Page<ActionItemD
     updatedAt: 'Actualizado',
   }
 
-  const activeFilters = [query.ownerUserId, query.areaId, query.projectId, query.priority, query.status].filter(Boolean).length
+  const activeFilters = [
+    query.ownerUserId,
+    query.areaId,
+    query.projectId,
+    query.priority,
+    query.status,
+  ].filter(Boolean).length
 
   return (
     <div className="flex flex-col gap-4">
@@ -262,7 +358,11 @@ export function PendientesBoard({ page, query, error }: { page: Page<ActionItemD
             ))}
           </SegmentedList>
           <div className="flex items-center gap-2">
-            <Button variant={filtersOpen ? 'secondary' : 'outline'} size="sm" onClick={() => setFiltersOpen((o) => !o)}>
+            <Button
+              variant={filtersOpen ? 'secondary' : 'outline'}
+              size="sm"
+              onClick={() => setFiltersOpen((o) => !o)}
+            >
               <SlidersHorizontal />
               Filtros
               {activeFilters > 0 ? <Badge tone="solid">{activeFilters}</Badge> : null}
@@ -281,7 +381,11 @@ export function PendientesBoard({ page, query, error }: { page: Page<ActionItemD
                   .getAllLeafColumns()
                   .filter((c) => c.getCanHide())
                   .map((c) => (
-                    <DropdownMenuCheckboxItem key={c.id} checked={c.getIsVisible()} onCheckedChange={(v) => c.toggleVisibility(Boolean(v))}>
+                    <DropdownMenuCheckboxItem
+                      key={c.id}
+                      checked={c.getIsVisible()}
+                      onCheckedChange={(v) => c.toggleVisibility(Boolean(v))}
+                    >
                       {COLUMN_LABELS[c.id] ?? c.id}
                     </DropdownMenuCheckboxItem>
                   ))}
@@ -291,7 +395,12 @@ export function PendientesBoard({ page, query, error }: { page: Page<ActionItemD
               <button
                 type="button"
                 onClick={() => changeMode('table')}
-                className={cn('rounded-sm p-1.5 transition-colors', mode === 'table' ? 'bg-ink-900 text-paper-50' : 'text-muted-foreground hover:bg-paper-200')}
+                className={cn(
+                  'rounded-sm p-1.5 transition-colors',
+                  mode === 'table'
+                    ? 'bg-ink-900 text-paper-50'
+                    : 'text-muted-foreground hover:bg-paper-200',
+                )}
                 aria-pressed={mode === 'table'}
                 aria-label="Vista tabla"
               >
@@ -300,7 +409,12 @@ export function PendientesBoard({ page, query, error }: { page: Page<ActionItemD
               <button
                 type="button"
                 onClick={() => changeMode('kanban')}
-                className={cn('rounded-sm p-1.5 transition-colors', mode === 'kanban' ? 'bg-ink-900 text-paper-50' : 'text-muted-foreground hover:bg-paper-200')}
+                className={cn(
+                  'rounded-sm p-1.5 transition-colors',
+                  mode === 'kanban'
+                    ? 'bg-ink-900 text-paper-50'
+                    : 'text-muted-foreground hover:bg-paper-200',
+                )}
                 aria-pressed={mode === 'kanban'}
                 aria-label="Vista kanban"
               >
@@ -319,14 +433,23 @@ export function PendientesBoard({ page, query, error }: { page: Page<ActionItemD
             url.set({ search: search.trim() || null })
           }}
         >
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar en pendientes…" className="h-8 w-64 text-xs" aria-label="Buscar en pendientes" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar en pendientes…"
+            className="h-8 w-64 text-xs"
+            aria-label="Buscar en pendientes"
+          />
           <Button type="submit" size="sm" variant="secondary">
             Buscar
           </Button>
         </form>
         <div className="ml-auto flex items-center gap-2">
           <span className="text-xs text-muted-foreground">Ordenar</span>
-          <Select value={query.sort} onValueChange={(v) => url.set({ sort: v === 'attention' ? null : v })}>
+          <Select
+            value={query.sort}
+            onValueChange={(v) => url.set({ sort: v === 'attention' ? null : v })}
+          >
             <SelectTrigger size="sm" className="w-[150px]" aria-label="Ordenar por">
               <SelectValue />
             </SelectTrigger>
@@ -344,15 +467,39 @@ export function PendientesBoard({ page, query, error }: { page: Page<ActionItemD
       {filtersOpen ? (
         <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-surface-muted/50 p-3">
           <div className="w-52">
-            <CatalogSelect kind="users" size="sm" value={query.ownerUserId ?? null} onChange={(v) => url.set({ ownerUserId: v })} emptyLabel="Cualquier responsable" placeholder="Responsable" />
+            <CatalogSelect
+              kind="users"
+              size="sm"
+              value={query.ownerUserId ?? null}
+              onChange={(v) => url.set({ ownerUserId: v })}
+              emptyLabel="Cualquier responsable"
+              placeholder="Responsable"
+            />
           </div>
           <div className="w-48">
-            <CatalogSelect kind="areas" size="sm" value={query.areaId ?? null} onChange={(v) => url.set({ areaId: v })} emptyLabel="Cualquier área" placeholder="Área" />
+            <CatalogSelect
+              kind="areas"
+              size="sm"
+              value={query.areaId ?? null}
+              onChange={(v) => url.set({ areaId: v })}
+              emptyLabel="Cualquier área"
+              placeholder="Área"
+            />
           </div>
           <div className="w-48">
-            <CatalogSelect kind="projects" size="sm" value={query.projectId ?? null} onChange={(v) => url.set({ projectId: v })} emptyLabel="Cualquier proyecto" placeholder="Proyecto" />
+            <CatalogSelect
+              kind="projects"
+              size="sm"
+              value={query.projectId ?? null}
+              onChange={(v) => url.set({ projectId: v })}
+              emptyLabel="Cualquier proyecto"
+              placeholder="Proyecto"
+            />
           </div>
-          <Select value={query.priority ?? '__all'} onValueChange={(v) => url.set({ priority: v === '__all' ? null : v })}>
+          <Select
+            value={query.priority ?? '__all'}
+            onValueChange={(v) => url.set({ priority: v === '__all' ? null : v })}
+          >
             <SelectTrigger size="sm" className="w-40" aria-label="Prioridad">
               <SelectValue />
             </SelectTrigger>
@@ -365,13 +512,20 @@ export function PendientesBoard({ page, query, error }: { page: Page<ActionItemD
               ))}
             </SelectContent>
           </Select>
-          <Select value={query.status ?? '__all'} onValueChange={(v) => url.set({ status: v === '__all' ? null : v })}>
+          <Select
+            value={query.status ?? '__all'}
+            onValueChange={(v) => url.set({ status: v === '__all' ? null : v })}
+          >
             <SelectTrigger size="sm" className="w-44" aria-label="Estado">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="__all">Cualquier estado</SelectItem>
-              {(Object.keys(ACTION_ITEM_STATUS_LABELS) as Array<keyof typeof ACTION_ITEM_STATUS_LABELS>).map((s) => (
+              {(
+                Object.keys(ACTION_ITEM_STATUS_LABELS) as Array<
+                  keyof typeof ACTION_ITEM_STATUS_LABELS
+                >
+              ).map((s) => (
                 <SelectItem key={s} value={s}>
                   {ACTION_ITEM_STATUS_LABELS[s].label}
                 </SelectItem>
@@ -437,17 +591,32 @@ function Kanban({ items }: { items: ActionItemDto[] }) {
         const list = groups.get(status) ?? []
         const meta = ACTION_ITEM_STATUS_LABELS[status]
         return (
-          <section key={status} className="flex w-[280px] shrink-0 flex-col rounded-lg border border-border bg-surface-muted/50" aria-label={meta.label}>
+          <section
+            key={status}
+            className="flex w-[280px] shrink-0 flex-col rounded-lg border border-border bg-surface-muted/50"
+            aria-label={meta.label}
+          >
             <header className="flex items-center justify-between px-3 py-2">
               <StatusBadge status={status} />
               <span className="font-mono text-xs text-muted-foreground">{list.length}</span>
             </header>
             <div className="flex min-h-[120px] flex-col gap-2 px-2 pb-2">
-              {list.length === 0 ? <p className="px-2 py-6 text-center text-xs text-muted-foreground">Vacío</p> : null}
+              {list.length === 0 ? (
+                <p className="px-2 py-6 text-center text-xs text-muted-foreground">Vacío</p>
+              ) : null}
               {list.map((it) => (
-                <article key={it.id} className={cn('rounded-md border border-border bg-surface p-3 shadow-card', it.isOverdue && 'border-l-2 border-l-danger-500')}>
+                <article
+                  key={it.id}
+                  className={cn(
+                    'rounded-md border border-border bg-surface p-3 shadow-card',
+                    it.isOverdue && 'border-l-2 border-l-danger-500',
+                  )}
+                >
                   <div className="flex items-start justify-between gap-2">
-                    <Link href={`/pendientes/${it.id}`} className="font-mono text-[11px] text-info-700 hover:underline">
+                    <Link
+                      href={`/pendientes/${it.id}`}
+                      className="font-mono text-[11px] text-info-700 hover:underline"
+                    >
                       {it.externalKey}
                     </Link>
                     <div className="flex items-center gap-1">
@@ -455,23 +624,41 @@ function Kanban({ items }: { items: ActionItemDto[] }) {
                       <ActionItemQuickActions item={it} />
                     </div>
                   </div>
-                  <Link href={`/pendientes/${it.id}`} className="mt-1 block text-sm font-medium leading-snug text-foreground hover:underline">
+                  <Link
+                    href={`/pendientes/${it.id}`}
+                    className="mt-1 block text-sm font-medium leading-snug text-foreground hover:underline"
+                  >
                     {it.title}
                   </Link>
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <span className="inline-flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-                      {it.ownerName ?? it.externalAssigneeName ? (
+                      {(it.ownerName ?? it.externalAssigneeName) ? (
                         <>
                           <UserAvatar name={it.ownerName ?? it.externalAssigneeName} size="xs" />
-                          <span className="truncate">{it.ownerName ?? it.externalAssigneeName}</span>
+                          <span className="truncate">
+                            {it.ownerName ?? it.externalAssigneeName}
+                          </span>
                         </>
                       ) : (
                         <span className="text-warning-800">Sin responsable</span>
                       )}
                     </span>
-                    <DueDate value={it.dueDate} isOverdue={it.isOverdue} status={it.status} className="text-xs" showDays={false} />
+                    <DueDate
+                      value={it.dueDate}
+                      isOverdue={it.isOverdue}
+                      status={it.status}
+                      className="text-xs"
+                      showDays={false}
+                    />
                   </div>
-                  {it.attentionReasons.length > 0 ? <AttentionReasonList reasons={it.attentionReasons} compact max={2} className="mt-2" /> : null}
+                  {it.attentionReasons.length > 0 ? (
+                    <AttentionReasonList
+                      reasons={it.attentionReasons}
+                      compact
+                      max={2}
+                      className="mt-2"
+                    />
+                  ) : null}
                 </article>
               ))}
             </div>

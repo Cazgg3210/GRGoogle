@@ -33,7 +33,11 @@ export interface FakeMeetOptions {
 export class FakeMeetAdapter implements MeetingCapturePort {
   readonly fixtures: FakeGoogleFixtures
   readonly now: NowFn
-  readonly patchCalls: Array<{ spaceName: string; asUser: string; config: { autoTranscription: boolean; autoSmartNotes: boolean } }> = []
+  readonly patchCalls: Array<{
+    spaceName: string
+    asUser: string
+    config: { autoTranscription: boolean; autoSmartNotes: boolean }
+  }> = []
   private readonly companyDomain: string
 
   constructor(options: FakeMeetOptions = {}) {
@@ -44,9 +48,13 @@ export class FakeMeetAdapter implements MeetingCapturePort {
 
   private assertInternal(asUser: string): void {
     if (!asUser.toLowerCase().endsWith(`@${this.companyDomain}`)) {
-      throw new DomainError(DomainErrorCode.GOOGLE_PERMISSION_DENIED, 'Fake Meet: sólo se puede impersonar usuarios internos', {
-        details: { asUser },
-      })
+      throw new DomainError(
+        DomainErrorCode.GOOGLE_PERMISSION_DENIED,
+        'Fake Meet: sólo se puede impersonar usuarios internos',
+        {
+          details: { asUser },
+        },
+      )
     }
   }
 
@@ -64,12 +72,20 @@ export class FakeMeetAdapter implements MeetingCapturePort {
   private mapRecord(r: FixtureConferenceRecord): MeetConferenceRecord {
     const start = recordStartTime(r, this.now)
     const end = recordEndTime(r, this.now)
-    return { name: r.name, spaceName: r.spaceName, startTime: start, endTime: end, expireTime: new Date(end.getTime() + 30 * 86_400_000) }
+    return {
+      name: r.name,
+      spaceName: r.spaceName,
+      startTime: start,
+      endTime: end,
+      expireTime: new Date(end.getTime() + 30 * 86_400_000),
+    }
   }
 
   async getSpaceByMeetingCode(meetingCode: string, asUser: string): Promise<MeetSpace | null> {
     this.assertInternal(asUser)
-    const s = this.fixtures.spaces.find((x) => x.meetingCode === meetingCode.toLowerCase() || x.name === meetingCode)
+    const s = this.fixtures.spaces.find(
+      (x) => x.meetingCode === meetingCode.toLowerCase() || x.name === meetingCode,
+    )
     if (!s) return null
     return {
       name: s.name,
@@ -91,7 +107,11 @@ export class FakeMeetAdapter implements MeetingCapturePort {
     if (!s) throw new DomainError(DomainErrorCode.GOOGLE_NOT_FOUND, `Space ${spaceName} no existe`)
     if (s.patchBlockedReason) return { applied: false, blockedReason: s.patchBlockedReason }
     if (s.ownerEmail.toLowerCase() !== asUser.toLowerCase()) {
-      return { applied: false, blockedReason: 'GOOGLE_PERMISSION_DENIED: sólo el propietario del space puede modificar artifactConfig' }
+      return {
+        applied: false,
+        blockedReason:
+          'GOOGLE_PERMISSION_DENIED: sólo el propietario del space puede modificar artifactConfig',
+      }
     }
     s.autoTranscription = config.autoTranscription ? 'ON' : 'OFF'
     s.autoSmartNotes = config.autoSmartNotes ? 'ON' : 'OFF'
@@ -104,7 +124,10 @@ export class FakeMeetAdapter implements MeetingCapturePort {
     return r ? this.mapRecord(r) : null
   }
 
-  async listConferenceRecordsByMeetingCode(meetingCode: string, asUser: string): Promise<MeetConferenceRecord[]> {
+  async listConferenceRecordsByMeetingCode(
+    meetingCode: string,
+    asUser: string,
+  ): Promise<MeetConferenceRecord[]> {
     this.assertInternal(asUser)
     return this.fixtures.conferenceRecords
       .filter((r) => r.meetingCode === meetingCode.toLowerCase() && this.canAccess(r, asUser))
@@ -127,7 +150,10 @@ export class FakeMeetAdapter implements MeetingCapturePort {
     }))
   }
 
-  async listTranscripts(conferenceRecordName: string, asUser: string): Promise<MeetTranscriptMeta[]> {
+  async listTranscripts(
+    conferenceRecordName: string,
+    asUser: string,
+  ): Promise<MeetTranscriptMeta[]> {
     this.assertInternal(asUser)
     const r = this.findRecord(conferenceRecordName, asUser)
     if (!r) return []
@@ -142,7 +168,10 @@ export class FakeMeetAdapter implements MeetingCapturePort {
     }))
   }
 
-  async listTranscriptEntries(transcriptName: string, asUser: string): Promise<MeetTranscriptEntry[]> {
+  async listTranscriptEntries(
+    transcriptName: string,
+    asUser: string,
+  ): Promise<MeetTranscriptEntry[]> {
     this.assertInternal(asUser)
     const [recordName, transcriptId] = transcriptName.split('/transcripts/')
     const r = recordName ? this.findRecord(recordName, asUser) : null

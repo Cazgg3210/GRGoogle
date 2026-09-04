@@ -24,9 +24,17 @@ export function AdminTabs({
   can: { users: boolean; catalog: boolean; audit: boolean; jobs: boolean }
 }) {
   const url = useUrlState()
-  const available = [can.users && 'usuarios', can.catalog && 'catalogos', can.audit && 'auditoria', can.jobs && 'jobs'].filter(Boolean) as string[]
-  const tab = available.includes(initialTab ?? '') ? (initialTab as string) : (available[0] ?? 'usuarios')
-  if (available.length === 0) return <InlineNotice tone="warning">Tu rol no tiene permisos de administración.</InlineNotice>
+  const available = [
+    can.users && 'usuarios',
+    can.catalog && 'catalogos',
+    can.audit && 'auditoria',
+    can.jobs && 'jobs',
+  ].filter(Boolean) as string[]
+  const tab = available.includes(initialTab ?? '')
+    ? (initialTab as string)
+    : (available[0] ?? 'usuarios')
+  if (available.length === 0)
+    return <InlineNotice tone="warning">Tu rol no tiene permisos de administración.</InlineNotice>
   return (
     <Tabs value={tab} onValueChange={(v) => url.set({ tab: v })}>
       <TabsList>
@@ -37,7 +45,13 @@ export function AdminTabs({
       </TabsList>
       {can.users ? (
         <TabsContent value="usuarios">
-          {usersError ? <InlineNotice tone="danger">No se pudieron cargar los usuarios ({usersError}).</InlineNotice> : <UsersAdmin users={users} areas={areas} />}
+          {usersError ? (
+            <InlineNotice tone="danger">
+              No se pudieron cargar los usuarios ({usersError}).
+            </InlineNotice>
+          ) : (
+            <UsersAdmin users={users} areas={areas} />
+          )}
         </TabsContent>
       ) : null}
       {can.catalog ? (

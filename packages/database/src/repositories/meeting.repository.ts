@@ -39,7 +39,9 @@ export class PrismaMeetingRepository extends BaseRepository implements MeetingRe
   }
 
   async findByCalendarEventId(calendarEventId: string): Promise<Meeting | null> {
-    const row = await this.db.meeting.findUnique({ where: { googleCalendarEventId: calendarEventId } })
+    const row = await this.db.meeting.findUnique({
+      where: { googleCalendarEventId: calendarEventId },
+    })
     return row ? toMeeting(row) : null
   }
 
@@ -143,8 +145,10 @@ export class PrismaMeetingRepository extends BaseRepository implements MeetingRe
     if (patch.aiAnalysisStatus !== undefined) data.aiAnalysisStatus = patch.aiAnalysisStatus
     if (patch.lastErrorCode !== undefined) data.lastErrorCode = patch.lastErrorCode
     if (patch.lastErrorAt !== undefined) data.lastErrorAt = patch.lastErrorAt
-    if (patch.detectedLanguageCode !== undefined) data.detectedLanguageCode = patch.detectedLanguageCode
-    if (patch.mixedLanguageDetected !== undefined) data.mixedLanguageDetected = patch.mixedLanguageDetected
+    if (patch.detectedLanguageCode !== undefined)
+      data.detectedLanguageCode = patch.detectedLanguageCode
+    if (patch.mixedLanguageDetected !== undefined)
+      data.mixedLanguageDetected = patch.mixedLanguageDetected
     if (patch.status !== undefined) data.status = patch.status
     if (patch.endAt !== undefined) data.endAt = patch.endAt
     if (patch.durationSeconds !== undefined) data.durationSeconds = patch.durationSeconds

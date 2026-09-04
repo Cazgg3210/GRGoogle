@@ -1,5 +1,10 @@
 import type { CalendarEventSummary, CalendarPort } from '@smlxl/domain'
-import { loadDefaultFixtures, type FakeGoogleFixtures, type FixtureCalendarEvent, type NowFn } from './fixtures.js'
+import {
+  loadDefaultFixtures,
+  type FakeGoogleFixtures,
+  type FixtureCalendarEvent,
+  type NowFn,
+} from './fixtures.js'
 
 export interface FakeCalendarOptions {
   fixtures?: FakeGoogleFixtures
@@ -47,7 +52,11 @@ export class FakeCalendarAdapter implements CalendarPort {
       description: null,
       organizerEmail: e.organizerEmail.toLowerCase(),
       creatorEmail: e.organizerEmail.toLowerCase(),
-      attendees: e.attendees.map((a) => ({ email: a.toLowerCase(), responseStatus: 'accepted', isOrganizer: a.toLowerCase() === e.organizerEmail.toLowerCase() })),
+      attendees: e.attendees.map((a) => ({
+        email: a.toLowerCase(),
+        responseStatus: 'accepted',
+        isOrganizer: a.toLowerCase() === e.organizerEmail.toLowerCase(),
+      })),
       startAt,
       endAt: new Date(startAt.getTime() + e.durationMinutes * 60_000),
       timezone: 'America/Mexico_City',
@@ -65,7 +74,11 @@ export class FakeCalendarAdapter implements CalendarPort {
     syncToken: string | null
     timeMin?: Date
     timeMax?: Date
-  }): Promise<{ events: CalendarEventSummary[]; nextSyncToken: string | null; fullSyncRequired: boolean }> {
+  }): Promise<{
+    events: CalendarEventSummary[]
+    nextSyncToken: string | null
+    fullSyncRequired: boolean
+  }> {
     if (input.syncToken && this.invalidTokens.has(input.syncToken)) {
       return { events: [], nextSyncToken: null, fullSyncRequired: true }
     }

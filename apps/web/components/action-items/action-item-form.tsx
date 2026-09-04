@@ -91,20 +91,43 @@ export function ActionItemForm({
       noValidate
     >
       <Field label="Título" htmlFor="ai-title" required error={errors.title?.message}>
-        <Input id="ai-title" {...register('title')} placeholder="Ej. Enviar carta de intención al Cliente Alfa" aria-invalid={Boolean(errors.title)} />
+        <Input
+          id="ai-title"
+          {...register('title')}
+          placeholder="Ej. Enviar carta de intención al Cliente Alfa"
+          aria-invalid={Boolean(errors.title)}
+        />
       </Field>
       <Field label="Descripción" htmlFor="ai-desc" error={errors.description?.message}>
-        <Textarea id="ai-desc" rows={3} {...register('description')} placeholder="Contexto, alcance, criterios de terminado…" />
+        <Textarea
+          id="ai-desc"
+          rows={3}
+          {...register('description')}
+          placeholder="Contexto, alcance, criterios de terminado…"
+        />
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Responsable" htmlFor="ai-owner">
           <Controller
             control={control}
             name="ownerUserId"
-            render={({ field }) => <CatalogSelect id="ai-owner" kind="users" value={field.value ?? null} onChange={field.onChange} emptyLabel="Sin responsable" />}
+            render={({ field }) => (
+              <CatalogSelect
+                id="ai-owner"
+                kind="users"
+                value={field.value ?? null}
+                onChange={field.onChange}
+                emptyLabel="Sin responsable"
+              />
+            )}
           />
         </Field>
-        <Field label="Fecha compromiso" htmlFor="ai-due" hint="Vacío = sin fecha (se mostrará explícitamente)." error={errors.dueDate?.message}>
+        <Field
+          label="Fecha compromiso"
+          htmlFor="ai-due"
+          hint="Vacío = sin fecha (se mostrará explícitamente)."
+          error={errors.dueDate?.message}
+        >
           <Input id="ai-due" type="date" {...register('dueDate')} />
         </Field>
         <Field label="Prioridad" htmlFor="ai-priority">
@@ -145,13 +168,33 @@ export function ActionItemForm({
           />
         </Field>
         <Field label="Área" htmlFor="ai-area">
-          <Controller control={control} name="areaId" render={({ field }) => <CatalogSelect id="ai-area" kind="areas" value={field.value ?? null} onChange={field.onChange} emptyLabel="Sin área" />} />
+          <Controller
+            control={control}
+            name="areaId"
+            render={({ field }) => (
+              <CatalogSelect
+                id="ai-area"
+                kind="areas"
+                value={field.value ?? null}
+                onChange={field.onChange}
+                emptyLabel="Sin área"
+              />
+            )}
+          />
         </Field>
         <Field label="Proyecto" htmlFor="ai-project">
           <Controller
             control={control}
             name="projectId"
-            render={({ field }) => <CatalogSelect id="ai-project" kind="projects" value={field.value ?? null} onChange={field.onChange} emptyLabel="Sin proyecto" />}
+            render={({ field }) => (
+              <CatalogSelect
+                id="ai-project"
+                kind="projects"
+                value={field.value ?? null}
+                onChange={field.onChange}
+                emptyLabel="Sin proyecto"
+              />
+            )}
           />
         </Field>
       </div>

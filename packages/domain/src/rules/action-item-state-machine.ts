@@ -12,10 +12,7 @@ import { DomainError, DomainErrorCode } from '../errors.js'
  */
 
 export type TransitionActor =
-  | { kind: 'AI' }
-  | { kind: 'USER'; userId: string }
-  | { kind: 'SYSTEM' }
-  | { kind: 'IMPORT' }
+  { kind: 'AI' } | { kind: 'USER'; userId: string } | { kind: 'SYSTEM' } | { kind: 'IMPORT' }
 
 export interface TransitionContext {
   actor: TransitionActor

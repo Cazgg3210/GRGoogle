@@ -41,7 +41,14 @@ export function formatDate(value: string | Date | null | undefined, fallback = '
 export function formatDateTime(value: string | Date | null | undefined, fallback = '—'): string {
   const d = toDate(value)
   if (!d) return fallback
-  return fmt({ day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+  return fmt({
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
     .format(d)
     .replace('.', '')
 }
@@ -67,7 +74,10 @@ export function formatWeekday(dayOfWeek: number): string {
 }
 
 /** "hace 3 días" / "en 2 días" / "hoy" */
-export function formatRelative(value: string | Date | null | undefined, now: Date = new Date()): string {
+export function formatRelative(
+  value: string | Date | null | undefined,
+  now: Date = new Date(),
+): string {
   const d = toDate(value)
   if (!d) return '—'
   const diffMs = d.getTime() - now.getTime()
@@ -85,7 +95,10 @@ export function formatRelative(value: string | Date | null | undefined, now: Dat
 }
 
 /** Diferencia en días naturales (positivo = futuro). */
-export function daysFromToday(dateOnly: string | null | undefined, now: Date = new Date()): number | null {
+export function daysFromToday(
+  dateOnly: string | null | undefined,
+  now: Date = new Date(),
+): number | null {
   const d = toDate(dateOnly)
   if (!d) return null
   const todayStr = toLocalDateString(now)
@@ -110,7 +123,10 @@ export function formatDuration(seconds: number | null | undefined, fallback = '�
 }
 
 /** "00:12:34" a partir de un ISO o de un string ya en HH:MM:SS. */
-export function formatClock(value: string | null | undefined, meetingStart?: string | null): string {
+export function formatClock(
+  value: string | null | undefined,
+  meetingStart?: string | null,
+): string {
   if (!value) return '—'
   if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(value)) return value
   const d = toDate(value)
@@ -126,7 +142,11 @@ export function formatClock(value: string | null | undefined, meetingStart?: str
   return formatTime(d)
 }
 
-export function formatPercent(value: number | null | undefined, digits = 0, fallback = '—'): string {
+export function formatPercent(
+  value: number | null | undefined,
+  digits = 0,
+  fallback = '—',
+): string {
   if (value === null || value === undefined || Number.isNaN(value)) return fallback
   const pct = value <= 1 && value >= 0 ? value * 100 : value
   return `${pct.toFixed(digits)}%`
@@ -139,7 +159,11 @@ export function formatNumber(value: number | null | undefined, fallback = '—')
 
 export function formatCurrencyUsd(value: number | null | undefined, fallback = '—'): string {
   if (value === null || value === undefined || Number.isNaN(value)) return fallback
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 4 }).format(value)
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 4,
+  }).format(value)
 }
 
 export function initials(name: string | null | undefined): string {

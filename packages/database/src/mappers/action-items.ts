@@ -123,7 +123,10 @@ export function toLink(row: LinkRow, ctx: MapperContext): ActionItemMeetingLink 
   }
 }
 
-export function linkToDb(l: ActionItemMeetingLink, ctx: MapperContext): Prisma.ActionItemMeetingLinkUncheckedCreateInput {
+export function linkToDb(
+  l: ActionItemMeetingLink,
+  ctx: MapperContext,
+): Prisma.ActionItemMeetingLinkUncheckedCreateInput {
   return {
     id: l.id,
     actionItemId: l.actionItemId,
@@ -153,7 +156,9 @@ export function toStatusHistory(row: HistoryRow): ActionItemStatusHistory {
   }
 }
 
-export function statusHistoryToDb(h: ActionItemStatusHistory): Prisma.ActionItemStatusHistoryUncheckedCreateInput {
+export function statusHistoryToDb(
+  h: ActionItemStatusHistory,
+): Prisma.ActionItemStatusHistoryUncheckedCreateInput {
   return {
     id: h.id,
     actionItemId: h.actionItemId,
@@ -254,7 +259,10 @@ export function toReviewItem(row: ReviewRow, ctx: MapperContext): AiReviewItem {
   }
 }
 
-export function reviewItemToDb(r: AiReviewItem, ctx: MapperContext): Prisma.AiReviewItemUncheckedCreateInput {
+export function reviewItemToDb(
+  r: AiReviewItem,
+  ctx: MapperContext,
+): Prisma.AiReviewItemUncheckedCreateInput {
   return {
     id: r.id,
     meetingId: r.meetingId,

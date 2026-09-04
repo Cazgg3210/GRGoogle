@@ -72,8 +72,7 @@ declare module 'next-auth/jwt' {
 }
 
 export type ApiSessionLookup =
-  | { ok: true; session: SessionDto }
-  | { ok: false; reason: 'NOT_ALLOWED' | 'UNREACHABLE' }
+  { ok: true; session: SessionDto } | { ok: false; reason: 'NOT_ALLOWED' | 'UNREACHABLE' }
 
 function emailAllowed(email: string | null | undefined, domain: string): email is string {
   if (!email) return false
@@ -157,7 +156,8 @@ export function createAuthConfig(env: AuthEnv): NextAuthConfig {
           email: { label: 'Correo corporativo', type: 'email' },
         },
         async authorize(credentials) {
-          const email = typeof credentials?.email === 'string' ? credentials.email.trim().toLowerCase() : ''
+          const email =
+            typeof credentials?.email === 'string' ? credentials.email.trim().toLowerCase() : ''
           if (!emailAllowed(email, domain)) return null
           const localName = email.split('@')[0] ?? email
           const lookup = await lookupApiSession(env, { email, name: localName })
@@ -173,7 +173,14 @@ export function createAuthConfig(env: AuthEnv): NextAuthConfig {
           }
           if (lookup.reason === 'NOT_ALLOWED') return null
           // API no disponible en desarrollo: sesión mínima como MEMBER.
-          return { id: email, platformUserId: email, email, name: localName, role: 'MEMBER', devBypass: true }
+          return {
+            id: email,
+            platformUserId: email,
+            email,
+            name: localName,
+            role: 'MEMBER',
+            devBypass: true,
+          }
         },
       }),
     )
@@ -189,7 +196,10 @@ export function createAuthConfig(env: AuthEnv): NextAuthConfig {
       async signIn({ user, account }) {
         if (account?.provider === DEV_CREDENTIALS_PROVIDER_ID) return true
         if (!emailAllowed(user.email, domain)) return false
-        const lookup = await lookupApiSession(env, { email: user.email, name: user.name ?? user.email })
+        const lookup = await lookupApiSession(env, {
+          email: user.email,
+          name: user.name ?? user.email,
+        })
         if (lookup.ok) return true
         if (lookup.reason === 'NOT_ALLOWED') return false
         // API inalcanzable: sólo se permite en modo bypass de desarrollo.
@@ -230,7 +240,12 @@ export function createAuthConfig(env: AuthEnv): NextAuthConfig {
           !token.apiToken || !token.apiTokenExp || token.apiTokenExp - now < REFRESH_WINDOW_SECONDS
         if (needsToken && token.email && token.userId && isApiTokenRole(token.role)) {
           token.apiToken = await mintApiToken(
-            { sub: token.userId, email: token.email, role: token.role, name: token.name ?? token.email },
+            {
+              sub: token.userId,
+              email: token.email,
+              role: token.role,
+              name: token.name ?? token.email,
+            },
             env.AUTH_SECRET,
             DEFAULT_API_TOKEN_TTL_SECONDS,
           )

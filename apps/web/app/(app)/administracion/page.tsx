@@ -25,7 +25,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   ])
   return (
     <>
-      <PageHeader eyebrow="Gobierno" title="Administración" description="Usuarios y roles, catálogos (áreas, proyectos y alias), auditoría de mutaciones y estado de la cola de trabajos." />
+      <PageHeader
+        eyebrow="Gobierno"
+        title="Administración"
+        description="Usuarios y roles, catálogos (áreas, proyectos y alias), auditoría de mutaciones y estado de la cola de trabajos."
+      />
       <AdminTabs
         initialTab={first(sp, 'tab')}
         users={users.ok ? users.data : []}

@@ -53,7 +53,8 @@ export interface GenAiUsageMetadata {
 export interface GenAiResponseLike {
   text?: string | undefined
   usageMetadata?: GenAiUsageMetadata | undefined
-  promptFeedback?: { blockReason?: string | undefined; blockReasonMessage?: string | undefined } | undefined
+  promptFeedback?:
+    { blockReason?: string | undefined; blockReasonMessage?: string | undefined } | undefined
 }
 
 export interface GenAiGenerateParams {
@@ -171,18 +172,38 @@ export function mapGeminiError(err: unknown): DomainError {
   const status = providerStatus(err)
   const message = err instanceof Error ? err.message : 'Error del proveedor IA'
   if (status === 429) {
-    return new DomainError(DomainErrorCode.GOOGLE_RATE_LIMIT, 'Límite de cuota de Gemini', { retryable: true, details: { status }, cause: err })
+    return new DomainError(DomainErrorCode.GOOGLE_RATE_LIMIT, 'Límite de cuota de Gemini', {
+      retryable: true,
+      details: { status },
+      cause: err,
+    })
   }
   if (isAbort(err) && status === null) {
-    return new DomainError(DomainErrorCode.AI_PROVIDER_ERROR, 'Timeout llamando a Gemini', { retryable: true, details: { reason: 'timeout' }, cause: err })
+    return new DomainError(DomainErrorCode.AI_PROVIDER_ERROR, 'Timeout llamando a Gemini', {
+      retryable: true,
+      details: { reason: 'timeout' },
+      cause: err,
+    })
   }
   if (status !== null && status >= 500) {
-    return new DomainError(DomainErrorCode.AI_PROVIDER_ERROR, `Gemini no disponible (${status})`, { retryable: true, details: { status }, cause: err })
+    return new DomainError(DomainErrorCode.AI_PROVIDER_ERROR, `Gemini no disponible (${status})`, {
+      retryable: true,
+      details: { status },
+      cause: err,
+    })
   }
   if (status === 401 || status === 403) {
-    return new DomainError(DomainErrorCode.AI_PROVIDER_ERROR, 'Credenciales de Gemini rechazadas', { retryable: false, details: { status }, cause: err })
+    return new DomainError(DomainErrorCode.AI_PROVIDER_ERROR, 'Credenciales de Gemini rechazadas', {
+      retryable: false,
+      details: { status },
+      cause: err,
+    })
   }
-  return new DomainError(DomainErrorCode.AI_PROVIDER_ERROR, `Error de Gemini: ${message}`, { retryable: false, details: { status }, cause: err })
+  return new DomainError(DomainErrorCode.AI_PROVIDER_ERROR, `Error de Gemini: ${message}`, {
+    retryable: false,
+    details: { status },
+    cause: err,
+  })
 }
 
 export class GeminiMeetingAnalyzer implements AiMeetingAnalyzer {
@@ -227,7 +248,11 @@ export class GeminiMeetingAnalyzer implements AiMeetingAnalyzer {
   }
 
   /** Una llamada con timeout + reintentos en errores transitorios del proveedor. */
-  private async generate(params: GenAiGenerateParams, acc: CallUsage, operation: string): Promise<string> {
+  private async generate(
+    params: GenAiGenerateParams,
+    acc: CallUsage,
+    operation: string,
+  ): Promise<string> {
     let attempt = 0
     for (;;) {
       const controller = new AbortController()
@@ -236,17 +261,29 @@ export class GeminiMeetingAnalyzer implements AiMeetingAnalyzer {
       try {
         const res = await this.options.client.models.generateContent({
           ...params,
-          config: { ...params.config, abortSignal: controller.signal, httpOptions: { timeout: this.timeoutMs } },
+          config: {
+            ...params.config,
+            abortSignal: controller.signal,
+            httpOptions: { timeout: this.timeoutMs },
+          },
         })
         addUsage(acc, res.usageMetadata, Date.now() - started)
         if (res.promptFeedback?.blockReason) {
-          throw new DomainError(DomainErrorCode.AI_INVALID_OUTPUT, `Gemini bloqueó la respuesta: ${res.promptFeedback.blockReason}`, {
-            details: { operation, blockReason: res.promptFeedback.blockReason },
-          })
+          throw new DomainError(
+            DomainErrorCode.AI_INVALID_OUTPUT,
+            `Gemini bloqueó la respuesta: ${res.promptFeedback.blockReason}`,
+            {
+              details: { operation, blockReason: res.promptFeedback.blockReason },
+            },
+          )
         }
         const text = res.text
         if (!text || text.trim().length === 0) {
-          throw new DomainError(DomainErrorCode.AI_INVALID_OUTPUT, 'Gemini devolvió una respuesta vacía', { details: { operation } })
+          throw new DomainError(
+            DomainErrorCode.AI_INVALID_OUTPUT,
+            'Gemini devolvió una respuesta vacía',
+            { details: { operation } },
+          )
         }
         return text
       } catch (err) {
@@ -255,7 +292,10 @@ export class GeminiMeetingAnalyzer implements AiMeetingAnalyzer {
         if (!mapped.retryable || attempt >= this.maxRetries) throw mapped
         attempt += 1
         const delay = Math.round(this.baseDelayMs * 2 ** (attempt - 1) * (0.5 + this.random()))
-        this.options.logger?.warn({ operation, attempt, delay, errorCode: mapped.code }, 'Reintentando llamada a Gemini')
+        this.options.logger?.warn(
+          { operation, attempt, delay, errorCode: mapped.code },
+          'Reintentando llamada a Gemini',
+        )
         await this.sleep(delay)
       } finally {
         clearTimeout(timer)
@@ -272,7 +312,9 @@ export class GeminiMeetingAnalyzer implements AiMeetingAnalyzer {
     acc: CallUsage,
     operation: string,
   ): Promise<z.infer<S>> {
-    const contents: GenAiGenerateParams['contents'] = [{ role: 'user', parts: [{ text: userPrompt }] }]
+    const contents: GenAiGenerateParams['contents'] = [
+      { role: 'user', parts: [{ text: userPrompt }] },
+    ]
     const params: GenAiGenerateParams = {
       model: this.options.model,
       contents,
@@ -283,7 +325,10 @@ export class GeminiMeetingAnalyzer implements AiMeetingAnalyzer {
         responseJsonSchema: jsonSchema,
       },
     }
-    this.options.logger?.debug({ operation, promptChars: systemPrompt.length + userPrompt.length }, 'Llamando a Gemini')
+    this.options.logger?.debug(
+      { operation, promptChars: systemPrompt.length + userPrompt.length },
+      'Llamando a Gemini',
+    )
     let text = await this.generate(params, acc, operation)
     for (let repair = 0; repair < 2; repair++) {
       let parsed: unknown
@@ -295,14 +340,27 @@ export class GeminiMeetingAnalyzer implements AiMeetingAnalyzer {
       }
       const validation = parseError ? null : schema.safeParse(parsed)
       if (validation?.success) return validation.data as z.infer<S>
-      const issues = parseError ?? validation?.error.issues.map((i) => `${i.path.join('.') || '(raíz)'}: ${i.message}`).slice(0, 25).join('; ') ?? ''
+      const issues =
+        parseError ??
+        validation?.error.issues
+          .map((i) => `${i.path.join('.') || '(raíz)'}: ${i.message}`)
+          .slice(0, 25)
+          .join('; ') ??
+        ''
       if (repair === 1) {
         metrics.increment(MetricNames.AI_FAILURES, 1, { reason: 'invalid_output' })
-        throw new DomainError(DomainErrorCode.AI_INVALID_OUTPUT, 'La salida de Gemini no cumple el schema', {
-          details: { operation, issues: issues.slice(0, 2000) },
-        })
+        throw new DomainError(
+          DomainErrorCode.AI_INVALID_OUTPUT,
+          'La salida de Gemini no cumple el schema',
+          {
+            details: { operation, issues: issues.slice(0, 2000) },
+          },
+        )
       }
-      this.options.logger?.warn({ operation, issuesChars: issues.length }, 'Salida IA inválida; solicitando reparación')
+      this.options.logger?.warn(
+        { operation, issuesChars: issues.length },
+        'Salida IA inválida; solicitando reparación',
+      )
       contents.push({ role: 'model', parts: [{ text }] })
       contents.push({
         role: 'user',
@@ -314,7 +372,11 @@ export class GeminiMeetingAnalyzer implements AiMeetingAnalyzer {
       })
       text = await this.generate({ ...params, contents }, acc, `${operation}.repair`)
     }
-    throw new DomainError(DomainErrorCode.AI_INVALID_OUTPUT, 'La salida de Gemini no cumple el schema', { details: { operation } })
+    throw new DomainError(
+      DomainErrorCode.AI_INVALID_OUTPUT,
+      'La salida de Gemini no cumple el schema',
+      { details: { operation } },
+    )
   }
 
   // ---------------------------------------------------------------------------
@@ -344,13 +406,27 @@ export class GeminiMeetingAnalyzer implements AiMeetingAnalyzer {
     const totalChars = input.segments.reduce((n, s) => n + s.text.length, 0)
     let result: MeetingAnalysisResult
     if (totalChars <= this.chunkThresholdChars) {
-      result = await this.callJson(MeetingAnalysisResultSchema, jsonSchema, ANALYZE_SYSTEM_PROMPT, buildAnalyzeUserPrompt(input), acc, 'analyze')
+      result = await this.callJson(
+        MeetingAnalysisResultSchema,
+        jsonSchema,
+        ANALYZE_SYSTEM_PROMPT,
+        buildAnalyzeUserPrompt(input),
+        acc,
+        'analyze',
+      )
     } else {
       const chunks = this.splitSegments(input)
-      this.options.logger?.info({ meetingId: input.meeting.id, chunks: chunks.length, totalChars }, 'Transcripción larga: analizando por bloques')
+      this.options.logger?.info(
+        { meetingId: input.meeting.id, chunks: chunks.length, totalChars },
+        'Transcripción larga: analizando por bloques',
+      )
       const partials: MeetingAnalysisResult[] = []
       for (let i = 0; i < chunks.length; i++) {
-        const chunkInput: AnalyzeMeetingInput = { ...input, segments: chunks[i] ?? [], smartNotesText: i === 0 ? input.smartNotesText : null }
+        const chunkInput: AnalyzeMeetingInput = {
+          ...input,
+          segments: chunks[i] ?? [],
+          smartNotesText: i === 0 ? input.smartNotesText : null,
+        }
         partials.push(
           await this.callJson(
             MeetingAnalysisResultSchema,
@@ -387,9 +463,15 @@ export class GeminiMeetingAnalyzer implements AiMeetingAnalyzer {
       acc,
       'reconcile',
     )
-    if (result.matchedActionItemId && !input.candidates.some((c) => c.actionItemId === result.matchedActionItemId)) {
+    if (
+      result.matchedActionItemId &&
+      !input.candidates.some((c) => c.actionItemId === result.matchedActionItemId)
+    ) {
       // El juez sólo puede elegir entre candidatos; cualquier otro id se descarta.
-      return { result: { ...result, decision: 'REQUIRES_HUMAN_REVIEW', matchedActionItemId: null }, usage: this.usageOf(acc) }
+      return {
+        result: { ...result, decision: 'REQUIRES_HUMAN_REVIEW', matchedActionItemId: null },
+        usage: this.usageOf(acc),
+      }
     }
     return { result, usage: this.usageOf(acc) }
   }
@@ -419,7 +501,11 @@ export function dedupeAnalysis(result: MeetingAnalysisResult): MeetingAnalysisRe
       continue
     }
     if (item.confidence > dup.confidence) {
-      items[items.indexOf(dup)] = { ...item, dueDate: item.dueDate ?? dup.dueDate, owner: item.owner ?? dup.owner }
+      items[items.indexOf(dup)] = {
+        ...item,
+        dueDate: item.dueDate ?? dup.dueDate,
+        owner: item.owner ?? dup.owner,
+      }
     } else if (!dup.dueDate && item.dueDate) dup.dueDate = item.dueDate
   }
   const decisions: MeetingAnalysisResult['decisions'] = []

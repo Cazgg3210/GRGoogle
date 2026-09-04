@@ -17,7 +17,11 @@ export default async function SettingsPage() {
         title="Configuración"
         description="Feature flags, umbrales de confianza IA, zona horaria, retención y cuentas monitoreadas. Los valores de entorno son el default; aquí se sobreescriben en base de datos."
       />
-      {settings.ok ? <SettingsForm initial={settings.data} /> : <PageError error={settings.error} retryHref="/configuracion" />}
+      {settings.ok ? (
+        <SettingsForm initial={settings.data} />
+      ) : (
+        <PageError error={settings.error} retryHref="/configuracion" />
+      )}
     </>
   )
 }

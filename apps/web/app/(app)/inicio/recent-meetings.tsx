@@ -31,7 +31,11 @@ export function RecentMeetings({ meetings }: { meetings: MeetingListItemDto[] })
       <CardContent className="px-0 pb-0">
         {meetings.length === 0 ? (
           <div className="px-5 pb-5">
-            <EmptyState compact title="Sin reuniones recientes" description="Cuando se detecten reuniones de las cuentas monitoreadas aparecerán aquí." />
+            <EmptyState
+              compact
+              title="Sin reuniones recientes"
+              description="Cuando se detecten reuniones de las cuentas monitoreadas aparecerán aquí."
+            />
           </div>
         ) : (
           <Table>
@@ -50,15 +54,25 @@ export function RecentMeetings({ meetings }: { meetings: MeetingListItemDto[] })
             <TableBody>
               {meetings.map((m) => (
                 <TableRow key={m.id}>
-                  <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{formatDateTime(m.startAt)}</TableCell>
+                  <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                    {formatDateTime(m.startAt)}
+                  </TableCell>
                   <TableCell>
                     <Link href={`/reuniones/${m.id}`} className="font-medium hover:underline">
                       {m.title}
                     </Link>
-                    {m.isExternalHost ? <span className="ml-2 text-[11px] uppercase tracking-wider text-warning-700">host externo</span> : null}
+                    {m.isExternalHost ? (
+                      <span className="ml-2 text-[11px] uppercase tracking-wider text-warning-700">
+                        host externo
+                      </span>
+                    ) : null}
                   </TableCell>
-                  <TableCell className="text-sm">{m.organizerName ?? m.organizerEmail ?? '—'}</TableCell>
-                  <TableCell className="font-mono text-xs tabular">{formatDuration(m.durationSeconds)}</TableCell>
+                  <TableCell className="text-sm">
+                    {m.organizerName ?? m.organizerEmail ?? '—'}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs tabular">
+                    {formatDuration(m.durationSeconds)}
+                  </TableCell>
                   <TableCell>
                     <ArtifactStatusBadge status={m.transcriptStatus} kind="transcript" />
                   </TableCell>
@@ -67,7 +81,9 @@ export function RecentMeetings({ meetings }: { meetings: MeetingListItemDto[] })
                   </TableCell>
                   <TableCell className="text-right font-mono text-xs tabular">
                     {m.actionItemCount}
-                    {m.pendingReviewCount > 0 ? <span className="ml-1 text-ai-700">(+{m.pendingReviewCount} rev.)</span> : null}
+                    {m.pendingReviewCount > 0 ? (
+                      <span className="ml-1 text-ai-700">(+{m.pendingReviewCount} rev.)</span>
+                    ) : null}
                   </TableCell>
                   <TableCell>
                     <ConfidenceIndicator value={m.extractionConfidence} variant="inline" />

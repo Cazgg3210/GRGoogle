@@ -68,7 +68,11 @@ export class PgBossJobQueue implements JobQueuePort {
     this.started = false
   }
 
-  async enqueue<TPayload>(name: string, payload: TPayload, options: EnqueueOptions = {}): Promise<string | null> {
+  async enqueue<TPayload>(
+    name: string,
+    payload: TPayload,
+    options: EnqueueOptions = {},
+  ): Promise<string | null> {
     const envelope: Envelope<TPayload> = {
       payload,
       correlationId: options.correlationId ?? newCorrelationId(),
@@ -83,13 +87,30 @@ export class PgBossJobQueue implements JobQueuePort {
     if (options.startAfterSeconds) sendOptions.startAfter = options.startAfterSeconds
     if (options.priority !== undefined) sendOptions.priority = options.priority
     const jobId = await this.boss.send(name, envelope as object, sendOptions)
-    this.logger.debug({ jobName: name, jobId, correlationId: envelope.correlationId, singletonKey: options.singletonKey }, jobId ? 'job encolado' : 'job omitido (singleton en vuelo)')
+    this.logger.debug(
+      {
+        jobName: name,
+        jobId,
+        correlationId: envelope.correlationId,
+        singletonKey: options.singletonKey,
+      },
+      jobId ? 'job encolado' : 'job omitido (singleton en vuelo)',
+    )
     return jobId
   }
 
-  async schedule<TPayload>(name: string, cron: string, payload: TPayload, options: { timezone?: string } = {}): Promise<void> {
+  async schedule<TPayload>(
+    name: string,
+    cron: string,
+    payload: TPayload,
+    options: { timezone?: string } = {},
+  ): Promise<void> {
     const envelope: Envelope<TPayload> = { payload, correlationId: `cron:${name}` }
-    await this.boss.schedule(name, cron, envelope as object, { tz: options.timezone ?? 'America/Mexico_City', retryLimit: this.defaultRetryLimit, retryBackoff: true })
+    await this.boss.schedule(name, cron, envelope as object, {
+      tz: options.timezone ?? 'America/Mexico_City',
+      retryLimit: this.defaultRetryLimit,
+      retryBackoff: true,
+    })
     this.logger.info({ jobName: name, cron, tz: options.timezone }, 'job programado')
   }
 
@@ -97,18 +118,36 @@ export class PgBossJobQueue implements JobQueuePort {
     await this.boss.unschedule(name)
   }
 
-  async work<TPayload>(name: string, handler: JobHandler<TPayload>, options: { concurrency?: number } = {}): Promise<void> {
+  async work<TPayload>(
+    name: string,
+    handler: JobHandler<TPayload>,
+    options: { concurrency?: number } = {},
+  ): Promise<void> {
     await this.ensureQueue(name)
     await this.boss.work<Envelope<TPayload>>(
       name,
-      { batchSize: 1, includeMetadata: true, pollingIntervalSeconds: 2, ...(options.concurrency ? {} : {}) },
+      {
+        batchSize: 1,
+        includeMetadata: true,
+        pollingIntervalSeconds: 2,
+        ...(options.concurrency ? {} : {}),
+      },
       async (jobs) => {
         for (const job of jobs) {
           const correlationId = job.data?.correlationId ?? newCorrelationId()
           const started = Date.now()
-          const log = this.logger.child({ jobId: job.id, jobName: name, correlationId, attempt: job.retryCount + 1 })
+          const log = this.logger.child({
+            jobId: job.id,
+            jobName: name,
+            correlationId,
+            attempt: job.retryCount + 1,
+          })
           try {
-            await handler(job.data.payload, { jobId: job.id, correlationId, attempt: job.retryCount + 1 })
+            await handler(job.data.payload, {
+              jobId: job.id,
+              correlationId,
+              attempt: job.retryCount + 1,
+            })
             log.info({ durationMs: Date.now() - started }, 'job completado')
           } catch (err) {
             metrics.increment(MetricNames.JOBS_FAILED, 1, { job: name })
@@ -122,11 +161,29 @@ export class PgBossJobQueue implements JobQueuePort {
   }
 
   /** Conteos por cola para /admin/jobs. */
-  async queueStats(): Promise<Array<{ name: string; created: number; active: number; completed: number; failed: number; retry: number }>> {
-    const out: Array<{ name: string; created: number; active: number; completed: number; failed: number; retry: number }> = []
+  async queueStats(): Promise<
+    Array<{
+      name: string
+      created: number
+      active: number
+      completed: number
+      failed: number
+      retry: number
+    }>
+  > {
+    const out: Array<{
+      name: string
+      created: number
+      active: number
+      completed: number
+      failed: number
+      retry: number
+    }> = []
     for (const name of this.queueNames) {
       const created = await this.boss.getQueueSize(name, { before: 'active' })
-      const active = await this.boss.getQueueSize(name, { before: 'completed' }).then((n) => Math.max(0, n - created))
+      const active = await this.boss
+        .getQueueSize(name, { before: 'completed' })
+        .then((n) => Math.max(0, n - created))
       out.push({ name, created, active, completed: 0, failed: 0, retry: 0 })
     }
     return out
@@ -146,7 +203,13 @@ export class PgBossJobQueue implements JobQueuePort {
     }
     const existing = await this.boss.getQueue(name)
     if (!existing) {
-      await this.boss.createQueue(name, { name, retryLimit: this.defaultRetryLimit, retryBackoff: true, retryDelay: 30, deadLetter: deadName })
+      await this.boss.createQueue(name, {
+        name,
+        retryLimit: this.defaultRetryLimit,
+        retryBackoff: true,
+        retryDelay: 30,
+        deadLetter: deadName,
+      })
     }
   }
 }

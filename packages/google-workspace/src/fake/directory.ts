@@ -21,7 +21,10 @@ export function displayNameFromEmail(email: string): string {
 export class FakeDirectoryAdapter implements DirectoryPort {
   readonly users: FakeDirectoryUser[]
 
-  constructor(emails: string[], overrides: Partial<Record<string, Partial<FakeDirectoryUser>>> = {}) {
+  constructor(
+    emails: string[],
+    overrides: Partial<Record<string, Partial<FakeDirectoryUser>>> = {},
+  ) {
     this.users = emails.map((email, i) => {
       const e = email.toLowerCase()
       return {

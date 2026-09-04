@@ -8,7 +8,15 @@ import { Header } from './header'
 
 const STORAGE_KEY = 'smlxl.sidebar.collapsed'
 
-export function AppShell({ nav, period, children }: { nav: SidebarNavItem[]; period: PeriodKey; children: React.ReactNode }) {
+export function AppShell({
+  nav,
+  period,
+  children,
+}: {
+  nav: SidebarNavItem[]
+  period: PeriodKey
+  children: React.ReactNode
+}) {
   const [collapsed, setCollapsed] = React.useState(false)
   const [hydrated, setHydrated] = React.useState(false)
 

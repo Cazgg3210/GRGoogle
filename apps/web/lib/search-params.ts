@@ -21,7 +21,12 @@ export function firstBool(sp: SearchParams, key: string): boolean | undefined {
   return undefined
 }
 
-export function oneOf<T extends string>(sp: SearchParams, key: string, allowed: readonly T[], fallback: T): T {
+export function oneOf<T extends string>(
+  sp: SearchParams,
+  key: string,
+  allowed: readonly T[],
+  fallback: T,
+): T {
   const v = first(sp, key)
   return (allowed as readonly string[]).includes(v ?? '') ? (v as T) : fallback
 }

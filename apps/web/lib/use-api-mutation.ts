@@ -18,18 +18,25 @@ export interface ApiMutationOptions<TData, TVariables> {
 }
 
 /** useMutation con toasts en español, invalidación y router.refresh(). */
-export function useApiMutation<TData = unknown, TVariables = void>(options: ApiMutationOptions<TData, TVariables>) {
+export function useApiMutation<TData = unknown, TVariables = void>(
+  options: ApiMutationOptions<TData, TVariables>,
+) {
   const queryClient = useQueryClient()
   const router = useRouter()
   return useMutation<TData, unknown, TVariables>({
     mutationFn: options.mutationFn,
     onSuccess: async (data, variables) => {
       if (options.successMessage) {
-        const msg = typeof options.successMessage === 'function' ? options.successMessage(data, variables) : options.successMessage
+        const msg =
+          typeof options.successMessage === 'function'
+            ? options.successMessage(data, variables)
+            : options.successMessage
         toast.success(msg)
       }
       if (options.invalidate) {
-        await Promise.all(options.invalidate.map((key) => queryClient.invalidateQueries({ queryKey: key })))
+        await Promise.all(
+          options.invalidate.map((key) => queryClient.invalidateQueries({ queryKey: key })),
+        )
       }
       if (options.refresh !== false) router.refresh()
       await options.onSuccess?.(data, variables)

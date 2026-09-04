@@ -11,13 +11,19 @@ import type { AuthClient, GoogleAdapterDeps } from './shared.js'
  */
 export interface SheetsApiClient {
   spreadsheets: {
-    get(params: sheets_v4.Params$Resource$Spreadsheets$Get, options?: { signal?: AbortSignal }): Promise<{ data: sheets_v4.Schema$Spreadsheet }>
+    get(
+      params: sheets_v4.Params$Resource$Spreadsheets$Get,
+      options?: { signal?: AbortSignal },
+    ): Promise<{ data: sheets_v4.Schema$Spreadsheet }>
     batchUpdate(
       params: sheets_v4.Params$Resource$Spreadsheets$Batchupdate,
       options?: { signal?: AbortSignal },
     ): Promise<{ data: sheets_v4.Schema$BatchUpdateSpreadsheetResponse }>
     values: {
-      get(params: sheets_v4.Params$Resource$Spreadsheets$Values$Get, options?: { signal?: AbortSignal }): Promise<{ data: sheets_v4.Schema$ValueRange }>
+      get(
+        params: sheets_v4.Params$Resource$Spreadsheets$Values$Get,
+        options?: { signal?: AbortSignal },
+      ): Promise<{ data: sheets_v4.Schema$ValueRange }>
       update(
         params: sheets_v4.Params$Resource$Spreadsheets$Values$Update,
         options?: { signal?: AbortSignal },
@@ -66,15 +72,21 @@ export function planUpsert(input: {
   columns: string[]
   rows: SheetRow[]
 }): UpsertPlan {
-  const columns = input.columns.includes(input.keyColumn) ? input.columns : [input.keyColumn, ...input.columns]
+  const columns = input.columns.includes(input.keyColumn)
+    ? input.columns
+    : [input.keyColumn, ...input.columns]
   const headerNeedsWrite =
-    input.existingHeader.length !== columns.length || columns.some((c, i) => input.existingHeader[i] !== c)
-  const keyIdx = (input.existingHeader.length > 0 ? input.existingHeader : columns).indexOf(input.keyColumn)
+    input.existingHeader.length !== columns.length ||
+    columns.some((c, i) => input.existingHeader[i] !== c)
+  const keyIdx = (input.existingHeader.length > 0 ? input.existingHeader : columns).indexOf(
+    input.keyColumn,
+  )
   const rowByKey = new Map<string, number>()
   if (keyIdx >= 0) {
     input.existingRows.forEach((r, i) => {
       const k = r[keyIdx]
-      if (k !== null && k !== undefined && String(k).length > 0 && !rowByKey.has(String(k))) rowByKey.set(String(k), i + 2)
+      if (k !== null && k !== undefined && String(k).length > 0 && !rowByKey.has(String(k)))
+        rowByKey.set(String(k), i + 2)
     })
   }
   const updates: UpsertPlan['updates'] = []
@@ -98,9 +110,14 @@ export class GoogleSheetsAdapter implements SheetsPort {
   private readonly clientFactory: (auth: AuthClient) => SheetsApiClient
 
   constructor(private readonly deps: SheetsAdapterDeps) {
-    this.clientFactory = deps.clientFactory ?? ((auth) => google.sheets({ version: 'v4', auth }) as unknown as SheetsApiClient)
+    this.clientFactory =
+      deps.clientFactory ??
+      ((auth) => google.sheets({ version: 'v4', auth }) as unknown as SheetsApiClient)
     if (!deps.actingUserEmail) {
-      throw new DomainError(DomainErrorCode.VALIDATION_ERROR, 'GoogleSheetsAdapter requiere actingUserEmail')
+      throw new DomainError(
+        DomainErrorCode.VALIDATION_ERROR,
+        'GoogleSheetsAdapter requiere actingUserEmail',
+      )
     }
   }
 
@@ -120,22 +137,40 @@ export class GoogleSheetsAdapter implements SheetsPort {
     try {
       await this.ensureSheet(client, spreadsheetId, sheetName)
       const existing = await withGoogleRetry(
-        (signal) => client.spreadsheets.values.get({ spreadsheetId, range: `'${sheetName}'!A1:ZZ` }, { signal }),
+        (signal) =>
+          client.spreadsheets.values.get(
+            { spreadsheetId, range: `'${sheetName}'!A1:ZZ` },
+            { signal },
+          ),
         this.retry('sheets.values.get'),
       )
       const all = (existing.data.values ?? []) as CellValue[][]
       const existingHeader = (all[0] ?? []).map((v) => String(v ?? ''))
       const existingRows = all.slice(1)
-      const plan = planUpsert({ existingHeader, existingRows, keyColumn: input.keyColumn, columns: input.columns, rows: input.rows })
+      const plan = planUpsert({
+        existingHeader,
+        existingRows,
+        keyColumn: input.keyColumn,
+        columns: input.columns,
+        rows: input.rows,
+      })
       const lastCol = columnLetter(plan.header.length - 1)
       const data: sheets_v4.Schema$ValueRange[] = []
-      if (plan.headerNeedsWrite) data.push({ range: `'${sheetName}'!A1:${lastCol}1`, values: [plan.header] })
+      if (plan.headerNeedsWrite)
+        data.push({ range: `'${sheetName}'!A1:${lastCol}1`, values: [plan.header] })
       for (const u of plan.updates) {
-        data.push({ range: `'${sheetName}'!A${u.rowNumber}:${lastCol}${u.rowNumber}`, values: [u.values] })
+        data.push({
+          range: `'${sheetName}'!A${u.rowNumber}:${lastCol}${u.rowNumber}`,
+          values: [u.values],
+        })
       }
       if (data.length > 0) {
         await withGoogleRetry(
-          (signal) => client.spreadsheets.values.batchUpdate({ spreadsheetId, requestBody: { valueInputOption: 'RAW', data } }, { signal }),
+          (signal) =>
+            client.spreadsheets.values.batchUpdate(
+              { spreadsheetId, requestBody: { valueInputOption: 'RAW', data } },
+              { signal },
+            ),
           this.retry('sheets.values.batchUpdate'),
         )
       }
@@ -159,22 +194,36 @@ export class GoogleSheetsAdapter implements SheetsPort {
     } catch (err) {
       if (err instanceof DomainError && err.code === DomainErrorCode.SHEETS_SYNC_FAILED) throw err
       const cause = err instanceof DomainError ? err : undefined
-      throw new DomainError(DomainErrorCode.SHEETS_SYNC_FAILED, `Sincronización con Sheets falló: ${cause?.message ?? 'error'}`, {
-        retryable: cause?.retryable ?? false,
-        details: { sheetName, googleCode: cause?.code ?? null },
-        cause: err,
-      })
+      throw new DomainError(
+        DomainErrorCode.SHEETS_SYNC_FAILED,
+        `Sincronización con Sheets falló: ${cause?.message ?? 'error'}`,
+        {
+          retryable: cause?.retryable ?? false,
+          details: { sheetName, googleCode: cause?.code ?? null },
+          cause: err,
+        },
+      )
     }
   }
 
-  private async ensureSheet(client: SheetsApiClient, spreadsheetId: string, sheetName: string): Promise<void> {
-    const meta = await withGoogleRetry((signal) => client.spreadsheets.get({ spreadsheetId }, { signal }), this.retry('sheets.get'))
+  private async ensureSheet(
+    client: SheetsApiClient,
+    spreadsheetId: string,
+    sheetName: string,
+  ): Promise<void> {
+    const meta = await withGoogleRetry(
+      (signal) => client.spreadsheets.get({ spreadsheetId }, { signal }),
+      this.retry('sheets.get'),
+    )
     const exists = (meta.data.sheets ?? []).some((s) => s.properties?.title === sheetName)
     if (exists) return
     await withGoogleRetry(
       (signal) =>
         client.spreadsheets.batchUpdate(
-          { spreadsheetId, requestBody: { requests: [{ addSheet: { properties: { title: sheetName } } }] } },
+          {
+            spreadsheetId,
+            requestBody: { requests: [{ addSheet: { properties: { title: sheetName } } }] },
+          },
           { signal },
         ),
       this.retry('sheets.batchUpdate.addSheet'),

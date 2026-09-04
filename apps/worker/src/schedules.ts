@@ -33,20 +33,32 @@ async function unscheduleIfSupported(queue: Unschedulable, name: string): Promis
 }
 
 /** Registra los cron en la cola respetando feature flags (§51) y la zona horaria de la empresa. */
-export async function registerSchedules(queue: JobQueuePort, application: Application, logger: Logger): Promise<ScheduleSummary> {
+export async function registerSchedules(
+  queue: JobQueuePort,
+  application: Application,
+  logger: Logger,
+): Promise<ScheduleSummary> {
   const settings = await application.ctx.getSettings()
   const timezone = settings.companyTimezone
-  const summary: ScheduleSummary = { registered: [], skipped: [], digest: { enabled: false, cron: '', timezone, nextRunAt: null } }
+  const summary: ScheduleSummary = {
+    registered: [],
+    skipped: [],
+    digest: { enabled: false, cron: '', timezone, nextRunAt: null },
+  }
 
   const add = async (name: keyof typeof CRON): Promise<void> => {
     await queue.schedule(name, CRON[name], {}, { timezone })
     summary.registered.push({ name, cron: CRON[name], timezone })
   }
 
-  if (settings.featureFlags.GOOGLE_INTEGRATION_ENABLED) await add(JobNames.CALENDAR_INCREMENTAL_SYNC)
+  if (settings.featureFlags.GOOGLE_INTEGRATION_ENABLED)
+    await add(JobNames.CALENDAR_INCREMENTAL_SYNC)
   else {
     await unscheduleIfSupported(queue, JobNames.CALENDAR_INCREMENTAL_SYNC)
-    summary.skipped.push({ name: JobNames.CALENDAR_INCREMENTAL_SYNC, reason: 'GOOGLE_INTEGRATION_ENABLED=false' })
+    summary.skipped.push({
+      name: JobNames.CALENDAR_INCREMENTAL_SYNC,
+      reason: 'GOOGLE_INTEGRATION_ENABLED=false',
+    })
   }
   await add(JobNames.RENEW_GOOGLE_SUBSCRIPTIONS)
   await add(JobNames.SEND_DUE_REMINDERS)
@@ -55,7 +67,14 @@ export async function registerSchedules(queue: JobQueuePort, application: Applic
   await add(JobNames.RECONCILE_MISSING_EVENTS)
 
   summary.digest = await applyDigestSchedule(queue, application, logger, null)
-  logger.info({ registered: summary.registered.map((r) => `${r.name} (${r.cron})`), skipped: summary.skipped, digest: summary.digest }, 'cron programados')
+  logger.info(
+    {
+      registered: summary.registered.map((r) => `${r.name} (${r.cron})`),
+      skipped: summary.skipped,
+      digest: summary.digest,
+    },
+    'cron programados',
+  )
   return summary
 }
 
@@ -63,32 +82,60 @@ export async function registerSchedules(queue: JobQueuePort, application: Applic
  * (Re)programa GENERATE_WEEKLY_DIGEST a partir de la configuración vigente.
  * Sólo toca la cola cuando cambió respecto a `previous`.
  */
-export async function applyDigestSchedule(queue: JobQueuePort, application: Application, logger: Logger, previous: DigestSchedule | null): Promise<DigestSchedule> {
+export async function applyDigestSchedule(
+  queue: JobQueuePort,
+  application: Application,
+  logger: Logger,
+  previous: DigestSchedule | null,
+): Promise<DigestSchedule> {
   const settings = await application.ctx.getSettings()
   const current = await application.reports.scheduleWeeklyDigest({ register: false })
   const flagEnabled = settings.featureFlags.WEEKLY_DIGEST_ENABLED
-  const next: DigestSchedule = { enabled: current.enabled && flagEnabled, cron: current.cron, timezone: current.timezone, nextRunAt: current.nextRunAt }
-  const changed = !previous || previous.enabled !== next.enabled || previous.cron !== next.cron || previous.timezone !== next.timezone
+  const next: DigestSchedule = {
+    enabled: current.enabled && flagEnabled,
+    cron: current.cron,
+    timezone: current.timezone,
+    nextRunAt: current.nextRunAt,
+  }
+  const changed =
+    !previous ||
+    previous.enabled !== next.enabled ||
+    previous.cron !== next.cron ||
+    previous.timezone !== next.timezone
   if (!changed) return next
   if (next.enabled) {
     await application.reports.scheduleWeeklyDigest({ register: true })
-    logger.info({ cron: next.cron, timezone: next.timezone, nextRunAt: next.nextRunAt }, 'resumen semanal programado')
+    logger.info(
+      { cron: next.cron, timezone: next.timezone, nextRunAt: next.nextRunAt },
+      'resumen semanal programado',
+    )
   } else {
     await unscheduleIfSupported(queue, JobNames.GENERATE_WEEKLY_DIGEST)
-    logger.info({ flagEnabled, configEnabled: current.enabled }, 'resumen semanal sin programación (deshabilitado)')
+    logger.info(
+      { flagEnabled, configEnabled: current.enabled },
+      'resumen semanal sin programación (deshabilitado)',
+    )
   }
   return next
 }
 
 /** Reevalúa la configuración del digest periódicamente (por defecto cada hora) y reprograma si cambió. */
-export function startDigestScheduleWatcher(queue: JobQueuePort, application: Application, logger: Logger, initial: DigestSchedule, intervalMs = 60 * 60 * 1000): () => void {
+export function startDigestScheduleWatcher(
+  queue: JobQueuePort,
+  application: Application,
+  logger: Logger,
+  initial: DigestSchedule,
+  intervalMs = 60 * 60 * 1000,
+): () => void {
   let last = initial
   const timer = setInterval(() => {
     applyDigestSchedule(queue, application, logger, last)
       .then((s) => {
         last = s
       })
-      .catch((err: unknown) => logger.error({ err }, 'error reevaluando la programación del resumen semanal'))
+      .catch((err: unknown) =>
+        logger.error({ err }, 'error reevaluando la programación del resumen semanal'),
+      )
   }, intervalMs)
   timer.unref()
   return () => clearInterval(timer)

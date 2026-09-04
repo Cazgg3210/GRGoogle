@@ -44,7 +44,9 @@ export function toSubscription(row: SubscriptionRow): GoogleWorkspaceSubscriptio
   }
 }
 
-export function subscriptionToDb(s: GoogleWorkspaceSubscription): Prisma.GoogleWorkspaceSubscriptionUncheckedCreateInput {
+export function subscriptionToDb(
+  s: GoogleWorkspaceSubscription,
+): Prisma.GoogleWorkspaceSubscriptionUncheckedCreateInput {
   return {
     id: s.id,
     monitoredUserId: s.monitoredUserId,
@@ -78,7 +80,9 @@ export function toInboundEvent(row: InboundRow): InboundGoogleEvent {
   }
 }
 
-export function inboundEventToDb(e: InboundGoogleEvent): Prisma.InboundGoogleEventUncheckedCreateInput {
+export function inboundEventToDb(
+  e: InboundGoogleEvent,
+): Prisma.InboundGoogleEventUncheckedCreateInput {
   return {
     id: e.id,
     cloudEventId: e.cloudEventId,
@@ -140,7 +144,9 @@ export function toDigestConfig(row: DigestConfigRow): WeeklyDigestConfig {
   }
 }
 
-export function digestConfigToDb(c: WeeklyDigestConfig): Prisma.WeeklyDigestConfigUncheckedCreateInput {
+export function digestConfigToDb(
+  c: WeeklyDigestConfig,
+): Prisma.WeeklyDigestConfigUncheckedCreateInput {
   return {
     id: c.id,
     enabled: c.enabled,
@@ -237,7 +243,9 @@ export function toLegacyRef(row: LegacyRefRow): LegacyImportReference {
   }
 }
 
-export function legacyRefToDb(r: LegacyImportReference): Prisma.LegacyImportReferenceUncheckedCreateInput {
+export function legacyRefToDb(
+  r: LegacyImportReference,
+): Prisma.LegacyImportReferenceUncheckedCreateInput {
   return {
     id: r.id,
     entityType: r.entityType,
@@ -261,7 +269,10 @@ export interface SettingsDefaults {
 }
 
 /** Defaults del entorno + overrides persistidos en BD (la BD gana campo a campo). */
-export function toPlatformSettings(row: SettingRow | null, defaults: SettingsDefaults): PlatformSettings {
+export function toPlatformSettings(
+  row: SettingRow | null,
+  defaults: SettingsDefaults,
+): PlatformSettings {
   const flags: FeatureFlags = { ...defaults.featureFlags }
   const thresholds = { ...DEFAULT_CONFIDENCE_THRESHOLDS }
   if (row) {

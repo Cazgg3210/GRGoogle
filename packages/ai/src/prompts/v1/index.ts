@@ -44,7 +44,10 @@ schemaVersion debe ser exactamente "${AI_SCHEMA_VERSION}".`
 function formatParticipants(input: AnalyzeMeetingInput): string {
   if (input.participants.length === 0) return '(sin lista de participantes)'
   return input.participants
-    .map((p) => `- ${p.displayName}${p.email ? ` <${p.email}>` : ''} (${p.isInternal ? 'interno' : 'externo'})`)
+    .map(
+      (p) =>
+        `- ${p.displayName}${p.email ? ` <${p.email}>` : ''} (${p.isInternal ? 'interno' : 'externo'})`,
+    )
     .join('\n')
 }
 
@@ -59,10 +62,18 @@ function formatOpenActions(input: AnalyzeMeetingInput): string {
 }
 
 export function formatSegments(segments: AnalyzeMeetingInput['segments']): string {
-  return segments.map((s) => `[${s.sequence}] ${s.startTime ? `(${s.startTime}) ` : ''}${s.speakerLabel}: ${s.text}`).join('\n')
+  return segments
+    .map(
+      (s) =>
+        `[${s.sequence}] ${s.startTime ? `(${s.startTime}) ` : ''}${s.speakerLabel}: ${s.text}`,
+    )
+    .join('\n')
 }
 
-export function buildAnalyzeUserPrompt(input: AnalyzeMeetingInput, options: { chunk?: { index: number; total: number } } = {}): string {
+export function buildAnalyzeUserPrompt(
+  input: AnalyzeMeetingInput,
+  options: { chunk?: { index: number; total: number } } = {},
+): string {
   const chunkNote = options.chunk
     ? `\nNOTA: esta es la parte ${options.chunk.index + 1} de ${options.chunk.total} de una transcripción larga. Analiza sólo lo que aparece aquí; se consolidará después.\n`
     : ''
@@ -94,7 +105,10 @@ export const CONSOLIDATE_SYSTEM_PROMPT = `Eres un analista de reuniones de SMLXL
 ${OUTPUT_RULES}
 schemaVersion debe ser exactamente "${AI_SCHEMA_VERSION}".`
 
-export function buildConsolidateUserPrompt(partials: unknown[], input: AnalyzeMeetingInput): string {
+export function buildConsolidateUserPrompt(
+  partials: unknown[],
+  input: AnalyzeMeetingInput,
+): string {
   return `Reunión: ${input.meeting.title} | referenceDate: ${input.referenceDate} | timezone: ${input.timezone}
 
 ANÁLISIS PARCIALES (en orden):

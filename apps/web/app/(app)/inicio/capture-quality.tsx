@@ -6,12 +6,44 @@ import { Card, CardContent, CardHeader, CardTitle, InlineNotice, cn, formatNumbe
 type CQ = DashboardDto['captureQuality']
 
 const ROWS: Array<{ key: keyof CQ; label: string; tone: string; href?: string; help: string }> = [
-  { key: 'withTranscript', label: 'Con transcript', tone: 'bg-success-500', help: 'Google publicó transcripción y se ingirió.' },
-  { key: 'withSmartNotes', label: 'Con Smart Notes', tone: 'bg-success-400', help: 'Google publicó notas automáticas.' },
-  { key: 'transcriptOnly', label: 'Procesadas sólo con transcript', tone: 'bg-info-500', help: 'Sin notas; el análisis usó únicamente la transcripción.' },
-  { key: 'noArtifact', label: 'Sin artefacto', tone: 'bg-warning-500', href: '/reuniones?processingStatus=WAITING_FOR_ARTIFACTS', help: 'Reunión detectada pero Google no generó transcript ni notas.' },
-  { key: 'externalHostUnavailable', label: 'Host externo / no accesible', tone: 'bg-signal-500', help: 'Organizador fuera del dominio: no se puede garantizar el artefacto.' },
-  { key: 'apiErrors', label: 'Errores de API', tone: 'bg-danger-500', href: '/reuniones?processingStatus=FAILED', help: 'Fallos de Google o de IA al obtener/procesar.' },
+  {
+    key: 'withTranscript',
+    label: 'Con transcript',
+    tone: 'bg-success-500',
+    help: 'Google publicó transcripción y se ingirió.',
+  },
+  {
+    key: 'withSmartNotes',
+    label: 'Con Smart Notes',
+    tone: 'bg-success-400',
+    help: 'Google publicó notas automáticas.',
+  },
+  {
+    key: 'transcriptOnly',
+    label: 'Procesadas sólo con transcript',
+    tone: 'bg-info-500',
+    help: 'Sin notas; el análisis usó únicamente la transcripción.',
+  },
+  {
+    key: 'noArtifact',
+    label: 'Sin artefacto',
+    tone: 'bg-warning-500',
+    href: '/reuniones?processingStatus=WAITING_FOR_ARTIFACTS',
+    help: 'Reunión detectada pero Google no generó transcript ni notas.',
+  },
+  {
+    key: 'externalHostUnavailable',
+    label: 'Host externo / no accesible',
+    tone: 'bg-signal-500',
+    help: 'Organizador fuera del dominio: no se puede garantizar el artefacto.',
+  },
+  {
+    key: 'apiErrors',
+    label: 'Errores de API',
+    tone: 'bg-danger-500',
+    href: '/reuniones?processingStatus=FAILED',
+    help: 'Fallos de Google o de IA al obtener/procesar.',
+  },
 ]
 
 export function CaptureQuality({ data }: { data: CQ }) {
@@ -24,10 +56,14 @@ export function CaptureQuality({ data }: { data: CQ }) {
             <Radio className="size-4 text-ai-600" />
             Calidad de captura
           </CardTitle>
-          <p className="mt-1 text-xs text-muted-foreground">Cuántas de las reuniones detectadas produjeron material analizable.</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Cuántas de las reuniones detectadas produjeron material analizable.
+          </p>
         </div>
         <div className="text-right">
-          <p className="display-num text-3xl leading-none text-ink-950">{formatNumber(data.detected)}</p>
+          <p className="display-num text-3xl leading-none text-ink-950">
+            {formatNumber(data.detected)}
+          </p>
           <p className="text-[11px] uppercase tracking-wider text-muted-foreground">detectadas</p>
         </div>
       </CardHeader>
@@ -52,15 +88,19 @@ export function CaptureQuality({ data }: { data: CQ }) {
                   </span>
                 </div>
                 <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-paper-200">
-                  <div className={cn('h-full rounded-full transition-[width] duration-700', r.tone)} style={{ width: `${Math.min(100, pct)}%` }} />
+                  <div
+                    className={cn('h-full rounded-full transition-[width] duration-700', r.tone)}
+                    style={{ width: `${Math.min(100, pct)}%` }}
+                  />
                 </div>
               </li>
             )
           })}
         </ul>
         <InlineNotice tone="neutral" icon={Info} className="mt-1">
-          “Todas las reuniones” no significa que Google haya producido artefactos para el 100%. Las reuniones organizadas por un
-          host externo no garantizan transcripción ni notas, aunque participen cuentas monitoreadas.
+          “Todas las reuniones” no significa que Google haya producido artefactos para el 100%. Las
+          reuniones organizadas por un host externo no garantizan transcripción ni notas, aunque
+          participen cuentas monitoreadas.
         </InlineNotice>
       </CardContent>
     </Card>

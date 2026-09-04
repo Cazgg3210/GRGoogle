@@ -2,7 +2,10 @@ import type { ExternalAssignee, ExternalAssigneeRepository, Id } from '@smlxl/do
 import { externalAssigneeToDb, toExternalAssignee } from '../mappers/catalogs.js'
 import { BaseRepository } from './base.js'
 
-export class PrismaExternalAssigneeRepository extends BaseRepository implements ExternalAssigneeRepository {
+export class PrismaExternalAssigneeRepository
+  extends BaseRepository
+  implements ExternalAssigneeRepository
+{
   async findById(id: Id): Promise<ExternalAssignee | null> {
     const row = await this.db.externalAssignee.findUnique({ where: { id } })
     return row ? toExternalAssignee(row) : null

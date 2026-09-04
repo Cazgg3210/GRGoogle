@@ -32,13 +32,27 @@ function show(v: unknown): string {
 }
 
 /** Vista antes/después de auditoría: resalta llaves agregadas, eliminadas y cambiadas. */
-export function JsonDiff({ before, after, className }: { before: unknown; after: unknown; className?: string }) {
+export function JsonDiff({
+  before,
+  after,
+  className,
+}: {
+  before: unknown
+  after: unknown
+  className?: string
+}) {
   const a = flatten(before)
   const b = flatten(after)
   const keys = Array.from(new Set([...Object.keys(a), ...Object.keys(b)])).sort()
-  if (keys.length === 0) return <p className="text-xs text-muted-foreground">Sin datos antes/después.</p>
+  if (keys.length === 0)
+    return <p className="text-xs text-muted-foreground">Sin datos antes/después.</p>
   return (
-    <div className={cn('overflow-x-auto rounded-md border border-border bg-surface scrollbar-thin', className)}>
+    <div
+      className={cn(
+        'overflow-x-auto rounded-md border border-border bg-surface scrollbar-thin',
+        className,
+      )}
+    >
       <table className="w-full text-xs">
         <thead className="bg-surface-muted/70 text-[10px] uppercase tracking-wider text-muted-foreground">
           <tr>
@@ -52,12 +66,32 @@ export function JsonDiff({ before, after, className }: { before: unknown; after:
             const inA = k in a
             const inB = k in b
             const changed = inA && inB && JSON.stringify(a[k]) !== JSON.stringify(b[k])
-            const tone = !inA ? 'bg-success-50' : !inB ? 'bg-danger-50' : changed ? 'bg-warning-50' : ''
+            const tone = !inA
+              ? 'bg-success-50'
+              : !inB
+                ? 'bg-danger-50'
+                : changed
+                  ? 'bg-warning-50'
+                  : ''
             return (
               <tr key={k} className={cn('border-t border-border/70', tone)}>
                 <td className="whitespace-nowrap px-2 py-1 text-muted-foreground">{k}</td>
-                <td className={cn('max-w-[280px] break-words px-2 py-1', changed && 'line-through decoration-danger-400')}>{inA ? show(a[k]) : '—'}</td>
-                <td className={cn('max-w-[280px] break-words px-2 py-1', (changed || !inA) && 'font-semibold text-ink-900')}>{inB ? show(b[k]) : '—'}</td>
+                <td
+                  className={cn(
+                    'max-w-[280px] break-words px-2 py-1',
+                    changed && 'line-through decoration-danger-400',
+                  )}
+                >
+                  {inA ? show(a[k]) : '—'}
+                </td>
+                <td
+                  className={cn(
+                    'max-w-[280px] break-words px-2 py-1',
+                    (changed || !inA) && 'font-semibold text-ink-900',
+                  )}
+                >
+                  {inB ? show(b[k]) : '—'}
+                </td>
               </tr>
             )
           })}

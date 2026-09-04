@@ -44,8 +44,12 @@ export interface EnsureAutoCaptureResult {
 }
 
 /** §12.3: activa auto-transcripción/Smart Notes impersonando al organizador. Nunca lanza. */
-export async function ensureAutoCapture(ctx: AppContext, meeting: Meeting): Promise<EnsureAutoCaptureResult> {
-  if (!meeting.googleMeetingCode || !meeting.organizerEmail) return { applied: false, blockedReason: 'Sin meetingCode u organizador' }
+export async function ensureAutoCapture(
+  ctx: AppContext,
+  meeting: Meeting,
+): Promise<EnsureAutoCaptureResult> {
+  if (!meeting.googleMeetingCode || !meeting.organizerEmail)
+    return { applied: false, blockedReason: 'Sin meetingCode u organizador' }
   const organizer = meeting.organizerEmail
   try {
     const space = await ctx.meet.getSpaceByMeetingCode(meeting.googleMeetingCode, organizer)
@@ -53,7 +57,11 @@ export async function ensureAutoCapture(ctx: AppContext, meeting: Meeting): Prom
       ctx.logger.warn({ meetingId: meeting.id }, 'Space de Meet no encontrado para auto-captura')
       return { applied: false, blockedReason: 'Space no encontrado' }
     }
-    const result = await ctx.meet.patchArtifactConfig(space.name, { autoTranscription: true, autoSmartNotes: true }, organizer)
+    const result = await ctx.meet.patchArtifactConfig(
+      space.name,
+      { autoTranscription: true, autoSmartNotes: true },
+      organizer,
+    )
     await ctx.uow.run(async (repos) => {
       const current = await repos.meetings.findById(meeting.id)
       if (!current) return
@@ -61,9 +69,19 @@ export async function ensureAutoCapture(ctx: AppContext, meeting: Meeting): Prom
       await repos.meetings.save({
         ...current,
         googleMeetingSpaceId: space.name,
-        transcriptStatus: current.transcriptStatus === ArtifactStatus.NOT_REQUESTED || current.transcriptStatus === ArtifactStatus.CAPABILITY_BLOCKED ? status : current.transcriptStatus,
-        smartNotesStatus: current.smartNotesStatus === ArtifactStatus.NOT_REQUESTED || current.smartNotesStatus === ArtifactStatus.CAPABILITY_BLOCKED ? status : current.smartNotesStatus,
-        lastErrorCode: result.applied ? current.lastErrorCode : DomainErrorCode.GOOGLE_CAPABILITY_BLOCKED,
+        transcriptStatus:
+          current.transcriptStatus === ArtifactStatus.NOT_REQUESTED ||
+          current.transcriptStatus === ArtifactStatus.CAPABILITY_BLOCKED
+            ? status
+            : current.transcriptStatus,
+        smartNotesStatus:
+          current.smartNotesStatus === ArtifactStatus.NOT_REQUESTED ||
+          current.smartNotesStatus === ArtifactStatus.CAPABILITY_BLOCKED
+            ? status
+            : current.smartNotesStatus,
+        lastErrorCode: result.applied
+          ? current.lastErrorCode
+          : DomainErrorCode.GOOGLE_CAPABILITY_BLOCKED,
         lastErrorAt: result.applied ? current.lastErrorAt : ctx.clock.now(),
         updatedAt: ctx.clock.now(),
       })
@@ -75,7 +93,11 @@ export async function ensureAutoCapture(ctx: AppContext, meeting: Meeting): Prom
         after: { spaceName: space.name, blockedReason: result.blockedReason ?? null },
       })
     })
-    if (!result.applied) ctx.logger.warn({ meetingId: meeting.id, blockedReason: result.blockedReason }, 'Auto-captura bloqueada por política/privilegios')
+    if (!result.applied)
+      ctx.logger.warn(
+        { meetingId: meeting.id, blockedReason: result.blockedReason },
+        'Auto-captura bloqueada por política/privilegios',
+      )
     return result
   } catch (err) {
     const code = isDomainError(err) ? err.code : DomainErrorCode.INTERNAL_ERROR
@@ -129,20 +151,33 @@ async function upsertMeetingFromEvent(
   const existing =
     (await repos.meetings.findByCalendarEventId(event.calendarEventId)) ??
     (event.meetingCode
-      ? (await repos.meetings.findByMeetingCode(event.meetingCode)).find(
+      ? ((await repos.meetings.findByMeetingCode(event.meetingCode)).find(
           (m) => Math.abs(m.startAt.getTime() - event.startAt.getTime()) < 3 * 60 * 60 * 1000,
-        ) ?? null
+        ) ?? null)
       : null)
   const now = ctx.clock.now()
   if (event.status === 'cancelled') {
-    if (!existing || existing.status === MeetingStatus.CANCELLED) return { meeting: existing, created: false, cancelled: false }
-    if (existing.status === MeetingStatus.ENDED) return { meeting: existing, created: false, cancelled: false }
-    const saved = await repos.meetings.save({ ...existing, status: MeetingStatus.CANCELLED, updatedAt: now })
-    await audit(repos, ctx, { actorType: 'SYSTEM', action: 'meeting.cancelled', entity: 'Meeting', entityId: saved.id, before: { status: existing.status } })
+    if (!existing || existing.status === MeetingStatus.CANCELLED)
+      return { meeting: existing, created: false, cancelled: false }
+    if (existing.status === MeetingStatus.ENDED)
+      return { meeting: existing, created: false, cancelled: false }
+    const saved = await repos.meetings.save({
+      ...existing,
+      status: MeetingStatus.CANCELLED,
+      updatedAt: now,
+    })
+    await audit(repos, ctx, {
+      actorType: 'SYSTEM',
+      action: 'meeting.cancelled',
+      entity: 'Meeting',
+      entityId: saved.id,
+      before: { status: existing.status },
+    })
     return { meeting: saved, created: false, cancelled: true }
   }
   if (!event.meetingCode) return { meeting: null, created: false, cancelled: false }
-  const organizerEmail = event.organizerEmail?.toLowerCase() ?? event.creatorEmail?.toLowerCase() ?? null
+  const organizerEmail =
+    event.organizerEmail?.toLowerCase() ?? event.creatorEmail?.toLowerCase() ?? null
   const organizer = organizerEmail ? (usersByEmail.get(organizerEmail) ?? null) : null
   const isExternalHost = !isInternalEmail(organizerEmail, settings.companyDomain)
   if (existing) {
@@ -166,7 +201,10 @@ async function upsertMeetingFromEvent(
       isExternalHost,
       updatedAt: now,
     })
-    await repos.meetings.replaceParticipants(saved.id, participantsFromAttendees(ctx, saved.id, event, usersByEmail, settings.companyDomain))
+    await repos.meetings.replaceParticipants(
+      saved.id,
+      participantsFromAttendees(ctx, saved.id, event, usersByEmail, settings.companyDomain),
+    )
     return { meeting: saved, created: false, cancelled: false }
   }
   const id = ctx.ids.next()
@@ -183,7 +221,10 @@ async function upsertMeetingFromEvent(
     startAt: event.startAt,
     endAt: event.endAt,
     durationSeconds: null,
-    status: event.endAt && event.endAt.getTime() < now.getTime() ? MeetingStatus.SCHEDULED : MeetingStatus.SCHEDULED,
+    status:
+      event.endAt && event.endAt.getTime() < now.getTime()
+        ? MeetingStatus.SCHEDULED
+        : MeetingStatus.SCHEDULED,
     source: MeetingSource.CALENDAR_DISCOVERY,
     processingStatus: MeetingProcessingStatus.DISCOVERED,
     transcriptStatus: ArtifactStatus.NOT_REQUESTED,
@@ -202,7 +243,10 @@ async function upsertMeetingFromEvent(
     updatedAt: now,
   }
   const saved = await repos.meetings.save(meeting)
-  await repos.meetings.replaceParticipants(saved.id, participantsFromAttendees(ctx, saved.id, event, usersByEmail, settings.companyDomain))
+  await repos.meetings.replaceParticipants(
+    saved.id,
+    participantsFromAttendees(ctx, saved.id, event, usersByEmail, settings.companyDomain),
+  )
   await audit(repos, ctx, {
     actorType: 'SYSTEM',
     action: 'meeting.discovered',
@@ -210,14 +254,30 @@ async function upsertMeetingFromEvent(
     entityId: saved.id,
     after: { source: saved.source, meetingCode: saved.googleMeetingCode, isExternalHost },
   })
-  await ctx.events.publish({ type: 'MeetingDiscovered', meetingId: saved.id, source: saved.source, occurredAt: now })
+  await ctx.events.publish({
+    type: 'MeetingDiscovered',
+    meetingId: saved.id,
+    source: saved.source,
+    occurredAt: now,
+  })
   metrics.increment(MetricNames.MEETINGS_DISCOVERED, 1, { source: 'calendar' })
   return { meeting: saved, created: true, cancelled: false }
 }
 
-export async function discoverMeetingsFromCalendar(ctx: AppContext, options: { userId?: string } = {}): Promise<DiscoverMeetingsResult> {
+export async function discoverMeetingsFromCalendar(
+  ctx: AppContext,
+  options: { userId?: string } = {},
+): Promise<DiscoverMeetingsResult> {
   const settings = await ctx.getSettings()
-  const result: DiscoverMeetingsResult = { users: 0, created: 0, updated: 0, cancelled: 0, autoCaptureApplied: 0, autoCaptureBlocked: 0, errors: [] }
+  const result: DiscoverMeetingsResult = {
+    users: 0,
+    created: 0,
+    updated: 0,
+    cancelled: 0,
+    autoCaptureApplied: 0,
+    autoCaptureBlocked: 0,
+    errors: [],
+  }
   let monitored = await ctx.repos.users.list({ active: true, monitored: true })
   if (options.userId) monitored = monitored.filter((u) => u.id === options.userId)
   const allUsers = await ctx.repos.users.list()
@@ -235,10 +295,17 @@ export async function discoverMeetingsFromCalendar(ctx: AppContext, options: { u
       lastError: null,
     }
     try {
-      let sync = await ctx.calendar.syncEvents({ userEmail: user.email, calendarId: CALENDAR_ID, syncToken: cursor.syncToken })
+      let sync = await ctx.calendar.syncEvents({
+        userEmail: user.email,
+        calendarId: CALENDAR_ID,
+        syncToken: cursor.syncToken,
+      })
       let fullSync = cursor.syncToken === null
       if (sync.fullSyncRequired) {
-        ctx.logger.info({ userId: user.id }, 'syncToken inválido; reiniciando sync completo de Calendar')
+        ctx.logger.info(
+          { userId: user.id },
+          'syncToken inválido; reiniciando sync completo de Calendar',
+        )
         fullSync = true
         sync = await ctx.calendar.syncEvents({
           userEmail: user.email,
@@ -260,18 +327,37 @@ export async function discoverMeetingsFromCalendar(ctx: AppContext, options: { u
       const toCapture: Meeting[] = []
       await ctx.uow.run(async (repos) => {
         for (const event of sync.events) {
-          const { meeting, created, cancelled } = await upsertMeetingFromEvent(ctx, repos, event, settings, usersByEmail)
+          const { meeting, created, cancelled } = await upsertMeetingFromEvent(
+            ctx,
+            repos,
+            event,
+            settings,
+            usersByEmail,
+          )
           if (created) result.created += 1
           else if (cancelled) result.cancelled += 1
           else if (meeting) result.updated += 1
           if (!meeting || cancelled || meeting.status !== MeetingStatus.SCHEDULED) continue
           if (created || meeting.transcriptStatus === ArtifactStatus.NOT_REQUESTED) {
-            if (!meeting.isExternalHost && settings.autoCaptureEnabled && meeting.startAt.getTime() > now.getTime()) toCapture.push(meeting)
+            if (
+              !meeting.isExternalHost &&
+              settings.autoCaptureEnabled &&
+              meeting.startAt.getTime() > now.getTime()
+            )
+              toCapture.push(meeting)
           }
           if (created) {
             const endAt = meeting.endAt ?? new Date(meeting.startAt.getTime() + 60 * 60 * 1000)
-            const startAfterSeconds = Math.max(0, Math.round((endAt.getTime() + SAFETY_NET_DELAY_MS - now.getTime()) / 1000))
-            await enqueueJob(ctx, JobNames.RECONCILE_MISSING_EVENTS, { meetingId: meeting.id }, { singletonKey: `reconcile:${meeting.id}`, startAfterSeconds })
+            const startAfterSeconds = Math.max(
+              0,
+              Math.round((endAt.getTime() + SAFETY_NET_DELAY_MS - now.getTime()) / 1000),
+            )
+            await enqueueJob(
+              ctx,
+              JobNames.RECONCILE_MISSING_EVENTS,
+              { meetingId: meeting.id },
+              { singletonKey: `reconcile:${meeting.id}`, startAfterSeconds },
+            )
           }
         }
         await repos.calendarCursors.save({
@@ -289,9 +375,15 @@ export async function discoverMeetingsFromCalendar(ctx: AppContext, options: { u
       }
     } catch (err) {
       const code = isDomainError(err) ? err.code : DomainErrorCode.INTERNAL_ERROR
-      ctx.logger.error({ userId: user.id, errorCode: code }, 'Error sincronizando Calendar del usuario')
+      ctx.logger.error(
+        { userId: user.id, errorCode: code },
+        'Error sincronizando Calendar del usuario',
+      )
       result.errors.push({ userEmail: user.email, code })
-      await ctx.repos.calendarCursors.save({ ...cursor, lastError: `${code}: ${err instanceof Error ? err.message : 'error'}`.slice(0, 500) })
+      await ctx.repos.calendarCursors.save({
+        ...cursor,
+        lastError: `${code}: ${err instanceof Error ? err.message : 'error'}`.slice(0, 500),
+      })
     }
   }
   return result

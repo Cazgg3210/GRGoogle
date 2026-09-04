@@ -7,7 +7,12 @@ import { newCorrelationId } from '@smlxl/observability'
  * configura `manual: true`).
  */
 export class InMemoryJobQueue implements JobQueuePort {
-  readonly enqueued: Array<{ name: string; payload: unknown; options: EnqueueOptions; correlationId: string }> = []
+  readonly enqueued: Array<{
+    name: string
+    payload: unknown
+    options: EnqueueOptions
+    correlationId: string
+  }> = []
   readonly scheduled: Array<{ name: string; cron: string; payload: unknown }> = []
   private readonly handlers = new Map<string, JobHandler<unknown>>()
   private readonly singletons = new Set<string>()
@@ -18,7 +23,11 @@ export class InMemoryJobQueue implements JobQueuePort {
   async start(): Promise<void> {}
   async stop(): Promise<void> {}
 
-  async enqueue<TPayload>(name: string, payload: TPayload, options: EnqueueOptions = {}): Promise<string | null> {
+  async enqueue<TPayload>(
+    name: string,
+    payload: TPayload,
+    options: EnqueueOptions = {},
+  ): Promise<string | null> {
     const key = options.singletonKey ? `${name}:${options.singletonKey}` : null
     if (key && this.singletons.has(key)) return null
     if (key) this.singletons.add(key)
@@ -53,7 +62,12 @@ export class InMemoryJobQueue implements JobQueuePort {
     return count
   }
 
-  private async execute(name: string, payload: unknown, jobId: string, correlationId: string): Promise<void> {
+  private async execute(
+    name: string,
+    payload: unknown,
+    jobId: string,
+    correlationId: string,
+  ): Promise<void> {
     const handler = this.handlers.get(name)
     if (!handler) return
     await handler(payload, { jobId, correlationId, attempt: 1 })

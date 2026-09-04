@@ -20,7 +20,10 @@ export function hasPermission(permissions: readonly string[], permission: Permis
   return permissions.includes(permission)
 }
 
-export function hasAnyPermission(permissions: readonly string[], required: readonly Permission[]): boolean {
+export function hasAnyPermission(
+  permissions: readonly string[],
+  required: readonly Permission[],
+): boolean {
   if (required.length === 0) return true
   return required.some((p) => permissions.includes(p))
 }
@@ -37,12 +40,37 @@ export interface NavItem {
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: '/inicio', label: 'Inicio', icon: Home, anyOf: [Permission.ACTION_ITEM_READ] },
   { href: '/reuniones', label: 'Reuniones', icon: CalendarDays, anyOf: [Permission.MEETING_READ] },
-  { href: '/pendientes', label: 'Pendientes', icon: ClipboardList, anyOf: [Permission.ACTION_ITEM_READ] },
-  { href: '/revision-ia', label: 'Revisión IA', icon: Sparkles, anyOf: [Permission.AI_REVIEW_RESOLVE] },
-  { href: '/reportes', label: 'Reportes', icon: Bell, anyOf: [Permission.REPORT_GLOBAL, Permission.REPORT_AREA] },
+  {
+    href: '/pendientes',
+    label: 'Pendientes',
+    icon: ClipboardList,
+    anyOf: [Permission.ACTION_ITEM_READ],
+  },
+  {
+    href: '/revision-ia',
+    label: 'Revisión IA',
+    icon: Sparkles,
+    anyOf: [Permission.AI_REVIEW_RESOLVE],
+  },
+  {
+    href: '/reportes',
+    label: 'Reportes',
+    icon: Bell,
+    anyOf: [Permission.REPORT_GLOBAL, Permission.REPORT_AREA],
+  },
   { href: '/equipo', label: 'Equipo', icon: Users, anyOf: [] },
-  { href: '/integraciones', label: 'Integraciones', icon: Plug, anyOf: [Permission.INTEGRATION_MANAGE] },
-  { href: '/configuracion', label: 'Configuración', icon: Settings, anyOf: [Permission.CONFIG_MANAGE] },
+  {
+    href: '/integraciones',
+    label: 'Integraciones',
+    icon: Plug,
+    anyOf: [Permission.INTEGRATION_MANAGE],
+  },
+  {
+    href: '/configuracion',
+    label: 'Configuración',
+    icon: Settings,
+    anyOf: [Permission.CONFIG_MANAGE],
+  },
   {
     href: '/administracion',
     label: 'Administración',

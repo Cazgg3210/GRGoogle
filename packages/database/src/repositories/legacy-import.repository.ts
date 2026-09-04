@@ -56,9 +56,19 @@ export class PrismaLegacyImportRepository extends BaseRepository implements Lega
 
   // --- Lotes ---------------------------------------------------------------
 
-  async createBatch(input: { id: Id; sourceFile: string; mode: string; startedAt: Date }): Promise<LegacyImportBatch> {
+  async createBatch(input: {
+    id: Id
+    sourceFile: string
+    mode: string
+    startedAt: Date
+  }): Promise<LegacyImportBatch> {
     const row = await this.db.legacyImportBatch.create({
-      data: { id: input.id, sourceFile: input.sourceFile, mode: input.mode, startedAt: input.startedAt },
+      data: {
+        id: input.id,
+        sourceFile: input.sourceFile,
+        mode: input.mode,
+        startedAt: input.startedAt,
+      },
     })
     return { ...row, report: row.report ?? null }
   }

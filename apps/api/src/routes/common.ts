@@ -13,7 +13,9 @@ export interface RouteDeps {
   version: string
   checkDatabase: () => Promise<boolean>
   /** Conteos por cola para /admin/jobs (pg-boss). Opcional en tests. */
-  jobStats?: () => Promise<Array<{ name: string; created: number; active: number; completed: number; failed: number }>>
+  jobStats?: () => Promise<
+    Array<{ name: string; created: number; active: number; completed: number; failed: number }>
+  >
 }
 
 export const IdParams = z.object({ id: IdSchema })

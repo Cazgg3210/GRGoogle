@@ -118,7 +118,14 @@ export const ITEMS: ItemDef[] = [
       { meeting: 'comite', relation: RelationType.MENTIONED, evidenceSeq: [4] },
       { meeting: 'alfa', relation: RelationType.MENTIONED, evidenceSeq: [5] },
     ],
-    comments: [{ by: 'gestora', body: 'Se ha mencionado en tres reuniones sin avance; confirmar con Andrés.', source: 'USER', ago: 1 }],
+    comments: [
+      {
+        by: 'gestora',
+        body: 'Se ha mencionado en tres reuniones sin avance; confirmar con Andrés.',
+        source: 'USER',
+        ago: 1,
+      },
+    ],
   },
   {
     seq: 2,
@@ -134,11 +141,26 @@ export const ITEMS: ItemDef[] = [
     due: -1,
     confidence: 0.88,
     tags: ['licencias', 'beta'],
-    links: [{ meeting: 'alfa', relation: RelationType.MENTIONED, evidenceSeq: [15], previousStatus: S.IN_PROGRESS, detectedStatus: S.COMPLETION_PROPOSED }],
+    links: [
+      {
+        meeting: 'alfa',
+        relation: RelationType.MENTIONED,
+        evidenceSeq: [15],
+        previousStatus: S.IN_PROGRESS,
+        detectedStatus: S.COMPLETION_PROPOSED,
+      },
+    ],
     history: [
       { from: null, to: S.PENDING, system: true, ago: 12, reason: 'Creada desde reunión' },
       { from: S.PENDING, to: S.IN_PROGRESS, by: 'finanzas', ago: 8 },
-      { from: S.IN_PROGRESS, to: S.COMPLETION_PROPOSED, system: true, ago: 3, reason: 'Propuesta de cierre generada por IA', meeting: 'alfa' },
+      {
+        from: S.IN_PROGRESS,
+        to: S.COMPLETION_PROPOSED,
+        system: true,
+        ago: 3,
+        reason: 'Propuesta de cierre generada por IA',
+        meeting: 'alfa',
+      },
     ],
   },
   {
@@ -241,7 +263,15 @@ export const ITEMS: ItemDef[] = [
     completedAgo: 3,
     confidence: 0.9,
     tags: ['legal', 'cliente-alfa'],
-    links: [{ meeting: 'legal', relation: RelationType.COMPLETED, evidenceSeq: [3], previousStatus: S.IN_PROGRESS, detectedStatus: S.COMPLETION_PROPOSED }],
+    links: [
+      {
+        meeting: 'legal',
+        relation: RelationType.COMPLETED,
+        evidenceSeq: [3],
+        previousStatus: S.IN_PROGRESS,
+        detectedStatus: S.COMPLETION_PROPOSED,
+      },
+    ],
   },
   {
     seq: 9,
@@ -257,13 +287,35 @@ export const ITEMS: ItemDef[] = [
     confidence: 0.91,
     blocker: 'Nube MX no ha entregado las credenciales del ambiente de pruebas.',
     tags: ['beta', 'infraestructura'],
-    links: [{ meeting: 'avancesBeta', relation: RelationType.BLOCKED, evidenceSeq: [2], previousStatus: S.IN_PROGRESS, detectedStatus: S.BLOCKED }],
+    links: [
+      {
+        meeting: 'avancesBeta',
+        relation: RelationType.BLOCKED,
+        evidenceSeq: [2],
+        previousStatus: S.IN_PROGRESS,
+        detectedStatus: S.BLOCKED,
+      },
+    ],
     history: [
       { from: null, to: S.PENDING, system: true, ago: 12, reason: 'Creada desde reunión' },
       { from: S.PENDING, to: S.IN_PROGRESS, by: 'operaciones', ago: 10 },
-      { from: S.IN_PROGRESS, to: S.BLOCKED, by: 'operaciones', ago: 6, reason: 'Sin credenciales del proveedor', meeting: 'avancesBeta' },
+      {
+        from: S.IN_PROGRESS,
+        to: S.BLOCKED,
+        by: 'operaciones',
+        ago: 6,
+        reason: 'Sin credenciales del proveedor',
+        meeting: 'avancesBeta',
+      },
     ],
-    comments: [{ by: 'operaciones', body: 'Escalado con Andrés; depende del contrato de soporte con Nube MX.', source: 'USER', ago: 5 }],
+    comments: [
+      {
+        by: 'operaciones',
+        body: 'Escalado con Andrés; depende del contrato de soporte con Nube MX.',
+        source: 'USER',
+        ago: 5,
+      },
+    ],
   },
   {
     seq: 10,
@@ -279,7 +331,9 @@ export const ITEMS: ItemDef[] = [
     due: -6,
     confidence: 0.87,
     tags: ['beta', 'proveedor'],
-    history: [{ from: null, to: S.WAITING, system: true, ago: 12, reason: 'Compromiso de tercero' }],
+    history: [
+      { from: null, to: S.WAITING, system: true, ago: 12, reason: 'Compromiso de tercero' },
+    ],
   },
   {
     seq: 11,
@@ -428,7 +482,13 @@ export const ITEMS: ItemDef[] = [
     tags: ['inversionistas'],
     history: [
       { from: null, to: S.PENDING, system: true, ago: 33, reason: 'Creada desde reunión' },
-      { from: S.PENDING, to: S.WAITING, by: 'capital', ago: 15, reason: 'Esperando confirmación de los inversionistas' },
+      {
+        from: S.PENDING,
+        to: S.WAITING,
+        by: 'capital',
+        ago: 15,
+        reason: 'Esperando confirmación de los inversionistas',
+      },
     ],
   },
   {
@@ -494,7 +554,14 @@ export const ITEMS: ItemDef[] = [
       { from: null, to: S.PENDING, system: true, ago: 20, reason: 'Creada desde reunión' },
       { from: S.PENDING, to: S.IN_PROGRESS, by: 'andres', ago: 14 },
     ],
-    comments: [{ by: 'andres', body: 'Visita a Monterrey programada; dos de los tres locales siguen disponibles.', source: 'USER', ago: 6 }],
+    comments: [
+      {
+        by: 'andres',
+        body: 'Visita a Monterrey programada; dos de los tres locales siguen disponibles.',
+        source: 'USER',
+        ago: 6,
+      },
+    ],
   },
   {
     seq: 24,
@@ -522,7 +589,8 @@ export const ITEMS: ItemDef[] = [
     priority: P.HIGH,
     due: -8,
     confidence: 0.89,
-    blocker: 'Faltan supuestos de renta del local; depende de la evaluación de locales (ACT-000023).',
+    blocker:
+      'Faltan supuestos de renta del local; depende de la evaluación de locales (ACT-000023).',
     tags: ['expansion', 'finanzas'],
     history: [
       { from: null, to: S.PENDING, system: true, ago: 20, reason: 'Creada desde reunión' },
@@ -558,7 +626,15 @@ export const ITEMS: ItemDef[] = [
     completedAgo: 12,
     confidence: 0.91,
     tags: ['cliente-alfa', 'legal'],
-    links: [{ meeting: 'legal', relation: RelationType.COMPLETED, evidenceSeq: [1], previousStatus: S.IN_PROGRESS, detectedStatus: S.COMPLETION_PROPOSED }],
+    links: [
+      {
+        meeting: 'legal',
+        relation: RelationType.COMPLETED,
+        evidenceSeq: [1],
+        previousStatus: S.IN_PROGRESS,
+        detectedStatus: S.COMPLETION_PROPOSED,
+      },
+    ],
   },
   {
     seq: 28,
@@ -622,7 +698,9 @@ export const ITEMS: ItemDef[] = [
     legacyId: 'AF-012',
     createdAgo: 55,
     tags: ['legado'],
-    comments: [{ body: 'Completada en julio; póliza enviada por correo.', source: 'LEGACY_IMPORT', ago: 40 }],
+    comments: [
+      { body: 'Completada en julio; póliza enviada por correo.', source: 'LEGACY_IMPORT', ago: 40 },
+    ],
   },
   {
     seq: 32,
@@ -663,8 +741,22 @@ export const ITEMS: ItemDef[] = [
     createdAgo: 60,
     recurrence: { frequency: 'DAILY', textOriginal: 'diaria' },
     tags: ['legado', 'recurrente', 'cobranza'],
-    history: [{ from: null, to: S.IN_PROGRESS, system: true, ago: 60, reason: 'Migración legado: estado En proceso' }],
-    comments: [{ body: 'Seguimiento diario; reporte semanal a Dirección.', source: 'LEGACY_IMPORT', ago: 60 }],
+    history: [
+      {
+        from: null,
+        to: S.IN_PROGRESS,
+        system: true,
+        ago: 60,
+        reason: 'Migración legado: estado En proceso',
+      },
+    ],
+    comments: [
+      {
+        body: 'Seguimiento diario; reporte semanal a Dirección.',
+        source: 'LEGACY_IMPORT',
+        ago: 60,
+      },
+    ],
   },
   {
     seq: 35,
@@ -678,7 +770,13 @@ export const ITEMS: ItemDef[] = [
     legacyId: 'OP-015',
     createdAgo: 50,
     tags: ['legado'],
-    comments: [{ body: 'Falta validar carpeta de contratos 2024 (marcada completa en el sheet).', source: 'LEGACY_IMPORT', ago: 28 }],
+    comments: [
+      {
+        body: 'Falta validar carpeta de contratos 2024 (marcada completa en el sheet).',
+        source: 'LEGACY_IMPORT',
+        ago: 28,
+      },
+    ],
   },
   {
     seq: 36,
@@ -717,7 +815,15 @@ export const ITEMS: ItemDef[] = [
     legacyId: 'EX-003',
     createdAgo: 35,
     tags: ['legado', 'expansion', 'externo'],
-    history: [{ from: null, to: S.WAITING, system: true, ago: 35, reason: 'Migración legado: compromiso de tercero' }],
+    history: [
+      {
+        from: null,
+        to: S.WAITING,
+        system: true,
+        ago: 35,
+        reason: 'Migración legado: compromiso de tercero',
+      },
+    ],
   },
   {
     seq: 39,
@@ -741,7 +847,9 @@ export const ITEMS: ItemDef[] = [
     legacyId: 'JU-011',
     createdAgo: 42,
     tags: ['legado', 'legal'],
-    comments: [{ body: 'Por revisar; proyecto en pausa según el sheet.', source: 'LEGACY_IMPORT', ago: 42 }],
+    comments: [
+      { body: 'Por revisar; proyecto en pausa según el sheet.', source: 'LEGACY_IMPORT', ago: 42 },
+    ],
   },
   {
     seq: 41,
@@ -757,7 +865,13 @@ export const ITEMS: ItemDef[] = [
     tags: ['ahorro'],
     history: [
       { from: null, to: S.PENDING, system: true, ago: 5, reason: 'Creada desde reunión' },
-      { from: S.PENDING, to: S.CANCELLED, by: 'finanzas', ago: 4, reason: 'Ya se había cancelado antes de la reunión' },
+      {
+        from: S.PENDING,
+        to: S.CANCELLED,
+        by: 'finanzas',
+        ago: 4,
+        reason: 'Ya se había cancelado antes de la reunión',
+      },
     ],
   },
   {
@@ -834,7 +948,13 @@ export const ITEMS: ItemDef[] = [
     tags: ['expansion', 'permisos'],
     history: [
       { from: null, to: S.PENDING, system: true, ago: 20, reason: 'Creada desde reunión' },
-      { from: S.PENDING, to: S.BLOCKED, by: 'andres', ago: 9, reason: 'Sin respuesta del ayuntamiento' },
+      {
+        from: S.PENDING,
+        to: S.BLOCKED,
+        by: 'andres',
+        ago: 9,
+        reason: 'Sin respuesta del ayuntamiento',
+      },
     ],
   },
   {
@@ -860,7 +980,12 @@ export function itemId(seq: number): string {
   return stableId(`item:${seq}`)
 }
 
-function evidenceFor(m: MeetingsResult, cat: Catalogs, meeting: MeetingKey, seqs: number[]): EvidenceQuote[] {
+function evidenceFor(
+  m: MeetingsResult,
+  cat: Catalogs,
+  meeting: MeetingKey,
+  seqs: number[],
+): EvidenceQuote[] {
   return seqs.map((seq) => ({
     text: m.segmentText(meeting, seq),
     segmentId: m.segmentId(meeting, seq),
@@ -879,17 +1004,32 @@ function resolveDue(def: ItemDef): Date | null {
   return localDate(def.due)
 }
 
-export async function seedActionItems(db: PrismaClient, cat: Catalogs, m: MeetingsResult): Promise<ActionItemsResult> {
+export async function seedActionItems(
+  db: PrismaClient,
+  cat: Catalogs,
+  m: MeetingsResult,
+): Promise<ActionItemsResult> {
   const ids: Record<number, string> = {}
-  const counts = { actionItems: 0, links: 0, statusHistory: 0, comments: 0, completionProposals: 0, aiReviewItems: 0, collaborators: 0 }
+  const counts = {
+    actionItems: 0,
+    links: 0,
+    statusHistory: 0,
+    comments: 0,
+    completionProposals: 0,
+    aiReviewItems: 0,
+    collaborators: 0,
+  }
 
   for (const def of ITEMS) {
     const id = itemId(def.seq)
     ids[def.seq] = id
     const meetingId = def.meeting ? m.ids[def.meeting] : null
-    const createdAt = def.meeting ? addMinutes(m.starts[def.meeting], 60) : daysAgo(def.createdAgo ?? 30)
+    const createdAt = def.meeting
+      ? addMinutes(m.starts[def.meeting], 60)
+      : daysAgo(def.createdAgo ?? 30)
     const isLegacy = def.legacyId !== undefined
-    const sourceEvidence = def.meeting && def.evidenceSeq ? evidenceFor(m, cat, def.meeting, def.evidenceSeq) : []
+    const sourceEvidence =
+      def.meeting && def.evidenceSeq ? evidenceFor(m, cat, def.meeting, def.evidenceSeq) : []
     const data = {
       title: def.title,
       description: def.description ?? null,
@@ -937,7 +1077,12 @@ export async function seedActionItems(db: PrismaClient, cat: Catalogs, m: Meetin
 
     // Links: CREATED desde la reunión de origen + los adicionales.
     const links: LinkDef[] = []
-    if (def.meeting) links.push({ meeting: def.meeting, relation: RelationType.CREATED, evidenceSeq: def.evidenceSeq })
+    if (def.meeting)
+      links.push({
+        meeting: def.meeting,
+        relation: RelationType.CREATED,
+        evidenceSeq: def.evidenceSeq,
+      })
     links.push(...(def.links ?? []))
     let lastMention: Date | null = null
     let latestMeeting: { id: string; at: Date } | null = null
@@ -954,10 +1099,16 @@ export async function seedActionItems(db: PrismaClient, cat: Catalogs, m: Meetin
         detectedDueDate: null,
         createdAt: linkAt,
       }
-      await db.actionItemMeetingLink.upsert({ where: { id: linkId }, create: { id: linkId, ...linkData }, update: linkData })
+      await db.actionItemMeetingLink.upsert({
+        where: { id: linkId },
+        create: { id: linkId, ...linkData },
+        update: linkData,
+      })
       counts.links++
-      if (l.relation === RelationType.MENTIONED && (!lastMention || linkAt > lastMention)) lastMention = linkAt
-      if (!latestMeeting || linkAt > latestMeeting.at) latestMeeting = { id: m.ids[l.meeting], at: linkAt }
+      if (l.relation === RelationType.MENTIONED && (!lastMention || linkAt > lastMention))
+        lastMention = linkAt
+      if (!latestMeeting || linkAt > latestMeeting.at)
+        latestMeeting = { id: m.ids[l.meeting], at: linkAt }
     }
     if (latestMeeting || lastMention) {
       await db.actionItem.update({
@@ -973,9 +1124,27 @@ export async function seedActionItems(db: PrismaClient, cat: Catalogs, m: Meetin
       const completedAgo = def.completedAgo ?? 1
       const approver = APPROVER[def.owner]
       history.push(
-        { from: null, to: S.PENDING, system: true, ago: completedAgo + 3, reason: 'Creada desde reunión' },
-        { from: S.PENDING, to: S.COMPLETION_PROPOSED, by: def.owner, ago: completedAgo + 1, reason: 'El responsable propone el cierre' },
-        { from: S.COMPLETION_PROPOSED, to: S.COMPLETED, by: approver, ago: completedAgo, reason: 'Propuesta de cierre aprobada' },
+        {
+          from: null,
+          to: S.PENDING,
+          system: true,
+          ago: completedAgo + 3,
+          reason: 'Creada desde reunión',
+        },
+        {
+          from: S.PENDING,
+          to: S.COMPLETION_PROPOSED,
+          by: def.owner,
+          ago: completedAgo + 1,
+          reason: 'El responsable propone el cierre',
+        },
+        {
+          from: S.COMPLETION_PROPOSED,
+          to: S.COMPLETED,
+          by: approver,
+          ago: completedAgo,
+          reason: 'Propuesta de cierre aprobada',
+        },
       )
       const proposalId = stableId(`proposal:${def.seq}:${proposalIndex++}`)
       const proposalData = {
@@ -993,7 +1162,11 @@ export async function seedActionItems(db: PrismaClient, cat: Catalogs, m: Meetin
         reviewComment: 'Aprobado.',
         createdAt: daysAgo(completedAgo + 1),
       }
-      await db.completionProposal.upsert({ where: { id: proposalId }, create: { id: proposalId, ...proposalData }, update: proposalData })
+      await db.completionProposal.upsert({
+        where: { id: proposalId },
+        create: { id: proposalId, ...proposalData },
+        update: proposalData,
+      })
       counts.completionProposals++
     } else if (isLegacy && history.length === 0) {
       history.push({
@@ -1004,7 +1177,13 @@ export async function seedActionItems(db: PrismaClient, cat: Catalogs, m: Meetin
         reason: `Migración legado: estado inicial ${def.status}`,
       })
     } else if (history.length === 0) {
-      history.push({ from: null, to: def.status === S.PROPOSED ? S.PROPOSED : S.PENDING, system: true, ago: 0, reason: def.meeting ? 'Creada desde reunión' : 'Creada manualmente' })
+      history.push({
+        from: null,
+        to: def.status === S.PROPOSED ? S.PROPOSED : S.PENDING,
+        system: true,
+        ago: 0,
+        reason: def.meeting ? 'Creada desde reunión' : 'Creada manualmente',
+      })
     }
     for (const [i, h] of history.entries()) {
       const historyId = stableId(`history:${def.seq}:${i}`)
@@ -1019,7 +1198,11 @@ export async function seedActionItems(db: PrismaClient, cat: Catalogs, m: Meetin
         meetingId: h.meeting ? m.ids[h.meeting] : null,
         changedAt,
       }
-      await db.actionItemStatusHistory.upsert({ where: { id: historyId }, create: { id: historyId, ...historyData }, update: historyData })
+      await db.actionItemStatusHistory.upsert({
+        where: { id: historyId },
+        create: { id: historyId, ...historyData },
+        update: historyData,
+      })
       counts.statusHistory++
     }
 
@@ -1033,7 +1216,11 @@ export async function seedActionItems(db: PrismaClient, cat: Catalogs, m: Meetin
         source: c.source,
         createdAt: daysAgo(c.ago),
       }
-      await db.actionItemComment.upsert({ where: { id: commentId }, create: { id: commentId, ...commentData }, update: commentData })
+      await db.actionItemComment.upsert({
+        where: { id: commentId },
+        create: { id: commentId, ...commentData },
+        update: commentData,
+      })
       counts.comments++
     }
   }
@@ -1047,9 +1234,12 @@ export async function seedActionItems(db: PrismaClient, cat: Catalogs, m: Meetin
       proposedByType: ProposedByType.AI,
       proposedByUserId: null,
       proposedFromMeetingId: m.ids.alfa,
-      reason: 'El cliente indicó en la reunión: "Lo del presupuesto de licencias ya quedó cerrado, lo mandé ayer". Requiere confirmación de Finanzas.',
+      reason:
+        'El cliente indicó en la reunión: "Lo del presupuesto de licencias ya quedó cerrado, lo mandé ayer". Requiere confirmación de Finanzas.',
       evidenceSegmentIds: [seg],
-      evidence: jsonSafe([{ text: m.segmentText('alfa', 15), speaker: 'Carlos Martínez', segmentId: seg }]),
+      evidence: jsonSafe([
+        { text: m.segmentText('alfa', 15), speaker: 'Carlos Martínez', segmentId: seg },
+      ]),
       confidence: 0.86,
       status: CompletionProposalStatus.PENDING,
       reviewedByUserId: null,
@@ -1057,7 +1247,11 @@ export async function seedActionItems(db: PrismaClient, cat: Catalogs, m: Meetin
       reviewComment: null,
       createdAt: addMinutes(m.starts.alfa, 50),
     }
-    await db.completionProposal.upsert({ where: { id: proposalId }, create: { id: proposalId, ...proposalData }, update: proposalData })
+    await db.completionProposal.upsert({
+      where: { id: proposalId },
+      create: { id: proposalId, ...proposalData },
+      update: proposalData,
+    })
     counts.completionProposals++
   }
 
@@ -1092,7 +1286,13 @@ export async function seedActionItems(db: PrismaClient, cat: Catalogs, m: Meetin
         dueDateTextOriginal: 'el próximo martes',
         priority: ActionItemPriority.HIGH,
         statusHint: 'UPDATE',
-        evidence: [{ text: m.segmentText('alfa', 5), speaker: 'Andrés Escandón', segmentId: m.segmentId('alfa', 5) }],
+        evidence: [
+          {
+            text: m.segmentText('alfa', 5),
+            speaker: 'Andrés Escandón',
+            segmentId: m.segmentId('alfa', 5),
+          },
+        ],
         confidence: 0.81,
         relatedOpenActionKey: formatExternalKey(1),
         projectHint: 'Cliente Alfa',
@@ -1151,7 +1351,9 @@ export async function seedActionItems(db: PrismaClient, cat: Catalogs, m: Meetin
         dueDateTextOriginal: 'a finales de la próxima semana',
         priority: ActionItemPriority.HIGH,
         statusHint: 'NEW',
-        evidence: [{ text: m.segmentText('avancesBeta', 6), segmentId: m.segmentId('avancesBeta', 6) }],
+        evidence: [
+          { text: m.segmentText('avancesBeta', 6), segmentId: m.segmentId('avancesBeta', 6) },
+        ],
         confidence: 0.84,
       },
       suggestedOwner: 'andres',
@@ -1207,9 +1409,9 @@ export async function seedActionItems(db: PrismaClient, cat: Catalogs, m: Meetin
       processingRunId: runId,
       reasons: r.reasons,
       reconcileDecision: r.decision,
-      candidateActionItemId: r.candidateSeq !== undefined ? ids[r.candidateSeq] ?? null : null,
+      candidateActionItemId: r.candidateSeq !== undefined ? (ids[r.candidateSeq] ?? null) : null,
       candidateScore: r.candidateScore ?? null,
-      proposedActionItemId: r.proposedSeq !== undefined ? ids[r.proposedSeq] ?? null : null,
+      proposedActionItemId: r.proposedSeq !== undefined ? (ids[r.proposedSeq] ?? null) : null,
       extracted: jsonSafe(r.extracted),
       suggestedOwnerUserId: r.suggestedOwner ? cat.users[r.suggestedOwner] : null,
       suggestedOwnerConfidence: r.suggestedOwnerConfidence ?? null,
@@ -1221,7 +1423,11 @@ export async function seedActionItems(db: PrismaClient, cat: Catalogs, m: Meetin
       resolutionNote: null,
       createdAt: addMinutes(m.starts[r.meeting], 50),
     }
-    await db.aiReviewItem.upsert({ where: { id: reviewId }, create: { id: reviewId, ...reviewData }, update: reviewData })
+    await db.aiReviewItem.upsert({
+      where: { id: reviewId },
+      create: { id: reviewId, ...reviewData },
+      update: reviewData,
+    })
     counts.aiReviewItems++
   }
 

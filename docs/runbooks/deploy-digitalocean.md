@@ -2,15 +2,15 @@
 
 Estado real de la infraestructura al 4 de septiembre de 2026 (fuente: contexto del propietario):
 
-| Elemento | Valor |
-|---|---|
-| Droplet | `ubuntu-s-2vcpu-4gb-nyc1`, 2 vCPU / 4 GB / 80 GB, NYC1, backups activados |
-| **Reserved IP** | **`129.212.197.34`** — la que se usa para DNS, Dokploy y SSH |
-| IP nativa | `147.182.219.216` (no usar para DNS; cambia si se reconstruye el droplet) |
-| Acceso | `ssh root@129.212.197.34` con llave SSH (o Web Console desde el panel de DigitalOcean) |
-| Panel | Dokploy ya instalado (Traefik + Let's Encrypt); comparte el droplet con otras apps (Pórtico San Miguel, etc.) |
-| Dominio | Aún no hay dominio propio; puente temporal con sslip.io: `smlxl.129-212-197-34.sslip.io` |
-| DNS futuro | Zona en DigitalOcean (Networking → Domains) con wildcard `*` → `129.212.197.34` |
+| Elemento        | Valor                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------- |
+| Droplet         | `ubuntu-s-2vcpu-4gb-nyc1`, 2 vCPU / 4 GB / 80 GB, NYC1, backups activados                                     |
+| **Reserved IP** | **`129.212.197.34`** — la que se usa para DNS, Dokploy y SSH                                                  |
+| IP nativa       | `147.182.219.216` (no usar para DNS; cambia si se reconstruye el droplet)                                     |
+| Acceso          | `ssh root@129.212.197.34` con llave SSH (o Web Console desde el panel de DigitalOcean)                        |
+| Panel           | Dokploy ya instalado (Traefik + Let's Encrypt); comparte el droplet con otras apps (Pórtico San Miguel, etc.) |
+| Dominio         | Aún no hay dominio propio; puente temporal con sslip.io: `smlxl.129-212-197-34.sslip.io`                      |
+| DNS futuro      | Zona en DigitalOcean (Networking → Domains) con wildcard `*` → `129.212.197.34`                               |
 
 La plataforma corre como cuatro contenedores (`postgres`, `api`, `worker`, `web`) definidos en
 `docker-compose.dokploy.yml`. Es una app más dentro de Dokploy: no requiere reinstalar nada ni tocar

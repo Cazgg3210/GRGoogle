@@ -59,7 +59,8 @@ export class FakeMeetingAnalyzer implements AiMeetingAnalyzer {
     const base = scenario ? scenario.build(input) : heuristicAnalysis(input)
     const merged: MeetingAnalysisResult = { ...base, ...this.options.override }
     const validated = MeetingAnalysisResultSchema.parse(merged)
-    const inputChars = input.segments.reduce((n, s) => n + s.text.length, 0) + (input.smartNotesText?.length ?? 0)
+    const inputChars =
+      input.segments.reduce((n, s) => n + s.text.length, 0) + (input.smartNotesText?.length ?? 0)
     return { result: validated, usage: this.usage(inputChars, JSON.stringify(validated).length) }
   }
 
@@ -69,7 +70,12 @@ export class FakeMeetingAnalyzer implements AiMeetingAnalyzer {
     const best = [...input.candidates].sort((a, b) => b.preScore - a.preScore)[0] ?? null
     let result: ReconcileResult
     if (!best) {
-      result = { decision: 'CREATE_NEW', matchedActionItemId: null, confidence: 0.9, rationale: 'No hay candidatos en el backlog.' }
+      result = {
+        decision: 'CREATE_NEW',
+        matchedActionItemId: null,
+        confidence: 0.9,
+        rationale: 'No hay candidatos en el backlog.',
+      }
     } else if (input.extracted.statusHint === 'DONE' && best.preScore >= 0.6) {
       result = {
         decision: 'MARK_DONE_CANDIDATE',
@@ -78,7 +84,10 @@ export class FakeMeetingAnalyzer implements AiMeetingAnalyzer {
         rationale: `En la reunión se afirma que "${best.title}" ya se completó.`,
       }
     } else if (best.preScore >= 0.8) {
-      const update = input.extracted.statusHint === 'UPDATE' || input.extracted.statusHint === 'BLOCKED' || input.extracted.dueDate !== null
+      const update =
+        input.extracted.statusHint === 'UPDATE' ||
+        input.extracted.statusHint === 'BLOCKED' ||
+        input.extracted.dueDate !== null
       result = {
         decision: update ? 'UPDATE_EXISTING' : 'LINK_EXISTING',
         matchedActionItemId: best.actionItemId,
@@ -93,9 +102,17 @@ export class FakeMeetingAnalyzer implements AiMeetingAnalyzer {
         rationale: `Posible duplicado de ${best.externalKey}, pero la similitud es parcial.`,
       }
     } else {
-      result = { decision: 'CREATE_NEW', matchedActionItemId: null, confidence: 0.85, rationale: 'Ningún candidato supera la similitud mínima.' }
+      result = {
+        decision: 'CREATE_NEW',
+        matchedActionItemId: null,
+        confidence: 0.85,
+        rationale: 'Ningún candidato supera la similitud mínima.',
+      }
     }
-    return { result, usage: this.usage(JSON.stringify(input).length, JSON.stringify(result).length) }
+    return {
+      result,
+      usage: this.usage(JSON.stringify(input).length, JSON.stringify(result).length),
+    }
   }
 
   async generateWeeklyDigest(input: WeeklyDigestInput): Promise<AiResponse<WeeklyDigestResult>> {
@@ -110,14 +127,27 @@ export class FakeMeetingAnalyzer implements AiMeetingAnalyzer {
         `Al cierre de la semana hay ${n('overdue')} tareas vencidas, ${n('noDueDate')} sin fecha y ${n('blocked')} bloqueadas.`,
       ],
       highlights: [
-        ...input.newItems.slice(0, 5).map((i) => `Nuevo: ${i.title} (${i.owner ?? 'sin responsable'}${i.dueDate ? `, vence ${i.dueDate}` : ''}).`),
+        ...input.newItems
+          .slice(0, 5)
+          .map(
+            (i) =>
+              `Nuevo: ${i.title} (${i.owner ?? 'sin responsable'}${i.dueDate ? `, vence ${i.dueDate}` : ''}).`,
+          ),
         ...input.proposals.slice(0, 3).map((p) => `Propuesta de cierre pendiente: ${p.title}.`),
       ].slice(0, 8),
       risksNarrative: [
-        ...input.overdueItems.slice(0, 5).map((i) => `${i.title} lleva ${i.daysOverdue} día(s) vencida (${i.owner ?? 'sin responsable'}).`),
+        ...input.overdueItems
+          .slice(0, 5)
+          .map(
+            (i) =>
+              `${i.title} lleva ${i.daysOverdue} día(s) vencida (${i.owner ?? 'sin responsable'}).`,
+          ),
         ...input.captureIssues.slice(0, 3).map((c) => `${c.meetingTitle}: ${c.issue}.`),
       ].slice(0, 8),
     }
-    return { result, usage: this.usage(JSON.stringify(input).length, JSON.stringify(result).length) }
+    return {
+      result,
+      usage: this.usage(JSON.stringify(input).length, JSON.stringify(result).length),
+    }
   }
 }

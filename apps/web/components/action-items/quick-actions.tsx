@@ -14,7 +14,13 @@ import {
   UserRoundCog,
 } from 'lucide-react'
 import type { ActionItemDto } from '@smlxl/contracts'
-import { Permission, allowedTransitions, canProposeCompletion, type ActionItemPriority, type ActionItemStatus } from '@smlxl/domain'
+import {
+  Permission,
+  allowedTransitions,
+  canProposeCompletion,
+  type ActionItemPriority,
+  type ActionItemStatus,
+} from '@smlxl/domain'
 import {
   ACTION_ITEM_STATUS_LABELS,
   Button,
@@ -74,7 +80,13 @@ export function ActionItemQuickActions({
   const [dialog, setDialog] = React.useState<DialogKind>(null)
   const [pendingStatus, setPendingStatus] = React.useState<ActionItemStatus | null>(null)
 
-  const invalidate = [qk.actionItems(), qk.actionItem(item.id), qk.notifications, ['action-items'], ['dashboard']]
+  const invalidate = [
+    qk.actionItems(),
+    qk.actionItem(item.id),
+    qk.notifications,
+    ['action-items'],
+    ['dashboard'],
+  ]
 
   const patch = useApiMutation<ActionItemDto, Record<string, unknown>>({
     mutationFn: (body) => clientApi.patch<ActionItemDto>(`/action-items/${item.id}`, body),
@@ -86,7 +98,8 @@ export function ActionItemQuickActions({
     },
   })
   const propose = useApiMutation<ActionItemDto, string>({
-    mutationFn: (reason) => clientApi.post<ActionItemDto>(`/action-items/${item.id}/complete`, { reason }),
+    mutationFn: (reason) =>
+      clientApi.post<ActionItemDto>(`/action-items/${item.id}/complete`, { reason }),
     successMessage: 'Cierre propuesto; requiere aprobación',
     invalidate,
     onSuccess: () => {
@@ -99,7 +112,8 @@ export function ActionItemQuickActions({
     (s) => s !== 'COMPLETED' && s !== 'COMPLETION_PROPOSED' && s !== 'BLOCKED' && s !== 'CANCELLED',
   )
   const canBlock = (transitions ?? allowedTransitions(item.status, 'USER')).includes('BLOCKED')
-  const canCancelNow = canCancel && (transitions ?? allowedTransitions(item.status, 'USER')).includes('CANCELLED')
+  const canCancelNow =
+    canCancel && (transitions ?? allowedTransitions(item.status, 'USER')).includes('CANCELLED')
   const proposable = canProposeCompletion(item.status)
   const closed = item.status === 'COMPLETED' || item.status === 'CANCELLED'
 
@@ -107,13 +121,20 @@ export function ActionItemQuickActions({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size={size} aria-label={`Acciones para ${item.externalKey}`} onClick={(e) => e.stopPropagation()}>
+          <Button
+            variant="ghost"
+            size={size}
+            aria-label={`Acciones para ${item.externalKey}`}
+            onClick={(e) => e.stopPropagation()}
+          >
             <MoreHorizontal />
             {size === 'sm' ? 'Acciones' : null}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align={align} className="w-60" onClick={(e) => e.stopPropagation()}>
-          <DropdownMenuLabel className="font-mono normal-case tracking-normal">{item.externalKey}</DropdownMenuLabel>
+          <DropdownMenuLabel className="font-mono normal-case tracking-normal">
+            {item.externalKey}
+          </DropdownMenuLabel>
           {canUpdate && !closed ? (
             <>
               <DropdownMenuSub>
@@ -151,7 +172,10 @@ export function ActionItemQuickActions({
                   Prioridad
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
-                  <DropdownMenuRadioGroup value={item.priority} onValueChange={(v) => patch.mutate({ priority: v })}>
+                  <DropdownMenuRadioGroup
+                    value={item.priority}
+                    onValueChange={(v) => patch.mutate({ priority: v })}
+                  >
                     {PRIORITIES.map((p) => (
                       <DropdownMenuRadioItem key={p} value={p}>
                         {PRIORITY_LABELS[p].label}
@@ -230,7 +254,9 @@ export function ActionItemQuickActions({
         reasonLabel="Bloqueo"
         reasonRequired
         reasonPlaceholder="Ej. Esperando firma del cliente"
-        onConfirm={(reason) => patch.mutate({ status: 'BLOCKED', blocker: reason, statusReason: reason })}
+        onConfirm={(reason) =>
+          patch.mutate({ status: 'BLOCKED', blocker: reason, statusReason: reason })
+        }
       />
       <ConfirmDialog
         open={dialog === 'propose'}
@@ -265,13 +291,19 @@ export function ActionItemQuickActions({
             setPendingStatus(null)
           }
         }}
-        title={pendingStatus ? `Cambiar a “${ACTION_ITEM_STATUS_LABELS[pendingStatus].label}”` : 'Cambiar estado'}
+        title={
+          pendingStatus
+            ? `Cambiar a “${ACTION_ITEM_STATUS_LABELS[pendingStatus].label}”`
+            : 'Cambiar estado'
+        }
         description={`Estado actual: ${ACTION_ITEM_STATUS_LABELS[item.status].label}.`}
         confirmLabel="Cambiar estado"
         loading={patch.isPending}
         reasonLabel="Comentario (opcional)"
         onConfirm={(reason) =>
-          pendingStatus ? patch.mutate({ status: pendingStatus, ...(reason ? { statusReason: reason } : {}) }) : undefined
+          pendingStatus
+            ? patch.mutate({ status: pendingStatus, ...(reason ? { statusReason: reason } : {}) })
+            : undefined
         }
       />
     </>
@@ -300,10 +332,18 @@ function OwnerDialog({
       <DialogContent size="sm">
         <DialogHeader>
           <DialogTitle>Cambiar responsable</DialogTitle>
-          <DialogDescription>El nuevo responsable recibirá notificación si Gmail está habilitado.</DialogDescription>
+          <DialogDescription>
+            El nuevo responsable recibirá notificación si Gmail está habilitado.
+          </DialogDescription>
         </DialogHeader>
         <Field label="Responsable" htmlFor="qa-owner">
-          <CatalogSelect id="qa-owner" kind="users" value={value} onChange={setValue} emptyLabel="Sin responsable" />
+          <CatalogSelect
+            id="qa-owner"
+            kind="users"
+            value={value}
+            onChange={setValue}
+            emptyLabel="Sin responsable"
+          />
         </Field>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
@@ -340,10 +380,17 @@ function DateDialog({
       <DialogContent size="sm">
         <DialogHeader>
           <DialogTitle>Cambiar fecha compromiso</DialogTitle>
-          <DialogDescription>Deja vacío para dejar el pendiente explícitamente “sin fecha”.</DialogDescription>
+          <DialogDescription>
+            Deja vacío para dejar el pendiente explícitamente “sin fecha”.
+          </DialogDescription>
         </DialogHeader>
         <Field label="Fecha compromiso" htmlFor="qa-date">
-          <Input id="qa-date" type="date" value={value} onChange={(e) => setValue(e.target.value)} />
+          <Input
+            id="qa-date"
+            type="date"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
         </Field>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>

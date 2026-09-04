@@ -15,6 +15,13 @@ describe('config', () => {
     expect(aiMode(env)).toBe('GEMINI')
   })
   it('rechaza bypass en producción', () => {
-    expect(() => loadEnv({ ...base, NODE_ENV: 'production', AUTH_DEV_BYPASS: 'true', AUTH_SECRET: 'x'.repeat(32) })).toThrow()
+    expect(() =>
+      loadEnv({
+        ...base,
+        NODE_ENV: 'production',
+        AUTH_DEV_BYPASS: 'true',
+        AUTH_SECRET: 'x'.repeat(32),
+      }),
+    ).toThrow()
   })
 })

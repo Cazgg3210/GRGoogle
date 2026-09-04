@@ -15,7 +15,13 @@ export interface ClientSession {
 
 const Ctx = React.createContext<ClientSession | null>(null)
 
-export function SessionProvider({ value, children }: { value: ClientSession; children: React.ReactNode }) {
+export function SessionProvider({
+  value,
+  children,
+}: {
+  value: ClientSession
+  children: React.ReactNode
+}) {
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
 

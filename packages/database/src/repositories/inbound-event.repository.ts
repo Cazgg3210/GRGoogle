@@ -13,9 +13,13 @@ export class PrismaInboundEventRepository extends BaseRepository implements Inbo
    * Idempotencia de webhooks (§13.5): intenta insertar; si el `cloudEventId`
    * ya existe (P2002) devuelve el registro existente con `created=false`.
    */
-  async insertIfAbsent(event: InboundGoogleEvent): Promise<{ created: boolean; event: InboundGoogleEvent }> {
+  async insertIfAbsent(
+    event: InboundGoogleEvent,
+  ): Promise<{ created: boolean; event: InboundGoogleEvent }> {
     // Camino rápido sin generar errores en el log; el catch cubre la carrera entre dos entregas simultáneas.
-    const already = await this.db.inboundGoogleEvent.findUnique({ where: { cloudEventId: event.cloudEventId } })
+    const already = await this.db.inboundGoogleEvent.findUnique({
+      where: { cloudEventId: event.cloudEventId },
+    })
     if (already) return { created: false, event: toInboundEvent(already) }
     try {
       const row = await this.db.inboundGoogleEvent.create({ data: inboundEventToDb(event) })
@@ -42,7 +46,10 @@ export class PrismaInboundEventRepository extends BaseRepository implements Inbo
   }
 
   async listRecent(limit: number): Promise<InboundGoogleEvent[]> {
-    const rows = await this.db.inboundGoogleEvent.findMany({ orderBy: { receivedAt: 'desc' }, take: limit })
+    const rows = await this.db.inboundGoogleEvent.findMany({
+      orderBy: { receivedAt: 'desc' },
+      take: limit,
+    })
     return rows.map(toInboundEvent)
   }
 

@@ -4,7 +4,9 @@ import { auth } from '@/auth'
 const PUBLIC_PREFIXES = ['/login', '/api/auth', '/_next', '/favicon.ico', '/icon', '/robots.txt']
 
 function isPublic(pathname: string): boolean {
-  return PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`) || pathname.startsWith(p))
+  return PUBLIC_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`) || pathname.startsWith(p),
+  )
 }
 
 /** Protege las rutas de la app y el proxy: sin sesión -> /login (o 401 para API). */
@@ -21,5 +23,7 @@ export default auth((req) => {
 })
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+  ],
 }

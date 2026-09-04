@@ -23,7 +23,9 @@ export async function googleSignInAction(formData: FormData): Promise<void> {
 
 export async function devSignInAction(formData: FormData): Promise<void> {
   if (!devBypassEnabled) redirect('/login?error=AccessDenied')
-  const email = String(formData.get('email') ?? '').trim().toLowerCase()
+  const email = String(formData.get('email') ?? '')
+    .trim()
+    .toLowerCase()
   const redirectTo = safeCallback(formData.get('callbackUrl'))
   try {
     await signIn(DEV_CREDENTIALS_PROVIDER_ID, { email, redirectTo })

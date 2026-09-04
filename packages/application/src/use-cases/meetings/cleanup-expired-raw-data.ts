@@ -16,7 +16,13 @@ export async function cleanupExpiredRawData(ctx: AppContext): Promise<{ deleted:
   const deleted = await ctx.uow.run(async (repos) => {
     const n = await repos.transcripts.deleteRawOlderThan(now)
     if (n > 0) {
-      await audit(repos, ctx, { actorType: 'SYSTEM', action: 'transcripts.raw_purged', entity: 'Transcript', entityId: 'batch', after: { deleted: n, before: now } })
+      await audit(repos, ctx, {
+        actorType: 'SYSTEM',
+        action: 'transcripts.raw_purged',
+        entity: 'Transcript',
+        entityId: 'batch',
+        after: { deleted: n, before: now },
+      })
     }
     return n
   })

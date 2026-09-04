@@ -70,10 +70,26 @@ export function UsersAdmin({ users, areas }: { users: UserDto[]; areas: AreaDto[
               <TableCell>
                 <RoleBadge role={u.role} />
               </TableCell>
-              <TableCell className="text-sm">{u.areaName ?? (u.areaId ? areaName.get(u.areaId) : null) ?? '—'}</TableCell>
-              <TableCell className="text-sm">{u.managerId ? (userName.get(u.managerId) ?? '—') : '—'}</TableCell>
-              <TableCell>{u.monitored ? <Badge tone="ai">Sí</Badge> : <span className="text-xs text-muted-foreground">No</span>}</TableCell>
-              <TableCell>{u.active ? <Badge tone="success">Activo</Badge> : <Badge tone="neutral">Inactivo</Badge>}</TableCell>
+              <TableCell className="text-sm">
+                {u.areaName ?? (u.areaId ? areaName.get(u.areaId) : null) ?? '—'}
+              </TableCell>
+              <TableCell className="text-sm">
+                {u.managerId ? (userName.get(u.managerId) ?? '—') : '—'}
+              </TableCell>
+              <TableCell>
+                {u.monitored ? (
+                  <Badge tone="ai">Sí</Badge>
+                ) : (
+                  <span className="text-xs text-muted-foreground">No</span>
+                )}
+              </TableCell>
+              <TableCell>
+                {u.active ? (
+                  <Badge tone="success">Activo</Badge>
+                ) : (
+                  <Badge tone="neutral">Inactivo</Badge>
+                )}
+              </TableCell>
               <TableCell className="text-right">
                 <Button variant="ghost" size="xs" onClick={() => setEditing(u)}>
                   <Pencil />
@@ -84,12 +100,29 @@ export function UsersAdmin({ users, areas }: { users: UserDto[]; areas: AreaDto[
           ))}
         </TableBody>
       </Table>
-      {editing ? <EditUserDialog user={editing} users={users} areas={areas} onClose={() => setEditing(null)} /> : null}
+      {editing ? (
+        <EditUserDialog
+          user={editing}
+          users={users}
+          areas={areas}
+          onClose={() => setEditing(null)}
+        />
+      ) : null}
     </div>
   )
 }
 
-function EditUserDialog({ user, users, areas, onClose }: { user: UserDto; users: UserDto[]; areas: AreaDto[]; onClose: () => void }) {
+function EditUserDialog({
+  user,
+  users,
+  areas,
+  onClose,
+}: {
+  user: UserDto
+  users: UserDto[]
+  areas: AreaDto[]
+  onClose: () => void
+}) {
   const [form, setForm] = React.useState({
     displayName: user.displayName,
     role: user.role,
@@ -109,14 +142,23 @@ function EditUserDialog({ user, users, areas, onClose }: { user: UserDto; users:
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Editar usuario</DialogTitle>
-          <DialogDescription>{user.email}. Los cambios de rol aplican en la siguiente petición y quedan auditados.</DialogDescription>
+          <DialogDescription>
+            {user.email}. Los cambios de rol aplican en la siguiente petición y quedan auditados.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Nombre" htmlFor="u-name" className="sm:col-span-2">
-            <Input id="u-name" value={form.displayName} onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))} />
+            <Input
+              id="u-name"
+              value={form.displayName}
+              onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
+            />
           </Field>
           <Field label="Rol" htmlFor="u-role">
-            <Select value={form.role} onValueChange={(v) => setForm((f) => ({ ...f, role: v as UserDto['role'] }))}>
+            <Select
+              value={form.role}
+              onValueChange={(v) => setForm((f) => ({ ...f, role: v as UserDto['role'] }))}
+            >
               <SelectTrigger id="u-role">
                 <SelectValue />
               </SelectTrigger>
@@ -130,7 +172,10 @@ function EditUserDialog({ user, users, areas, onClose }: { user: UserDto; users:
             </Select>
           </Field>
           <Field label="Área" htmlFor="u-area">
-            <Select value={form.areaId ?? NONE} onValueChange={(v) => setForm((f) => ({ ...f, areaId: v === NONE ? null : v }))}>
+            <Select
+              value={form.areaId ?? NONE}
+              onValueChange={(v) => setForm((f) => ({ ...f, areaId: v === NONE ? null : v }))}
+            >
               <SelectTrigger id="u-area">
                 <SelectValue />
               </SelectTrigger>
@@ -145,7 +190,10 @@ function EditUserDialog({ user, users, areas, onClose }: { user: UserDto; users:
             </Select>
           </Field>
           <Field label="Reporta a" htmlFor="u-manager" className="sm:col-span-2">
-            <Select value={form.managerId ?? NONE} onValueChange={(v) => setForm((f) => ({ ...f, managerId: v === NONE ? null : v }))}>
+            <Select
+              value={form.managerId ?? NONE}
+              onValueChange={(v) => setForm((f) => ({ ...f, managerId: v === NONE ? null : v }))}
+            >
               <SelectTrigger id="u-manager">
                 <SelectValue />
               </SelectTrigger>
@@ -163,11 +211,17 @@ function EditUserDialog({ user, users, areas, onClose }: { user: UserDto; users:
           </Field>
           <label className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm">
             Activo
-            <Switch checked={form.active} onCheckedChange={(v) => setForm((f) => ({ ...f, active: v }))} />
+            <Switch
+              checked={form.active}
+              onCheckedChange={(v) => setForm((f) => ({ ...f, active: v }))}
+            />
           </label>
           <label className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm">
             Monitorear Meet
-            <Switch checked={form.monitored} onCheckedChange={(v) => setForm((f) => ({ ...f, monitored: v }))} />
+            <Switch
+              checked={form.monitored}
+              onCheckedChange={(v) => setForm((f) => ({ ...f, monitored: v }))}
+            />
           </label>
         </div>
         <DialogFooter>

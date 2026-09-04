@@ -4,7 +4,20 @@ import * as React from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Mail, Send } from 'lucide-react'
 import type { WeeklyDigestDto } from '@smlxl/contracts'
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, InlineNotice, Tabs, SegmentedList, SegmentedTrigger, formatDate, formatDateTime } from '@smlxl/ui'
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  InlineNotice,
+  Tabs,
+  SegmentedList,
+  SegmentedTrigger,
+  formatDate,
+  formatDateTime,
+} from '@smlxl/ui'
 import { clientApi } from '@/lib/api.client'
 import { qk } from '@/lib/query-keys'
 import { useApiMutation } from '@/lib/use-api-mutation'
@@ -12,13 +25,29 @@ import { ConfirmDialog } from '@/components/shared/confirm-dialog'
 
 /** Secciones A–G del digest (§18). Las llaves del payload se mapean por nombre conocido; el resto se muestra genérico. */
 const SECTION_META: Array<{ letter: string; keys: string[]; title: string }> = [
-  { letter: 'A', keys: ['executiveSummary', 'executiveNarrative', 'summary', 'resumen'], title: 'Resumen ejecutivo' },
+  {
+    letter: 'A',
+    keys: ['executiveSummary', 'executiveNarrative', 'summary', 'resumen'],
+    title: 'Resumen ejecutivo',
+  },
   { letter: 'B', keys: ['kpis', 'indicators', 'metrics'], title: 'Indicadores de la semana' },
-  { letter: 'C', keys: ['completed', 'completedItems', 'closed'], title: 'Completadas (aprobadas)' },
+  {
+    letter: 'C',
+    keys: ['completed', 'completedItems', 'closed'],
+    title: 'Completadas (aprobadas)',
+  },
   { letter: 'D', keys: ['overdue', 'overdueItems', 'vencidas'], title: 'Vencidas y en riesgo' },
-  { letter: 'E', keys: ['newItems', 'created', 'nuevas', 'highlights'], title: 'Nuevos compromisos' },
+  {
+    letter: 'E',
+    keys: ['newItems', 'created', 'nuevas', 'highlights'],
+    title: 'Nuevos compromisos',
+  },
   { letter: 'F', keys: ['byArea', 'byPerson', 'areas', 'people'], title: 'Por área y por persona' },
-  { letter: 'G', keys: ['meetings', 'captureQuality', 'risks', 'risksNarrative', 'nextWeek', 'upcoming'], title: 'Reuniones, calidad de captura y próxima semana' },
+  {
+    letter: 'G',
+    keys: ['meetings', 'captureQuality', 'risks', 'risksNarrative', 'nextWeek', 'upcoming'],
+    title: 'Reuniones, calidad de captura y próxima semana',
+  },
 ]
 
 const KEY_LABELS: Record<string, string> = {
@@ -46,7 +75,8 @@ function Value({ value, depth = 0 }: { value: unknown; depth?: number }): React.
   if (value === null || value === undefined) return <span className="text-muted-foreground">—</span>
   if (typeof value === 'string') return <span className="whitespace-pre-line">{value}</span>
   if (typeof value === 'number') return <span className="font-mono tabular">{value}</span>
-  if (typeof value === 'boolean') return <Badge tone={value ? 'success' : 'neutral'}>{value ? 'Sí' : 'No'}</Badge>
+  if (typeof value === 'boolean')
+    return <Badge tone={value ? 'success' : 'neutral'}>{value ? 'Sí' : 'No'}</Badge>
   if (Array.isArray(value)) {
     if (value.length === 0) return <span className="text-muted-foreground">Sin elementos</span>
     if (value.every((v) => typeof v === 'string' || typeof v === 'number')) {
@@ -99,12 +129,19 @@ function Value({ value, depth = 0 }: { value: unknown; depth?: number }): React.
   }
   if (isRecord(value)) {
     const entries = Object.entries(value)
-    if (entries.every(([, v]) => typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean' || v === null)) {
+    if (
+      entries.every(
+        ([, v]) =>
+          typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean' || v === null,
+      )
+    ) {
       return (
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-3">
           {entries.map(([k, v]) => (
             <div key={k} className="rounded-md bg-surface-muted/60 px-2.5 py-1.5">
-              <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{KEY_LABELS[k] ?? k}</dt>
+              <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                {KEY_LABELS[k] ?? k}
+              </dt>
               <dd className="text-sm">
                 <Value value={v} depth={depth + 1} />
               </dd>
@@ -117,7 +154,9 @@ function Value({ value, depth = 0 }: { value: unknown; depth?: number }): React.
       <div className="flex flex-col gap-3">
         {entries.map(([k, v]) => (
           <div key={k}>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{KEY_LABELS[k] ?? k}</p>
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {KEY_LABELS[k] ?? k}
+            </p>
             <Value value={v} depth={depth + 1} />
           </div>
         ))}
@@ -149,25 +188,35 @@ export function DigestDetail({ digest, canSend }: { digest: WeeklyDigestDto; can
 
   return (
     <div className="flex flex-col gap-6">
-      <Link href="/reportes" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+      <Link
+        href="/reportes"
+        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft className="size-3" />
         Reportes
       </Link>
       <header className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-border bg-surface p-6 shadow-card">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-signal-600">Digest semanal · {digest.audience}</p>
-          <h1 className="mt-1 font-display text-3xl tracking-tight text-ink-950">Semana {digest.weekLabel}</h1>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-signal-600">
+            Digest semanal · {digest.audience}
+          </p>
+          <h1 className="mt-1 font-display text-3xl tracking-tight text-ink-950">
+            Semana {digest.weekLabel}
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {formatDate(digest.weekStart)} – {formatDate(digest.weekEnd)} · generado {formatDateTime(digest.generatedAt)} · versión {digest.version}
+            {formatDate(digest.weekStart)} – {formatDate(digest.weekEnd)} · generado{' '}
+            {formatDateTime(digest.generatedAt)} · versión {digest.version}
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
             {digest.sentAt ? (
               <>
-                <Badge tone="success">Enviado</Badge> {formatDateTime(digest.sentAt)} a {digest.recipientEmails.join(', ') || 'sin destinatarios'}
+                <Badge tone="success">Enviado</Badge> {formatDateTime(digest.sentAt)} a{' '}
+                {digest.recipientEmails.join(', ') || 'sin destinatarios'}
               </>
             ) : (
               <>
-                <Badge tone="neutral">Sin enviar</Badge> Destinatarios configurados: {digest.recipientEmails.join(', ') || 'ninguno'}
+                <Badge tone="neutral">Sin enviar</Badge> Destinatarios configurados:{' '}
+                {digest.recipientEmails.join(', ') || 'ninguno'}
               </>
             )}
           </p>
@@ -201,13 +250,19 @@ export function DigestDetail({ digest, canSend }: { digest: WeeklyDigestDto; can
               .map((s) => (
                 <Card key={s.letter}>
                   <CardHeader className="flex-row items-center gap-3">
-                    <span className="flex size-8 items-center justify-center rounded-sm bg-ink-900 font-display text-lg text-paper-50">{s.letter}</span>
+                    <span className="flex size-8 items-center justify-center rounded-sm bg-ink-900 font-display text-lg text-paper-50">
+                      {s.letter}
+                    </span>
                     <CardTitle>{s.title}</CardTitle>
                   </CardHeader>
                   <CardContent className="flex flex-col gap-4">
                     {s.entries.map(([k, v]) => (
                       <div key={k}>
-                        {s.entries.length > 1 ? <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{KEY_LABELS[k] ?? k}</p> : null}
+                        {s.entries.length > 1 ? (
+                          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            {KEY_LABELS[k] ?? k}
+                          </p>
+                        ) : null}
                         <Value value={v} />
                       </div>
                     ))}
@@ -222,7 +277,9 @@ export function DigestDetail({ digest, canSend }: { digest: WeeklyDigestDto; can
                 <CardContent className="flex flex-col gap-4">
                   {rest.map(([k, v]) => (
                     <div key={k}>
-                      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{KEY_LABELS[k] ?? k}</p>
+                      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        {KEY_LABELS[k] ?? k}
+                      </p>
                       <Value value={v} />
                     </div>
                   ))}

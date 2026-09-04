@@ -24,7 +24,15 @@ import {
   labelFor,
 } from '../lib/labels.js'
 
-export function StatusBadge({ status, className, size }: { status: ActionItemStatus | string; className?: string; size?: 'default' | 'lg' }) {
+export function StatusBadge({
+  status,
+  className,
+  size,
+}: {
+  status: ActionItemStatus | string
+  className?: string
+  size?: 'default' | 'lg'
+}) {
   const meta = labelFor(ACTION_ITEM_STATUS_LABELS, status)
   return (
     <Badge tone={meta.tone} size={size} dot className={className} title={meta.description}>
@@ -40,7 +48,15 @@ const PRIORITY_ICON: Record<ActionItemPriority, React.ComponentType<{ className?
   URGENT: Flame,
 }
 
-export function PriorityBadge({ priority, className, compact }: { priority: ActionItemPriority | string; className?: string; compact?: boolean }) {
+export function PriorityBadge({
+  priority,
+  className,
+  compact,
+}: {
+  priority: ActionItemPriority | string
+  className?: string
+  compact?: boolean
+}) {
   const meta = labelFor(PRIORITY_LABELS, priority)
   const Icon = PRIORITY_ICON[priority as ActionItemPriority] ?? Minus
   if (compact) {
@@ -69,22 +85,49 @@ export function PriorityBadge({ priority, className, compact }: { priority: Acti
   )
 }
 
-export function ProcessingStatusBadge({ status, className, size }: { status: MeetingProcessingStatus | string; className?: string; size?: 'default' | 'lg' }) {
+export function ProcessingStatusBadge({
+  status,
+  className,
+  size,
+}: {
+  status: MeetingProcessingStatus | string
+  className?: string
+  size?: 'default' | 'lg'
+}) {
   const meta = labelFor(PROCESSING_STATUS_LABELS, status)
   const busy = status === 'ANALYZING' || status === 'INGESTING'
   return (
-    <Badge tone={meta.tone} size={size} className={cn(busy && 'animate-pulse-soft', className)} title={meta.description}>
+    <Badge
+      tone={meta.tone}
+      size={size}
+      className={cn(busy && 'animate-pulse-soft', className)}
+      title={meta.description}
+    >
       {meta.label}
     </Badge>
   )
 }
 
-export function ArtifactStatusBadge({ status, kind, className }: { status: ArtifactStatus | string; kind?: 'transcript' | 'notes'; className?: string }) {
+export function ArtifactStatusBadge({
+  status,
+  kind,
+  className,
+}: {
+  status: ArtifactStatus | string
+  kind?: 'transcript' | 'notes'
+  className?: string
+}) {
   const meta = labelFor(ARTIFACT_STATUS_LABELS, status)
   const prefix = kind === 'transcript' ? 'Transcript: ' : kind === 'notes' ? 'Notas: ' : ''
   return (
-    <Badge tone={meta.tone} className={className} title={`${prefix}${meta.label}${meta.description ? ` — ${meta.description}` : ''}`}>
-      {status === 'UNAVAILABLE_EXTERNAL_HOST' || status === 'CAPABILITY_BLOCKED' ? <AlertTriangle className="size-3" /> : null}
+    <Badge
+      tone={meta.tone}
+      className={className}
+      title={`${prefix}${meta.label}${meta.description ? ` — ${meta.description}` : ''}`}
+    >
+      {status === 'UNAVAILABLE_EXTERNAL_HOST' || status === 'CAPABILITY_BLOCKED' ? (
+        <AlertTriangle className="size-3" />
+      ) : null}
       {meta.label}
     </Badge>
   )
@@ -99,7 +142,13 @@ export function AiAnalysisBadge({ status, className }: { status: string; classNa
   )
 }
 
-export function ConfidentialityBadge({ level, className }: { level: ConfidentialityLevel | string; className?: string }) {
+export function ConfidentialityBadge({
+  level,
+  className,
+}: {
+  level: ConfidentialityLevel | string
+  className?: string
+}) {
   const meta = labelFor(CONFIDENTIALITY_LABELS, level)
   if (level === 'NORMAL') return null
   return (
@@ -118,8 +167,15 @@ export function RoleBadge({ role, className }: { role: UserRole | string; classN
   )
 }
 
-export function CaptureQualityChips({ buckets, className }: { buckets: Array<CaptureQualityBucket | string>; className?: string }) {
-  if (buckets.length === 0) return <span className="text-xs text-muted-foreground">Sin datos de captura</span>
+export function CaptureQualityChips({
+  buckets,
+  className,
+}: {
+  buckets: Array<CaptureQualityBucket | string>
+  className?: string
+}) {
+  if (buckets.length === 0)
+    return <span className="text-xs text-muted-foreground">Sin datos de captura</span>
   return (
     <div className={cn('flex flex-wrap gap-1', className)}>
       {buckets.map((b) => {
@@ -184,7 +240,9 @@ export function AttentionReasonList({
             />
             <span>
               <span className="font-medium">{meta.label}</span>
-              {meta.description ? <span className="text-muted-foreground"> — {meta.description}</span> : null}
+              {meta.description ? (
+                <span className="text-muted-foreground"> — {meta.description}</span>
+              ) : null}
             </span>
           </li>
         )

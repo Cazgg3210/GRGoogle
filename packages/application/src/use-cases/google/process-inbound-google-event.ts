@@ -58,7 +58,11 @@ export function redactEventPayload(event: WorkspaceCloudEvent): unknown {
   }
 }
 
-async function resolveSubscribedUserEmail(repos: Repositories, event: WorkspaceCloudEvent, meeting: Meeting | null): Promise<string | null> {
+async function resolveSubscribedUserEmail(
+  repos: Repositories,
+  event: WorkspaceCloudEvent,
+  meeting: Meeting | null,
+): Promise<string | null> {
   const m = /users\/([^/\s]+)/.exec(event.source)
   if (m?.[1]) {
     const tail = decodeURIComponent(m[1])
@@ -96,9 +100,13 @@ async function findOrCreateMeetingForRecord(
     if (record?.spaceName) {
       // `conferenceRecord.space` es el nombre canónico; el meetingCode se resuelve con spaces.get.
       const space = await ctx.meet.getSpaceByMeetingCode(record.spaceName, asUser).catch(() => null)
-      meetingCode = space?.meetingCode || (/^spaces\/([a-z]{3}-[a-z]{4}-[a-z]{3})$/.exec(record.spaceName)?.[1] ?? null)
+      meetingCode =
+        space?.meetingCode ||
+        (/^spaces\/([a-z]{3}-[a-z]{4}-[a-z]{3})$/.exec(record.spaceName)?.[1] ?? null)
       if (!meetingCode) {
-        const bySpace = (await repos.meetings.listByStatus(MeetingProcessingStatus.DISCOVERED, 500)).find((m) => m.googleMeetingSpaceId === record?.spaceName)
+        const bySpace = (
+          await repos.meetings.listByStatus(MeetingProcessingStatus.DISCOVERED, 500)
+        ).find((m) => m.googleMeetingSpaceId === record?.spaceName)
         if (bySpace) meetingCode = bySpace.googleMeetingCode
       }
     }
@@ -113,10 +121,18 @@ async function findOrCreateMeetingForRecord(
       .filter((m) => !m.googleConferenceRecordId && m.status !== MeetingStatus.CANCELLED)
       .find((m) => {
         const end = m.endAt ?? new Date(m.startAt.getTime() + 60 * 60 * 1000)
-        return start.getTime() <= end.getTime() + 2 * 60 * 60 * 1000 && start.getTime() >= m.startAt.getTime() - 2 * 60 * 60 * 1000
+        return (
+          start.getTime() <= end.getTime() + 2 * 60 * 60 * 1000 &&
+          start.getTime() >= m.startAt.getTime() - 2 * 60 * 60 * 1000
+        )
       })
     if (linked) {
-      const saved = await repos.meetings.save({ ...linked, googleConferenceRecordId: recordName, googleMeetingSpaceId: record?.spaceName ?? linked.googleMeetingSpaceId, updatedAt: now })
+      const saved = await repos.meetings.save({
+        ...linked,
+        googleConferenceRecordId: recordName,
+        googleMeetingSpaceId: record?.spaceName ?? linked.googleMeetingSpaceId,
+        updatedAt: now,
+      })
       return { meeting: saved, created: false, record }
     }
   }
@@ -127,14 +143,18 @@ async function findOrCreateMeetingForRecord(
     googleMeetingSpaceId: record?.spaceName ?? null,
     googleMeetingCode: meetingCode,
     googleCalendarEventId: null,
-    title: meetingCode ? `Reunión de Meet ${meetingCode}` : `Reunión de Meet ${recordName.replace('conferenceRecords/', '')}`,
+    title: meetingCode
+      ? `Reunión de Meet ${meetingCode}`
+      : `Reunión de Meet ${recordName.replace('conferenceRecords/', '')}`,
     organizerUserId: organizerUser?.id ?? null,
     organizerEmail,
     // Sin organizador conocido, el evento llegó por la suscripción de un usuario interno → host interno.
     isExternalHost: asUser ? !isInternalEmail(asUser, settings.companyDomain) : true,
     startAt: start,
     endAt: record?.endTime ?? null,
-    durationSeconds: record?.endTime ? Math.round((record.endTime.getTime() - start.getTime()) / 1000) : null,
+    durationSeconds: record?.endTime
+      ? Math.round((record.endTime.getTime() - start.getTime()) / 1000)
+      : null,
     status: MeetingStatus.IN_PROGRESS,
     source: MeetingSource.WORKSPACE_EVENT,
     processingStatus: MeetingProcessingStatus.DISCOVERED,
@@ -154,13 +174,28 @@ async function findOrCreateMeetingForRecord(
     updatedAt: now,
   }
   const saved = await repos.meetings.save(meeting)
-  await audit(repos, ctx, { actorType: 'SYSTEM', action: 'meeting.discovered', entity: 'Meeting', entityId: saved.id, after: { source: saved.source, conferenceRecord: recordName } })
-  await ctx.events.publish({ type: 'MeetingDiscovered', meetingId: saved.id, source: saved.source, occurredAt: now })
+  await audit(repos, ctx, {
+    actorType: 'SYSTEM',
+    action: 'meeting.discovered',
+    entity: 'Meeting',
+    entityId: saved.id,
+    after: { source: saved.source, conferenceRecord: recordName },
+  })
+  await ctx.events.publish({
+    type: 'MeetingDiscovered',
+    meetingId: saved.id,
+    source: saved.source,
+    occurredAt: now,
+  })
   metrics.increment(MetricNames.MEETINGS_DISCOVERED, 1, { source: 'workspace_event' })
   return { meeting: saved, created: true, record }
 }
 
-export async function processInboundGoogleEvent(ctx: AppContext, event: WorkspaceCloudEvent, options: { correlationId?: string } = {}): Promise<ProcessInboundEventResult> {
+export async function processInboundGoogleEvent(
+  ctx: AppContext,
+  event: WorkspaceCloudEvent,
+  options: { correlationId?: string } = {},
+): Promise<ProcessInboundEventResult> {
   const now = ctx.clock.now()
   const recordName = extractConferenceRecordName(event)
   const inserted = await ctx.repos.inboundEvents.insertIfAbsent({
@@ -178,10 +213,18 @@ export async function processInboundGoogleEvent(ctx: AppContext, event: Workspac
     attempts: 0,
     lastErrorCode: null,
   })
-  if (!inserted.created && inserted.event.processingStatus !== InboundEventProcessingStatus.FAILED) {
+  if (
+    !inserted.created &&
+    inserted.event.processingStatus !== InboundEventProcessingStatus.FAILED
+  ) {
     metrics.increment(MetricNames.WEBHOOK_DUPLICATES)
     ctx.logger.info({ googleEventId: event.id }, 'Evento duplicado ignorado')
-    return { duplicate: true, status: inserted.event.processingStatus, meetingId: null, enqueuedJob: null }
+    return {
+      duplicate: true,
+      status: inserted.event.processingStatus,
+      meetingId: null,
+      enqueuedJob: null,
+    }
   }
   const stored = inserted.event
   let meetingId: string | null = null
@@ -197,28 +240,66 @@ export async function processInboundGoogleEvent(ctx: AppContext, event: Workspac
           case GoogleMeetEventType.CONFERENCE_STARTED: {
             const { meeting } = await findOrCreateMeetingForRecord(ctx, repos, recordName, event)
             meetingId = meeting.id
-            if (meeting.status !== MeetingStatus.ENDED) await repos.meetings.updateProcessing(meeting.id, { status: MeetingStatus.IN_PROGRESS })
+            if (meeting.status !== MeetingStatus.ENDED)
+              await repos.meetings.updateProcessing(meeting.id, {
+                status: MeetingStatus.IN_PROGRESS,
+              })
             break
           }
           case GoogleMeetEventType.CONFERENCE_ENDED: {
-            const { meeting, record } = await findOrCreateMeetingForRecord(ctx, repos, recordName, event)
+            const { meeting, record } = await findOrCreateMeetingForRecord(
+              ctx,
+              repos,
+              recordName,
+              event,
+            )
             meetingId = meeting.id
             const endAt = record?.endTime ?? (event.time ? new Date(event.time) : now)
             const startAt = record?.startTime ?? meeting.startAt
             const patch = {
               status: MeetingStatus.ENDED,
               endAt,
-              durationSeconds: Math.max(0, Math.round((endAt.getTime() - startAt.getTime()) / 1000)),
-              transcriptStatus: meeting.transcriptStatus === ArtifactStatus.NOT_REQUESTED ? ArtifactStatus.PENDING : meeting.transcriptStatus,
-              smartNotesStatus: meeting.smartNotesStatus === ArtifactStatus.NOT_REQUESTED ? ArtifactStatus.PENDING : meeting.smartNotesStatus,
+              durationSeconds: Math.max(
+                0,
+                Math.round((endAt.getTime() - startAt.getTime()) / 1000),
+              ),
+              transcriptStatus:
+                meeting.transcriptStatus === ArtifactStatus.NOT_REQUESTED
+                  ? ArtifactStatus.PENDING
+                  : meeting.transcriptStatus,
+              smartNotesStatus:
+                meeting.smartNotesStatus === ArtifactStatus.NOT_REQUESTED
+                  ? ArtifactStatus.PENDING
+                  : meeting.smartNotesStatus,
             }
             if (meeting.processingStatus === MeetingProcessingStatus.DISCOVERED) {
-              await setProcessingStatus(repos, meeting, MeetingProcessingStatus.WAITING_FOR_ARTIFACTS, patch)
+              await setProcessingStatus(
+                repos,
+                meeting,
+                MeetingProcessingStatus.WAITING_FOR_ARTIFACTS,
+                patch,
+              )
             } else {
               await repos.meetings.updateProcessing(meeting.id, patch)
             }
-            enqueuedJob = await enqueueJob(ctx, JobNames.FETCH_MEETING_ARTIFACTS, { meetingId: meeting.id }, { singletonKey: `fetch:${meeting.id}`, startAfterSeconds: 120, correlationId: options.correlationId })
-            await audit(repos, ctx, { actorType: 'SYSTEM', action: 'meeting.ended', entity: 'Meeting', entityId: meeting.id, after: { conferenceRecord: recordName, endAt }, correlationId: options.correlationId })
+            enqueuedJob = await enqueueJob(
+              ctx,
+              JobNames.FETCH_MEETING_ARTIFACTS,
+              { meetingId: meeting.id },
+              {
+                singletonKey: `fetch:${meeting.id}`,
+                startAfterSeconds: 120,
+                correlationId: options.correlationId,
+              },
+            )
+            await audit(repos, ctx, {
+              actorType: 'SYSTEM',
+              action: 'meeting.ended',
+              entity: 'Meeting',
+              entityId: meeting.id,
+              after: { conferenceRecord: recordName, endAt },
+              correlationId: options.correlationId,
+            })
             break
           }
           case GoogleMeetEventType.TRANSCRIPT_FILE_GENERATED:
@@ -232,19 +313,50 @@ export async function processInboundGoogleEvent(ctx: AppContext, event: Workspac
             const isTranscript = event.type.includes('.transcript.')
             const generated = event.type.endsWith('fileGenerated')
             const started = event.type.endsWith('started')
-            const artifactStatus = generated ? ArtifactStatus.AVAILABLE : started ? ArtifactStatus.PENDING : ArtifactStatus.PENDING
-            const patch = isTranscript ? { transcriptStatus: artifactStatus } : { smartNotesStatus: artifactStatus }
+            const artifactStatus = generated
+              ? ArtifactStatus.AVAILABLE
+              : started
+                ? ArtifactStatus.PENDING
+                : ArtifactStatus.PENDING
+            const patch = isTranscript
+              ? { transcriptStatus: artifactStatus }
+              : { smartNotesStatus: artifactStatus }
             if (generated) {
-              await ctx.events.publish({ type: 'MeetingArtifactsAvailable', meetingId: meeting.id, occurredAt: now })
-              if (meeting.processingStatus === MeetingProcessingStatus.WAITING_FOR_ARTIFACTS || meeting.processingStatus === MeetingProcessingStatus.DISCOVERED) {
-                await setProcessingStatus(repos, meeting, MeetingProcessingStatus.ARTIFACTS_AVAILABLE, patch)
+              await ctx.events.publish({
+                type: 'MeetingArtifactsAvailable',
+                meetingId: meeting.id,
+                occurredAt: now,
+              })
+              if (
+                meeting.processingStatus === MeetingProcessingStatus.WAITING_FOR_ARTIFACTS ||
+                meeting.processingStatus === MeetingProcessingStatus.DISCOVERED
+              ) {
+                await setProcessingStatus(
+                  repos,
+                  meeting,
+                  MeetingProcessingStatus.ARTIFACTS_AVAILABLE,
+                  patch,
+                )
               } else {
                 await repos.meetings.updateProcessing(meeting.id, patch)
               }
-              enqueuedJob = await enqueueJob(ctx, JobNames.FETCH_MEETING_ARTIFACTS, { meetingId: meeting.id }, { singletonKey: `fetch:${meeting.id}`, startAfterSeconds: 30, correlationId: options.correlationId })
+              enqueuedJob = await enqueueJob(
+                ctx,
+                JobNames.FETCH_MEETING_ARTIFACTS,
+                { meetingId: meeting.id },
+                {
+                  singletonKey: `fetch:${meeting.id}`,
+                  startAfterSeconds: 30,
+                  correlationId: options.correlationId,
+                },
+              )
             } else {
               const current = isTranscript ? meeting.transcriptStatus : meeting.smartNotesStatus
-              if (current === ArtifactStatus.NOT_REQUESTED || current === ArtifactStatus.CAPABILITY_BLOCKED) await repos.meetings.updateProcessing(meeting.id, patch)
+              if (
+                current === ArtifactStatus.NOT_REQUESTED ||
+                current === ArtifactStatus.CAPABILITY_BLOCKED
+              )
+                await repos.meetings.updateProcessing(meeting.id, patch)
             }
             break
           }
@@ -256,11 +368,26 @@ export async function processInboundGoogleEvent(ctx: AppContext, event: Workspac
   } catch (err) {
     status = InboundEventProcessingStatus.FAILED
     errorCode = isDomainError(err) ? err.code : DomainErrorCode.INTERNAL_ERROR
-    ctx.logger.error({ googleEventId: event.id, errorCode, meetingId }, 'Error procesando evento de Google')
+    ctx.logger.error(
+      { googleEventId: event.id, errorCode, meetingId },
+      'Error procesando evento de Google',
+    )
     metrics.increment(MetricNames.JOBS_FAILED, 1, { job: JobNames.PROCESS_GOOGLE_EVENT })
-    await ctx.repos.inboundEvents.save({ ...stored, processingStatus: status, attempts: stored.attempts + 1, lastErrorCode: errorCode, processedAt: ctx.clock.now() })
+    await ctx.repos.inboundEvents.save({
+      ...stored,
+      processingStatus: status,
+      attempts: stored.attempts + 1,
+      lastErrorCode: errorCode,
+      processedAt: ctx.clock.now(),
+    })
     throw err
   }
-  await ctx.repos.inboundEvents.save({ ...stored, processingStatus: status, attempts: stored.attempts + 1, lastErrorCode: null, processedAt: ctx.clock.now() })
+  await ctx.repos.inboundEvents.save({
+    ...stored,
+    processingStatus: status,
+    attempts: stored.attempts + 1,
+    lastErrorCode: null,
+    processedAt: ctx.clock.now(),
+  })
   return { duplicate: false, status, meetingId, enqueuedJob }
 }

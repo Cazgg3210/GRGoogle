@@ -34,7 +34,9 @@ export default async function TeamPage() {
     safe(api.get<AreaDto[]>('/team/areas')),
     safe(api.get<ProjectDto[]>('/team/projects')),
   ])
-  const canManage = hasPermission(session?.permissions ?? [], Permission.USER_MANAGE) || hasPermission(session?.permissions ?? [], Permission.CATALOG_MANAGE)
+  const canManage =
+    hasPermission(session?.permissions ?? [], Permission.USER_MANAGE) ||
+    hasPermission(session?.permissions ?? [], Permission.CATALOG_MANAGE)
   const areaName = new Map((areas.ok ? areas.data : []).map((a) => [a.id, a.name]))
   const userName = new Map((users.ok ? users.data : []).map((u) => [u.id, u.displayName]))
 
@@ -58,7 +60,8 @@ export default async function TeamPage() {
             <CardTitle>Usuarios</CardTitle>
             {users.ok ? (
               <span className="text-xs text-muted-foreground">
-                {users.data.filter((u) => u.monitored).length} monitoreados · {users.data.filter((u) => u.active).length} activos
+                {users.data.filter((u) => u.monitored).length} monitoreados ·{' '}
+                {users.data.filter((u) => u.active).length} activos
               </span>
             ) : null}
           </CardHeader>
@@ -97,10 +100,26 @@ export default async function TeamPage() {
                       <TableCell>
                         <RoleBadge role={u.role} />
                       </TableCell>
-                      <TableCell className="text-sm">{u.areaName ?? (u.areaId ? areaName.get(u.areaId) : null) ?? '—'}</TableCell>
-                      <TableCell className="text-sm">{u.managerId ? (userName.get(u.managerId) ?? '—') : '—'}</TableCell>
-                      <TableCell>{u.monitored ? <Badge tone="ai">Meet monitoreado</Badge> : <span className="text-xs text-muted-foreground">No</span>}</TableCell>
-                      <TableCell>{u.active ? <Badge tone="success">Activo</Badge> : <Badge tone="neutral">Inactivo</Badge>}</TableCell>
+                      <TableCell className="text-sm">
+                        {u.areaName ?? (u.areaId ? areaName.get(u.areaId) : null) ?? '—'}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {u.managerId ? (userName.get(u.managerId) ?? '—') : '—'}
+                      </TableCell>
+                      <TableCell>
+                        {u.monitored ? (
+                          <Badge tone="ai">Meet monitoreado</Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">No</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {u.active ? (
+                          <Badge tone="success">Activo</Badge>
+                        ) : (
+                          <Badge tone="neutral">Inactivo</Badge>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -136,8 +155,20 @@ export default async function TeamPage() {
                         <TableRow key={a.id}>
                           <TableCell className="font-medium">{a.name}</TableCell>
                           <TableCell className="font-mono text-xs">{a.code ?? '—'}</TableCell>
-                          <TableCell>{a.isExternalCategory ? <Badge tone="warning">Categoría externa</Badge> : <span className="text-xs text-muted-foreground">Interna</span>}</TableCell>
-                          <TableCell>{a.active ? <Badge tone="success">Activa</Badge> : <Badge tone="neutral">Inactiva</Badge>}</TableCell>
+                          <TableCell>
+                            {a.isExternalCategory ? (
+                              <Badge tone="warning">Categoría externa</Badge>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">Interna</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {a.active ? (
+                              <Badge tone="success">Activa</Badge>
+                            ) : (
+                              <Badge tone="neutral">Inactiva</Badge>
+                            )}
+                          </TableCell>
                         </TableRow>
                       ))}
                   </TableBody>
@@ -173,15 +204,31 @@ export default async function TeamPage() {
                       <TableRow key={p.id}>
                         <TableCell>
                           <span className="font-medium">{p.canonicalName}</span>
-                          {p.code ? <span className="ml-1 font-mono text-xs text-muted-foreground">{p.code}</span> : null}
+                          {p.code ? (
+                            <span className="ml-1 font-mono text-xs text-muted-foreground">
+                              {p.code}
+                            </span>
+                          ) : null}
                         </TableCell>
-                        <TableCell className="text-sm">{p.areaId ? (areaName.get(p.areaId) ?? '—') : '—'}</TableCell>
+                        <TableCell className="text-sm">
+                          {p.areaId ? (areaName.get(p.areaId) ?? '—') : '—'}
+                        </TableCell>
                         <TableCell>
                           <span className="flex flex-wrap gap-1">
-                            {p.aliases.length ? p.aliases.map((a) => <Badge key={a}>{a}</Badge>) : <span className="text-xs text-muted-foreground">—</span>}
+                            {p.aliases.length ? (
+                              p.aliases.map((a) => <Badge key={a}>{a}</Badge>)
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
                           </span>
                         </TableCell>
-                        <TableCell>{p.active ? <Badge tone="success">Activo</Badge> : <Badge tone="neutral">Inactivo</Badge>}</TableCell>
+                        <TableCell>
+                          {p.active ? (
+                            <Badge tone="success">Activo</Badge>
+                          ) : (
+                            <Badge tone="neutral">Inactivo</Badge>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

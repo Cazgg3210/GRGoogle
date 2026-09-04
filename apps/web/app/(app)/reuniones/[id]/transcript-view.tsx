@@ -25,21 +25,45 @@ function highlight(text: string, term: string): React.ReactNode {
   )
 }
 
-const SPEAKER_TONES = ['text-ink-800', 'text-ai-700', 'text-signal-700', 'text-info-700', 'text-success-700', 'text-danger-700', 'text-warning-800']
+const SPEAKER_TONES = [
+  'text-ink-800',
+  'text-ai-700',
+  'text-signal-700',
+  'text-info-700',
+  'text-success-700',
+  'text-danger-700',
+  'text-warning-800',
+]
 
-export function TranscriptView({ meetingId, meetingStartAt, active }: { meetingId: string; meetingStartAt: string; active: boolean }) {
+export function TranscriptView({
+  meetingId,
+  meetingStartAt,
+  active,
+}: {
+  meetingId: string
+  meetingStartAt: string
+  active: boolean
+}) {
   const query = useTranscript(meetingId, active)
   const [term, setTerm] = React.useState('')
   const [sourceId, setSourceId] = React.useState<string | null>(null)
 
   const transcripts = query.data?.transcripts ?? []
   const selected = transcripts.find((t) => t.id === sourceId) ?? transcripts[0]
-  const segments = React.useMemo(() => (selected ? [...selected.segments].sort((a, b) => a.sequence - b.sequence) : []), [selected])
-  const speakers = React.useMemo(() => Array.from(new Set(segments.map((s) => s.speakerLabel))), [segments])
+  const segments = React.useMemo(
+    () => (selected ? [...selected.segments].sort((a, b) => a.sequence - b.sequence) : []),
+    [selected],
+  )
+  const speakers = React.useMemo(
+    () => Array.from(new Set(segments.map((s) => s.speakerLabel))),
+    [segments],
+  )
   const filtered = React.useMemo(() => {
     const t = term.trim().toLowerCase()
     if (!t) return segments
-    return segments.filter((s) => s.text.toLowerCase().includes(t) || s.speakerLabel.toLowerCase().includes(t))
+    return segments.filter(
+      (s) => s.text.toLowerCase().includes(t) || s.speakerLabel.toLowerCase().includes(t),
+    )
   }, [segments, term])
 
   if (query.isLoading) {
@@ -53,10 +77,23 @@ export function TranscriptView({ meetingId, meetingStartAt, active }: { meetingI
   }
   if (query.isError) {
     const d = describeError(query.error)
-    return <ErrorState title={d.title} message={d.message} code={d.code} onRetry={() => void query.refetch()} compact />
+    return (
+      <ErrorState
+        title={d.title}
+        message={d.message}
+        code={d.code}
+        onRetry={() => void query.refetch()}
+        compact
+      />
+    )
   }
   if (transcripts.length === 0 || segments.length === 0) {
-    return <EmptyState title="Sin transcripción disponible" description="Google no ha publicado la transcripción o la reunión no tiene artefactos ingeridos." />
+    return (
+      <EmptyState
+        title="Sin transcripción disponible"
+        description="Google no ha publicado la transcripción o la reunión no tiene artefactos ingeridos."
+      />
+    )
   }
 
   return (
@@ -64,7 +101,13 @@ export function TranscriptView({ meetingId, meetingStartAt, active }: { meetingI
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative w-full max-w-sm">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={term} onChange={(e) => setTerm(e.target.value)} placeholder="Buscar en la transcripción…" className="pl-8" aria-label="Buscar en la transcripción" />
+          <Input
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            placeholder="Buscar en la transcripción…"
+            className="pl-8"
+            aria-label="Buscar en la transcripción"
+          />
         </div>
         {transcripts.length > 1 ? (
           <div className="flex gap-1">
@@ -73,7 +116,12 @@ export function TranscriptView({ meetingId, meetingStartAt, active }: { meetingI
                 key={t.id}
                 type="button"
                 onClick={() => setSourceId(t.id)}
-                className={cn('rounded-sm border px-2 py-1 text-xs', selected?.id === t.id ? 'border-ink-900 bg-ink-900 text-paper-50' : 'border-border hover:bg-paper-100')}
+                className={cn(
+                  'rounded-sm border px-2 py-1 text-xs',
+                  selected?.id === t.id
+                    ? 'border-ink-900 bg-ink-900 text-paper-50'
+                    : 'border-border hover:bg-paper-100',
+                )}
               >
                 {SOURCE_LABELS[t.sourceType] ?? t.sourceType}
               </button>
@@ -89,20 +137,48 @@ export function TranscriptView({ meetingId, meetingStartAt, active }: { meetingI
       </div>
       <ol className="max-h-[70dvh] overflow-y-auto rounded-lg border border-border bg-surface shadow-card scrollbar-thin">
         {filtered.length === 0 ? (
-          <li className="px-4 py-8 text-center text-sm text-muted-foreground">Sin coincidencias.</li>
+          <li className="px-4 py-8 text-center text-sm text-muted-foreground">
+            Sin coincidencias.
+          </li>
         ) : (
-          filtered.map((s) => <SegmentRow key={s.id} segment={s} meetingStartAt={meetingStartAt} term={term.trim()} tone={SPEAKER_TONES[speakers.indexOf(s.speakerLabel) % SPEAKER_TONES.length] ?? ''} />)
+          filtered.map((s) => (
+            <SegmentRow
+              key={s.id}
+              segment={s}
+              meetingStartAt={meetingStartAt}
+              term={term.trim()}
+              tone={SPEAKER_TONES[speakers.indexOf(s.speakerLabel) % SPEAKER_TONES.length] ?? ''}
+            />
+          ))
         )}
       </ol>
     </div>
   )
 }
 
-function SegmentRow({ segment, meetingStartAt, term, tone }: { segment: TranscriptSegment; meetingStartAt: string; term: string; tone: string }) {
+function SegmentRow({
+  segment,
+  meetingStartAt,
+  term,
+  tone,
+}: {
+  segment: TranscriptSegment
+  meetingStartAt: string
+  term: string
+  tone: string
+}) {
   return (
-    <li id={`seg-${segment.id}`} className="grid grid-cols-[72px_150px_1fr] gap-3 border-b border-border/70 px-4 py-2 text-sm last:border-0 hover:bg-paper-100/60">
-      <span className="pt-0.5 font-mono text-[11px] tabular text-muted-foreground">{formatClock(segment.startAt, meetingStartAt)}</span>
-      <span className={cn('truncate pt-0.5 text-xs font-semibold', tone)} title={segment.speakerLabel}>
+    <li
+      id={`seg-${segment.id}`}
+      className="grid grid-cols-[72px_150px_1fr] gap-3 border-b border-border/70 px-4 py-2 text-sm last:border-0 hover:bg-paper-100/60"
+    >
+      <span className="pt-0.5 font-mono text-[11px] tabular text-muted-foreground">
+        {formatClock(segment.startAt, meetingStartAt)}
+      </span>
+      <span
+        className={cn('truncate pt-0.5 text-xs font-semibold', tone)}
+        title={segment.speakerLabel}
+      >
         {highlight(segment.speakerLabel, term)}
       </span>
       <span className="leading-relaxed">{highlight(segment.text, term)}</span>

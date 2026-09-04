@@ -59,7 +59,9 @@ export function httpStatusOf(err: unknown): number | null {
 
 function isAbortError(err: unknown): boolean {
   const e = asHttpLike(err)
-  return e.name === 'AbortError' || e.code === 'ABORT_ERR' || /aborted|timeout/i.test(e.message ?? '')
+  return (
+    e.name === 'AbortError' || e.code === 'ABORT_ERR' || /aborted|timeout/i.test(e.message ?? '')
+  )
 }
 
 function isNetworkError(err: unknown): boolean {
@@ -83,16 +85,24 @@ export function mapGoogleError(err: unknown, operation = 'google'): DomainError 
     })
   }
   if (status === 403 || status === 401) {
-    return new DomainError(DomainErrorCode.GOOGLE_PERMISSION_DENIED, `Permiso denegado en ${operation}: ${message}`, {
-      details,
-      cause: err,
-    })
+    return new DomainError(
+      DomainErrorCode.GOOGLE_PERMISSION_DENIED,
+      `Permiso denegado en ${operation}: ${message}`,
+      {
+        details,
+        cause: err,
+      },
+    )
   }
   if (status === 404) {
-    return new DomainError(DomainErrorCode.GOOGLE_NOT_FOUND, `Recurso no encontrado en ${operation}`, {
-      details,
-      cause: err,
-    })
+    return new DomainError(
+      DomainErrorCode.GOOGLE_NOT_FOUND,
+      `Recurso no encontrado en ${operation}`,
+      {
+        details,
+        cause: err,
+      },
+    )
   }
   if (status === 429) {
     return new DomainError(DomainErrorCode.GOOGLE_RATE_LIMIT, `Límite de cuota en ${operation}`, {
@@ -102,24 +112,36 @@ export function mapGoogleError(err: unknown, operation = 'google'): DomainError 
     })
   }
   if (status !== null && status >= 500) {
-    return new DomainError(DomainErrorCode.GOOGLE_UNAVAILABLE, `Google no disponible en ${operation} (${status})`, {
-      retryable: true,
-      details,
-      cause: err,
-    })
+    return new DomainError(
+      DomainErrorCode.GOOGLE_UNAVAILABLE,
+      `Google no disponible en ${operation} (${status})`,
+      {
+        retryable: true,
+        details,
+        cause: err,
+      },
+    )
   }
   if (status === null && isNetworkError(err)) {
-    return new DomainError(DomainErrorCode.GOOGLE_UNAVAILABLE, `Error de red en ${operation}: ${message}`, {
-      retryable: true,
-      details,
-      cause: err,
-    })
+    return new DomainError(
+      DomainErrorCode.GOOGLE_UNAVAILABLE,
+      `Error de red en ${operation}: ${message}`,
+      {
+        retryable: true,
+        details,
+        cause: err,
+      },
+    )
   }
   if (status === 400 || status === 409 || status === 412 || status === 422) {
-    return new DomainError(DomainErrorCode.VALIDATION_ERROR, `Google rechazó la solicitud en ${operation}: ${message}`, {
-      details,
-      cause: err,
-    })
+    return new DomainError(
+      DomainErrorCode.VALIDATION_ERROR,
+      `Google rechazó la solicitud en ${operation}: ${message}`,
+      {
+        details,
+        cause: err,
+      },
+    )
   }
   return new DomainError(DomainErrorCode.GOOGLE_UNAVAILABLE, `Error en ${operation}: ${message}`, {
     retryable: false,

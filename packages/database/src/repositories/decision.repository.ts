@@ -4,7 +4,10 @@ import { BaseRepository } from './base.js'
 
 export class PrismaDecisionRepository extends BaseRepository implements DecisionRepository {
   async listByMeeting(meetingId: Id): Promise<Decision[]> {
-    const rows = await this.db.decision.findMany({ where: { meetingId }, orderBy: { createdAt: 'asc' } })
+    const rows = await this.db.decision.findMany({
+      where: { meetingId },
+      orderBy: { createdAt: 'asc' },
+    })
     return rows.map((r) => toDecision(r, this.ctx))
   }
 

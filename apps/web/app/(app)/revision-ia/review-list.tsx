@@ -3,7 +3,11 @@
 import * as React from 'react'
 import Link from 'next/link'
 import { ExternalLink, Sparkles, X } from 'lucide-react'
-import { ExtractedActionItemSchema, type AiReviewItemDto, type ExtractedActionItemDto } from '@smlxl/contracts'
+import {
+  ExtractedActionItemSchema,
+  type AiReviewItemDto,
+  type ExtractedActionItemDto,
+} from '@smlxl/contracts'
 import type { AiReviewReason } from '@smlxl/domain'
 import {
   AI_REVIEW_REASON_LABELS,
@@ -54,7 +58,15 @@ function pct(v: number | null | undefined): string {
   return v === null || v === undefined ? '' : ` (${formatPercent(v)})`
 }
 
-export function ReviewList({ page, reason, meetingId }: { page: Page<AiReviewItemDto>; reason?: string; meetingId?: string }) {
+export function ReviewList({
+  page,
+  reason,
+  meetingId,
+}: {
+  page: Page<AiReviewItemDto>
+  reason?: string
+  meetingId?: string
+}) {
   const url = useUrlState()
   const items = React.useMemo(() => {
     const pending = page.items.filter((i) => i.status === 'PENDING')
@@ -64,11 +76,18 @@ export function ReviewList({ page, reason, meetingId }: { page: Page<AiReviewIte
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Motivo</span>
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Motivo
+        </span>
         <button
           type="button"
           onClick={() => url.set({ reason: null })}
-          className={cn('rounded-full border px-2.5 py-1 text-xs transition-colors', !reason ? 'border-ink-900 bg-ink-900 text-paper-50' : 'border-border hover:bg-paper-100')}
+          className={cn(
+            'rounded-full border px-2.5 py-1 text-xs transition-colors',
+            !reason
+              ? 'border-ink-900 bg-ink-900 text-paper-50'
+              : 'border-border hover:bg-paper-100',
+          )}
         >
           Todos
         </button>
@@ -80,14 +99,24 @@ export function ReviewList({ page, reason, meetingId }: { page: Page<AiReviewIte
               key={r}
               type="button"
               onClick={() => url.set({ reason: reason === r ? null : r })}
-              className={cn('rounded-full border px-2.5 py-1 text-xs transition-colors', reason === r ? 'border-ink-900 bg-ink-900 text-paper-50' : 'border-border hover:bg-paper-100')}
+              className={cn(
+                'rounded-full border px-2.5 py-1 text-xs transition-colors',
+                reason === r
+                  ? 'border-ink-900 bg-ink-900 text-paper-50'
+                  : 'border-border hover:bg-paper-100',
+              )}
             >
               {meta.label} <span className="font-mono opacity-70">{n}</span>
             </button>
           )
         })}
         {meetingId ? (
-          <Button variant="ghost" size="sm" onClick={() => url.set({ meetingId: null })} className="ml-auto">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => url.set({ meetingId: null })}
+            className="ml-auto"
+          >
             <X />
             Quitar filtro de reunión
           </Button>
@@ -124,7 +153,13 @@ function ReviewCard({ item }: { item: AiReviewItemDto }) {
   const extracted = React.useMemo(() => parseExtracted(item.extracted), [item.extracted])
   const [dialog, setDialog] = React.useState<null | 'approve' | 'merge' | 'reject'>(null)
   const [evidenceOpen, setEvidenceOpen] = React.useState(false)
-  const invalidate = [['ai-review'], qk.notifications, ['action-items'], ['dashboard'], qk.meetingReviewItems(item.meetingId)]
+  const invalidate = [
+    ['ai-review'],
+    qk.notifications,
+    ['action-items'],
+    ['dashboard'],
+    qk.meetingReviewItems(item.meetingId),
+  ]
 
   const approve = useApiMutation<AiReviewItemDto, Record<string, unknown>>({
     mutationFn: (body) => clientApi.post<AiReviewItemDto>(`/ai-review/${item.id}/approve`, body),
@@ -145,7 +180,11 @@ function ReviewCard({ item }: { item: AiReviewItemDto }) {
     onSuccess: () => setDialog(null),
   })
 
-  const quote = extracted?.evidence[0]?.text ?? (typeof item.extracted === 'object' && item.extracted && 'title' in item.extracted ? String((item.extracted as { title: unknown }).title) : null)
+  const quote =
+    extracted?.evidence[0]?.text ??
+    (typeof item.extracted === 'object' && item.extracted && 'title' in item.extracted
+      ? String((item.extracted as { title: unknown }).title)
+      : null)
   const title = extracted?.title ?? quote ?? 'Extracción sin título'
   const evidence = extracted?.evidence ?? []
 
@@ -164,44 +203,68 @@ function ReviewCard({ item }: { item: AiReviewItemDto }) {
           )
         })}
         <span className="ml-auto text-xs text-muted-foreground" title={item.reconcileDecision}>
-          {(RECONCILE_DECISION_LABELS as Record<string, string>)[item.reconcileDecision] ?? item.reconcileDecision}
+          {(RECONCILE_DECISION_LABELS as Record<string, string>)[item.reconcileDecision] ??
+            item.reconcileDecision}
         </span>
       </header>
 
       <div className="flex flex-1 flex-col gap-4 px-5 py-4">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ai-700">IA detectó:</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ai-700">
+            IA detectó:
+          </p>
           <blockquote className="mt-1 border-l-2 border-signal-400 pl-3 font-display text-xl leading-snug text-ink-950">
             “{quote ?? title}”
           </blockquote>
-          {extracted && quote !== extracted.title ? <p className="mt-2 text-sm font-medium">{extracted.title}</p> : null}
-          {extracted?.description ? <p className="mt-1 text-sm text-muted-foreground">{extracted.description}</p> : null}
+          {extracted && quote !== extracted.title ? (
+            <p className="mt-2 text-sm font-medium">{extracted.title}</p>
+          ) : null}
+          {extracted?.description ? (
+            <p className="mt-1 text-sm text-muted-foreground">{extracted.description}</p>
+          ) : null}
         </div>
 
         <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-xs text-muted-foreground">Responsable sugerido</dt>
             <dd className="font-medium">
-              {item.suggestedOwnerName ?? extracted?.owner?.name ?? <span className="text-warning-800">No identificado</span>}
+              {item.suggestedOwnerName ?? extracted?.owner?.name ?? (
+                <span className="text-warning-800">No identificado</span>
+              )}
               <span className="text-muted-foreground">{pct(item.suggestedOwnerConfidence)}</span>
             </dd>
           </div>
           <div>
             <dt className="text-xs text-muted-foreground">Fecha sugerida</dt>
             <dd className="font-medium">
-              {item.suggestedDueDate ? formatDate(item.suggestedDueDate) : extracted?.dueDate ? formatDate(extracted.dueDate) : <span className="text-warning-800">Sin fecha</span>}
+              {item.suggestedDueDate ? (
+                formatDate(item.suggestedDueDate)
+              ) : extracted?.dueDate ? (
+                formatDate(extracted.dueDate)
+              ) : (
+                <span className="text-warning-800">Sin fecha</span>
+              )}
               <span className="text-muted-foreground">{pct(item.suggestedDueDateConfidence)}</span>
-              {extracted?.dueDateTextOriginal ? <span className="block text-xs text-muted-foreground">“{extracted.dueDateTextOriginal}”</span> : null}
+              {extracted?.dueDateTextOriginal ? (
+                <span className="block text-xs text-muted-foreground">
+                  “{extracted.dueDateTextOriginal}”
+                </span>
+              ) : null}
             </dd>
           </div>
           {item.candidateActionItemId ? (
             <div className="sm:col-span-2">
               <dt className="text-xs text-muted-foreground">Coincide con pendiente existente</dt>
               <dd className="font-medium">
-                <Link href={`/pendientes/${item.candidateActionItemId}`} className="font-mono text-info-700 hover:underline">
+                <Link
+                  href={`/pendientes/${item.candidateActionItemId}`}
+                  className="font-mono text-info-700 hover:underline"
+                >
                   #{item.candidateActionItemKey ?? item.candidateActionItemId.slice(0, 8)}
                 </Link>
-                {item.candidateActionItemTitle ? <span className="ml-1">{item.candidateActionItemTitle}</span> : null}
+                {item.candidateActionItemTitle ? (
+                  <span className="ml-1">{item.candidateActionItemTitle}</span>
+                ) : null}
                 <span className="text-muted-foreground">{pct(item.candidateScore)}</span>
               </dd>
             </div>
@@ -209,21 +272,34 @@ function ReviewCard({ item }: { item: AiReviewItemDto }) {
           {extracted ? (
             <div className="sm:col-span-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <span>
-                Confianza global <span className="font-mono">{formatPercent(extracted.confidence)}</span>
+                Confianza global{' '}
+                <span className="font-mono">{formatPercent(extracted.confidence)}</span>
               </span>
-              {extracted.priority ? <Badge tone={PRIORITY_LABELS[extracted.priority].tone}>{PRIORITY_LABELS[extracted.priority].label}</Badge> : null}
+              {extracted.priority ? (
+                <Badge tone={PRIORITY_LABELS[extracted.priority].tone}>
+                  {PRIORITY_LABELS[extracted.priority].label}
+                </Badge>
+              ) : null}
               <Badge>hint: {extracted.statusHint}</Badge>
             </div>
           ) : null}
         </dl>
 
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          <Link href={`/reuniones/${item.meetingId}`} className="inline-flex items-center gap-1 text-info-700 hover:underline">
+          <Link
+            href={`/reuniones/${item.meetingId}`}
+            className="inline-flex items-center gap-1 text-info-700 hover:underline"
+          >
             {item.meetingTitle}
             <ExternalLink className="size-3" />
           </Link>
           <span>{formatDateTime(item.meetingStartAt)}</span>
-          <button type="button" className="text-ai-700 hover:underline" onClick={() => setEvidenceOpen(true)} disabled={evidence.length === 0}>
+          <button
+            type="button"
+            className="text-ai-700 hover:underline"
+            onClick={() => setEvidenceOpen(true)}
+            disabled={evidence.length === 0}
+          >
             Ver evidencia{evidence.length ? ` (${evidence.length})` : ''}
           </button>
         </p>
@@ -235,18 +311,53 @@ function ReviewCard({ item }: { item: AiReviewItemDto }) {
             Actualizar existente
           </Button>
         ) : null}
-        <Button size="sm" variant={item.candidateActionItemId ? 'outline' : 'default'} onClick={() => setDialog('approve')}>
+        <Button
+          size="sm"
+          variant={item.candidateActionItemId ? 'outline' : 'default'}
+          onClick={() => setDialog('approve')}
+        >
           Crear nuevo
         </Button>
-        <Button size="sm" variant="ghost" className="ml-auto text-danger-700" onClick={() => setDialog('reject')}>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="ml-auto text-danger-700"
+          onClick={() => setDialog('reject')}
+        >
           Descartar
         </Button>
       </footer>
 
-      <ApproveDialog open={dialog === 'approve'} onOpenChange={(o) => !o && setDialog(null)} item={item} extracted={extracted} loading={approve.isPending} onSubmit={(b) => approve.mutate(b)} />
-      <MergeDialog open={dialog === 'merge'} onOpenChange={(o) => !o && setDialog(null)} item={item} loading={merge.isPending} onSubmit={(b) => merge.mutate(b)} />
-      <RejectDialog open={dialog === 'reject'} onOpenChange={(o) => !o && setDialog(null)} loading={reject.isPending} onSubmit={(b) => reject.mutate(b)} />
-      <EvidenceDrawer open={evidenceOpen} onOpenChange={setEvidenceOpen} title={title} meetingId={item.meetingId} meetingTitle={item.meetingTitle} meetingStartAt={item.meetingStartAt} evidence={evidence} />
+      <ApproveDialog
+        open={dialog === 'approve'}
+        onOpenChange={(o) => !o && setDialog(null)}
+        item={item}
+        extracted={extracted}
+        loading={approve.isPending}
+        onSubmit={(b) => approve.mutate(b)}
+      />
+      <MergeDialog
+        open={dialog === 'merge'}
+        onOpenChange={(o) => !o && setDialog(null)}
+        item={item}
+        loading={merge.isPending}
+        onSubmit={(b) => merge.mutate(b)}
+      />
+      <RejectDialog
+        open={dialog === 'reject'}
+        onOpenChange={(o) => !o && setDialog(null)}
+        loading={reject.isPending}
+        onSubmit={(b) => reject.mutate(b)}
+      />
+      <EvidenceDrawer
+        open={evidenceOpen}
+        onOpenChange={setEvidenceOpen}
+        title={title}
+        meetingId={item.meetingId}
+        meetingTitle={item.meetingTitle}
+        meetingStartAt={item.meetingStartAt}
+        evidence={evidence}
+      />
     </article>
   )
 }
@@ -285,7 +396,10 @@ function ApproveDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Crear pendiente nuevo</DialogTitle>
-          <DialogDescription>Puedes corregir lo que la IA sugirió antes de crearlo. La evidencia y la reunión origen se conservan.</DialogDescription>
+          <DialogDescription>
+            Puedes corregir lo que la IA sugirió antes de crearlo. La evidencia y la reunión origen
+            se conservan.
+          </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-4">
           <Field label="Título" htmlFor="ap-title" required>
@@ -293,10 +407,21 @@ function ApproveDialog({
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Responsable" htmlFor="ap-owner">
-              <CatalogSelect id="ap-owner" kind="users" value={owner} onChange={setOwner} emptyLabel="Sin responsable" />
+              <CatalogSelect
+                id="ap-owner"
+                kind="users"
+                value={owner}
+                onChange={setOwner}
+                emptyLabel="Sin responsable"
+              />
             </Field>
             <Field label="Fecha compromiso" htmlFor="ap-date">
-              <Input id="ap-date" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+              <Input
+                id="ap-date"
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+              />
             </Field>
             <Field label="Prioridad" htmlFor="ap-priority">
               <Select value={priority} onValueChange={setPriority}>
@@ -314,7 +439,12 @@ function ApproveDialog({
             </Field>
           </div>
           <Field label="Nota de revisión" htmlFor="ap-note">
-            <Textarea id="ap-note" rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
+            <Textarea
+              id="ap-note"
+              rows={2}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
           </Field>
         </div>
         <DialogFooter>
@@ -373,30 +503,59 @@ function MergeDialog({
         <DialogHeader>
           <DialogTitle>Actualizar pendiente existente</DialogTitle>
           <DialogDescription>
-            Se vinculará esta mención a <span className="font-mono">#{item.candidateActionItemKey ?? '…'}</span> y se registrará la evidencia. Elige qué datos aplicar.
+            Se vinculará esta mención a{' '}
+            <span className="font-mono">#{item.candidateActionItemKey ?? '…'}</span> y se registrará
+            la evidencia. Elige qué datos aplicar.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-4">
-          <Field label="Pendiente destino (id)" htmlFor="mg-target" hint="Por defecto el candidato detectado; pega otro id si corresponde.">
-            <Input id="mg-target" value={target} onChange={(e) => setTarget(e.target.value)} className="font-mono text-xs" />
+          <Field
+            label="Pendiente destino (id)"
+            htmlFor="mg-target"
+            hint="Por defecto el candidato detectado; pega otro id si corresponde."
+          >
+            <Input
+              id="mg-target"
+              value={target}
+              onChange={(e) => setTarget(e.target.value)}
+              className="font-mono text-xs"
+            />
           </Field>
           <label className="flex items-center gap-2 text-sm">
             <Checkbox checked={applyDueDate} onCheckedChange={(v) => setApplyDueDate(Boolean(v))} />
-            Aplicar fecha sugerida {item.suggestedDueDate ? `(${formatDate(item.suggestedDueDate)})` : '(sin fecha)'}
+            Aplicar fecha sugerida{' '}
+            {item.suggestedDueDate ? `(${formatDate(item.suggestedDueDate)})` : '(sin fecha)'}
           </label>
           <label className="flex items-center gap-2 text-sm">
             <Checkbox checked={applyOwner} onCheckedChange={(v) => setApplyOwner(Boolean(v))} />
-            Aplicar responsable sugerido {item.suggestedOwnerName ? `(${item.suggestedOwnerName})` : '(ninguno)'}
+            Aplicar responsable sugerido{' '}
+            {item.suggestedOwnerName ? `(${item.suggestedOwnerName})` : '(ninguno)'}
           </label>
           <Field label="Nota" htmlFor="mg-note">
-            <Textarea id="mg-note" rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
+            <Textarea
+              id="mg-note"
+              rows={2}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
           </Field>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button loading={loading} disabled={!target.trim()} onClick={() => onSubmit({ targetActionItemId: target.trim(), applyDueDate, applyOwner, ...(note.trim() ? { note: note.trim() } : {}) })}>
+          <Button
+            loading={loading}
+            disabled={!target.trim()}
+            onClick={() =>
+              onSubmit({
+                targetActionItemId: target.trim(),
+                applyDueDate,
+                applyOwner,
+                ...(note.trim() ? { note: note.trim() } : {}),
+              })
+            }
+          >
             Actualizar existente
           </Button>
         </DialogFooter>
@@ -405,7 +564,17 @@ function MergeDialog({
   )
 }
 
-function RejectDialog({ open, onOpenChange, loading, onSubmit }: { open: boolean; onOpenChange: (o: boolean) => void; loading: boolean; onSubmit: (body: Record<string, unknown>) => void }) {
+function RejectDialog({
+  open,
+  onOpenChange,
+  loading,
+  onSubmit,
+}: {
+  open: boolean
+  onOpenChange: (o: boolean) => void
+  loading: boolean
+  onSubmit: (body: Record<string, unknown>) => void
+}) {
   const [note, setNote] = React.useState('')
   React.useEffect(() => {
     if (open) setNote('')
@@ -415,17 +584,29 @@ function RejectDialog({ open, onOpenChange, loading, onSubmit }: { open: boolean
       <DialogContent size="sm">
         <DialogHeader>
           <DialogTitle>Descartar extracción</DialogTitle>
-          <DialogDescription>No se creará ni modificará ningún pendiente. La decisión queda auditada.</DialogDescription>
+          <DialogDescription>
+            No se creará ni modificará ningún pendiente. La decisión queda auditada.
+          </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="rj-note">Motivo (opcional)</Label>
-          <Textarea id="rj-note" rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ej. No es un compromiso, es una opinión." />
+          <Textarea
+            id="rj-note"
+            rows={2}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Ej. No es un compromiso, es una opinión."
+          />
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button variant="danger" loading={loading} onClick={() => onSubmit(note.trim() ? { note: note.trim() } : {})}>
+          <Button
+            variant="danger"
+            loading={loading}
+            onClick={() => onSubmit(note.trim() ? { note: note.trim() } : {})}
+          >
             Descartar
           </Button>
         </DialogFooter>

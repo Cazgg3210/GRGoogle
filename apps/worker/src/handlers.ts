@@ -2,7 +2,12 @@ import { z } from 'zod'
 import { JobNames, googleMode, type JobName } from '@smlxl/config'
 import { WorkspaceCloudEventSchema } from '@smlxl/contracts'
 import type { Application } from '@smlxl/application'
-import { DomainErrorCode, isDomainError, type JobHandlerContext, type JobQueuePort } from '@smlxl/domain'
+import {
+  DomainErrorCode,
+  isDomainError,
+  type JobHandlerContext,
+  type JobQueuePort,
+} from '@smlxl/domain'
 import type { Logger } from '@smlxl/observability'
 
 const Id = z.string().min(1)
@@ -11,11 +16,21 @@ const Id = z.string().min(1)
 export const JobPayloadSchemas = {
   [JobNames.PROCESS_GOOGLE_EVENT]: z.object({ event: WorkspaceCloudEventSchema }),
   [JobNames.FETCH_MEETING_ARTIFACTS]: z.object({ meetingId: Id }),
-  [JobNames.ANALYZE_MEETING]: z.object({ meetingId: Id, kind: z.enum(['ANALYZE_MEETING', 'REPROCESS']).optional() }),
+  [JobNames.ANALYZE_MEETING]: z.object({
+    meetingId: Id,
+    kind: z.enum(['ANALYZE_MEETING', 'REPROCESS']).optional(),
+  }),
   [JobNames.RECONCILE_ACTION_ITEMS]: z.object({ meetingId: Id, processingRunId: Id }),
-  [JobNames.SEND_ACTION_ITEM_NOTIFICATION]: z.object({ actionItemId: Id, type: z.literal('NEW_ASSIGNMENT'), previousOwnerUserId: Id.nullable().optional() }),
+  [JobNames.SEND_ACTION_ITEM_NOTIFICATION]: z.object({
+    actionItemId: Id,
+    type: z.literal('NEW_ASSIGNMENT'),
+    previousOwnerUserId: Id.nullable().optional(),
+  }),
   [JobNames.SEND_DUE_REMINDERS]: z.object({ userId: Id.optional() }),
-  [JobNames.GENERATE_WEEKLY_DIGEST]: z.object({ weekOf: z.string().optional(), sendAfterGenerate: z.boolean().optional() }),
+  [JobNames.GENERATE_WEEKLY_DIGEST]: z.object({
+    weekOf: z.string().optional(),
+    sendAfterGenerate: z.boolean().optional(),
+  }),
   [JobNames.SEND_WEEKLY_DIGEST]: z.object({ digestId: Id }),
   [JobNames.SYNC_GOOGLE_SHEETS]: z.object({ dryRun: z.boolean().optional() }),
   [JobNames.RENEW_GOOGLE_SUBSCRIPTIONS]: z.object({}),
@@ -26,7 +41,11 @@ export const JobPayloadSchemas = {
 } as const satisfies Record<JobName, z.ZodTypeAny>
 
 type PayloadOf<N extends JobName> = z.infer<(typeof JobPayloadSchemas)[N]>
-type Handler<N extends JobName> = (payload: PayloadOf<N>, job: JobHandlerContext, log: Logger) => Promise<void>
+type Handler<N extends JobName> = (
+  payload: PayloadOf<N>,
+  job: JobHandlerContext,
+  log: Logger,
+) => Promise<void>
 
 function isFeatureDisabled(err: unknown): boolean {
   return isDomainError(err) && err.code === DomainErrorCode.FEATURE_DISABLED
@@ -42,20 +61,41 @@ export function buildJobHandlers(application: Application): { [N in JobName]: Ha
   const { ctx } = application
   return {
     [JobNames.PROCESS_GOOGLE_EVENT]: async ({ event }, job, log) => {
-      const r = await application.google.processInboundGoogleEvent(event, { correlationId: job.correlationId })
+      const r = await application.google.processInboundGoogleEvent(event, {
+        correlationId: job.correlationId,
+      })
       log.info({ googleEventId: event.id, ...r }, 'evento Google procesado')
     },
     [JobNames.FETCH_MEETING_ARTIFACTS]: async ({ meetingId }, job, log) => {
-      const r = await application.meetings.fetchMeetingArtifacts({ meetingId, attempt: job.attempt, correlationId: job.correlationId })
+      const r = await application.meetings.fetchMeetingArtifacts({
+        meetingId,
+        attempt: job.attempt,
+        correlationId: job.correlationId,
+      })
       log.info(r, 'artefactos de reunión procesados')
     },
     [JobNames.ANALYZE_MEETING]: async ({ meetingId, kind }, job, log) => {
-      const r = await application.meetings.analyzeMeeting({ meetingId, kind: kind ?? 'ANALYZE_MEETING', correlationId: job.correlationId })
-      log.info({ meetingId, processingStatus: r.processingStatus, skipped: r.skipped, reconcile: r.reconcile }, 'reunión analizada')
+      const r = await application.meetings.analyzeMeeting({
+        meetingId,
+        kind: kind ?? 'ANALYZE_MEETING',
+        correlationId: job.correlationId,
+      })
+      log.info(
+        {
+          meetingId,
+          processingStatus: r.processingStatus,
+          skipped: r.skipped,
+          reconcile: r.reconcile,
+        },
+        'reunión analizada',
+      )
     },
     [JobNames.RECONCILE_ACTION_ITEMS]: async ({ meetingId, processingRunId }, _job, log) => {
       // La reconciliación (§16.2) se ejecuta dentro de ANALYZE_MEETING en la misma transacción; este job es un no-op de compatibilidad.
-      log.info({ meetingId, processingRunId }, 'RECONCILE_ACTION_ITEMS: la reconciliación ya se aplicó en ANALYZE_MEETING; sin acción')
+      log.info(
+        { meetingId, processingRunId },
+        'RECONCILE_ACTION_ITEMS: la reconciliación ya se aplicó en ANALYZE_MEETING; sin acción',
+      )
     },
     [JobNames.SEND_ACTION_ITEM_NOTIFICATION]: async ({ actionItemId }, _job, log) => {
       const r = await application.actionItems.sendNewAssignmentEmail(actionItemId)
@@ -63,7 +103,12 @@ export function buildJobHandlers(application: Application): { [N in JobName]: Ha
     },
     [JobNames.SEND_DUE_REMINDERS]: async ({ userId }, _job, log) => {
       const r = await application.notifications.sendReminders(userId ? { userId } : {})
-      log.info(r, r.disabled ? 'recordatorios deshabilitados (GMAIL_NOTIFICATIONS_ENABLED)' : 'recordatorios enviados')
+      log.info(
+        r,
+        r.disabled
+          ? 'recordatorios deshabilitados (GMAIL_NOTIFICATIONS_ENABLED)'
+          : 'recordatorios enviados',
+      )
     },
     [JobNames.GENERATE_WEEKLY_DIGEST]: async ({ weekOf, sendAfterGenerate }, _job, log) => {
       const settings = await ctx.getSettings()
@@ -72,13 +117,23 @@ export function buildJobHandlers(application: Application): { [N in JobName]: Ha
         return
       }
       const digest = await application.reports.generateWeeklyDigest(null, weekOf ? { weekOf } : {})
-      log.info({ digestId: digest.id, weekStart: digest.weekStart, version: digest.version }, 'resumen semanal generado')
+      log.info(
+        { digestId: digest.id, weekStart: digest.weekStart, version: digest.version },
+        'resumen semanal generado',
+      )
       if (!sendAfterGenerate) return
       try {
         const sent = await application.reports.sendWeeklyDigest(null, digest.id)
-        log.info({ digestId: sent.id, recipients: sent.recipientEmails.length }, 'resumen semanal enviado')
+        log.info(
+          { digestId: sent.id, recipients: sent.recipientEmails.length },
+          'resumen semanal enviado',
+        )
       } catch (err) {
-        if (isFeatureDisabled(err)) log.info({ digestId: digest.id, reason: (err as Error).message }, 'envío del resumen deshabilitado; se conserva generado')
+        if (isFeatureDisabled(err))
+          log.info(
+            { digestId: digest.id, reason: (err as Error).message },
+            'envío del resumen deshabilitado; se conserva generado',
+          )
         else throw err
       }
     },
@@ -87,7 +142,8 @@ export function buildJobHandlers(application: Application): { [N in JobName]: Ha
         const sent = await application.reports.sendWeeklyDigest(null, digestId)
         log.info({ digestId, recipients: sent.recipientEmails.length }, 'resumen semanal enviado')
       } catch (err) {
-        if (isFeatureDisabled(err)) log.info({ digestId, reason: (err as Error).message }, 'envío del resumen deshabilitado')
+        if (isFeatureDisabled(err))
+          log.info({ digestId, reason: (err as Error).message }, 'envío del resumen deshabilitado')
         else throw err
       }
     },
@@ -98,7 +154,15 @@ export function buildJobHandlers(application: Application): { [N in JobName]: Ha
         return
       }
       const r = await application.sheets.syncTasksToGoogleSheets(null, { dryRun: dryRun ?? false })
-      log.info({ spreadsheetId: r.spreadsheetId, pendientes: r.pendientes, reuniones: r.reuniones, dryRun: dryRun ?? false }, 'Google Sheets sincronizado')
+      log.info(
+        {
+          spreadsheetId: r.spreadsheetId,
+          pendientes: r.pendientes,
+          reuniones: r.reuniones,
+          dryRun: dryRun ?? false,
+        },
+        'Google Sheets sincronizado',
+      )
     },
     [JobNames.RENEW_GOOGLE_SUBSCRIPTIONS]: async (_payload, _job, log) => {
       const r = await application.google.ensureWorkspaceSubscriptions()
@@ -106,7 +170,10 @@ export function buildJobHandlers(application: Application): { [N in JobName]: Ha
     },
     [JobNames.RETRY_FAILED_MEETING_PROCESSING]: async ({ meetingId }, _job, log) => {
       const r = await application.meetings.retryFailedMeetings(meetingId ? { meetingId } : {})
-      log.info({ candidates: r.candidates, requeued: r.requeued, skipped: r.skipped }, 'reintento de reuniones fallidas')
+      log.info(
+        { candidates: r.candidates, requeued: r.requeued, skipped: r.skipped },
+        'reintento de reuniones fallidas',
+      )
     },
     [JobNames.CLEANUP_EXPIRED_RAW_DATA]: async (_payload, _job, log) => {
       const r = await application.meetings.cleanupExpiredRawData()
@@ -129,14 +196,23 @@ export function buildJobHandlers(application: Application): { [N in JobName]: Ha
 }
 
 /** Registra un handler por cada `JobNames` en la cola; el payload se valida con Zod antes de ejecutar. */
-export async function registerJobHandlers(queue: JobQueuePort, application: Application, logger: Logger): Promise<JobName[]> {
+export async function registerJobHandlers(
+  queue: JobQueuePort,
+  application: Application,
+  logger: Logger,
+): Promise<JobName[]> {
   const handlers = buildJobHandlers(application)
   const registered: JobName[] = []
   for (const name of Object.values(JobNames)) {
     const schema = JobPayloadSchemas[name]
     const handler = handlers[name] as Handler<JobName>
     await queue.work<unknown>(name, async (payload, job) => {
-      const log = logger.child({ jobName: name, jobId: job.jobId, correlationId: job.correlationId, attempt: job.attempt })
+      const log = logger.child({
+        jobName: name,
+        jobId: job.jobId,
+        correlationId: job.correlationId,
+        attempt: job.attempt,
+      })
       const parsed = schema.safeParse(payload ?? {})
       if (!parsed.success) {
         log.error({ issues: parsed.error.issues }, 'payload de job inválido')

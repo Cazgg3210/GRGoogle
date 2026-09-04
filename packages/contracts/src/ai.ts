@@ -21,9 +21,7 @@ export const EvidenceQuoteSchema = z.object({
   segmentId: z.string().optional(),
 })
 
-const IsoDateSchema = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha en formato YYYY-MM-DD')
+const IsoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha en formato YYYY-MM-DD')
 
 export const ExtractedActionItemSchema = z.object({
   title: z.string().min(3).max(300),
@@ -60,7 +58,11 @@ export const MeetingAnalysisResultSchema = z.object({
     detectedLanguageCode: z.string().min(2).max(10),
     mixedLanguageDetected: z.boolean(),
   }),
-  topics: z.array(z.object({ title: z.string().max(200), subtopics: z.array(z.string().max(200)).max(20) })).max(30),
+  topics: z
+    .array(
+      z.object({ title: z.string().max(200), subtopics: z.array(z.string().max(200)).max(20) }),
+    )
+    .max(30),
   projectHint: z.string().max(200).nullable(),
   sensitivityHint: z.enum(['NORMAL', 'RESTRICTED', 'LEGAL', 'EXECUTIVE']),
   summary: z.object({

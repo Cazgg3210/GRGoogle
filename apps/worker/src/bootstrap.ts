@@ -1,7 +1,14 @@
 import { createAiAnalyzer } from '@smlxl/ai'
 import { createApplication, type AppContext, type Application } from '@smlxl/application'
 import { featureFlagsFromEnv, googleMode, loadEnv, type Env } from '@smlxl/config'
-import { PrismaUnitOfWork, SystemClock, UuidGenerator, createPrismaClient, createRepositories, type PrismaClient } from '@smlxl/database'
+import {
+  PrismaUnitOfWork,
+  SystemClock,
+  UuidGenerator,
+  createPrismaClient,
+  createRepositories,
+  type PrismaClient,
+} from '@smlxl/database'
 import type { DomainEvent, DomainEventPublisher, Repositories } from '@smlxl/domain'
 import { createGoogleAdapters } from '@smlxl/google-workspace'
 import { PgBossJobQueue } from '@smlxl/jobs'
@@ -48,20 +55,31 @@ export async function createRuntime(options: { service: string }): Promise<Runti
     throw err
   }
 
-  const defaults = { featureFlags: featureFlagsFromEnv(env), companyTimezone: env.COMPANY_TIMEZONE, companyDomain: env.GOOGLE_WORKSPACE_DOMAIN }
+  const defaults = {
+    featureFlags: featureFlagsFromEnv(env),
+    companyTimezone: env.COMPANY_TIMEZONE,
+    companyDomain: env.GOOGLE_WORKSPACE_DOMAIN,
+  }
   const repos = createRepositories(prisma, defaults)
   const uow = new PrismaUnitOfWork(prisma, defaults)
   const clock = new SystemClock()
   const ids = new UuidGenerator()
   const settings = await repos.settings.get()
   const mode = googleMode(env)
-  const google = createGoogleAdapters(env, mode, { monitoredUserEmails: settings.monitoredUserEmails, now: () => clock.now(), adminEmail: env.GMAIL_SENDER_EMAIL })
+  const google = createGoogleAdapters(env, mode, {
+    monitoredUserEmails: settings.monitoredUserEmails,
+    now: () => clock.now(),
+    adminEmail: env.GMAIL_SENDER_EMAIL,
+  })
   const ai = createAiAnalyzer(env, { logger })
   const queue = new PgBossJobQueue({ connectionString: env.DATABASE_URL, logger })
   try {
     await queue.start()
   } catch (err) {
-    logger.fatal({ err }, 'No se pudo iniciar la cola de trabajos (pg-boss) en PostgreSQL; abortando')
+    logger.fatal(
+      { err },
+      'No se pudo iniciar la cola de trabajos (pg-boss) en PostgreSQL; abortando',
+    )
     await prisma.$disconnect().catch(() => undefined)
     throw err
   }
@@ -86,7 +104,15 @@ export async function createRuntime(options: { service: string }): Promise<Runti
     getSettings: () => repos.settings.get(),
   }
   const application = createApplication(ctx)
-  logger.info({ googleMode: mode, ai: ai.providerName, nodeEnv: env.NODE_ENV, devBypass: env.AUTH_DEV_BYPASS }, 'runtime listo')
+  logger.info(
+    {
+      googleMode: mode,
+      ai: ai.providerName,
+      nodeEnv: env.NODE_ENV,
+      devBypass: env.AUTH_DEV_BYPASS,
+    },
+    'runtime listo',
+  )
 
   let stopped = false
   return {
@@ -102,7 +128,9 @@ export async function createRuntime(options: { service: string }): Promise<Runti
       if (stopped) return
       stopped = true
       await queue.stop().catch((err: unknown) => logger.warn({ err }, 'error deteniendo la cola'))
-      await prisma.$disconnect().catch((err: unknown) => logger.warn({ err }, 'error cerrando Prisma'))
+      await prisma
+        .$disconnect()
+        .catch((err: unknown) => logger.warn({ err }, 'error cerrando Prisma'))
     },
   }
 }
@@ -128,5 +156,7 @@ export function installShutdownHandlers(logger: Logger, close: () => Promise<voi
   }
   process.once('SIGINT', () => handle('SIGINT'))
   process.once('SIGTERM', () => handle('SIGTERM'))
-  process.on('unhandledRejection', (reason) => logger.error({ err: reason }, 'promesa rechazada sin manejar'))
+  process.on('unhandledRejection', (reason) =>
+    logger.error({ err: reason }, 'promesa rechazada sin manejar'),
+  )
 }

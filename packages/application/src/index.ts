@@ -1,5 +1,8 @@
 import type { AppContext } from './context.js'
-import { discoverMeetingsFromCalendar, ensureAutoCapture } from './use-cases/google/discover-meetings-from-calendar.js'
+import {
+  discoverMeetingsFromCalendar,
+  ensureAutoCapture,
+} from './use-cases/google/discover-meetings-from-calendar.js'
 import { ensureWorkspaceSubscriptions } from './use-cases/google/ensure-workspace-subscriptions.js'
 import { processInboundGoogleEvent } from './use-cases/google/process-inbound-google-event.js'
 import { fetchMeetingArtifacts } from './use-cases/meetings/fetch-meeting-artifacts.js'
@@ -9,7 +12,11 @@ import { reconcileMissingEvents } from './use-cases/meetings/reconcile-missing-e
 import { cleanupExpiredRawData } from './use-cases/meetings/cleanup-expired-raw-data.js'
 import { simulateMeetingEnded } from './use-cases/meetings/simulate-meeting-ended.js'
 import { createManualMeeting, updateMeeting } from './use-cases/meetings/meeting-commands.js'
-import { approveAiReview, mergeAiReview, rejectAiReview } from './use-cases/review/resolve-ai-review.js'
+import {
+  approveAiReview,
+  mergeAiReview,
+  rejectAiReview,
+} from './use-cases/review/resolve-ai-review.js'
 import {
   addComment,
   approveCompletion,
@@ -23,11 +30,29 @@ import {
   updateActionItem,
 } from './use-cases/action-items/commands.js'
 import { generateWeeklyDigest } from './use-cases/digest/generate-weekly-digest.js'
-import { getDigest, getDigestConfig, listDigests, scheduleWeeklyDigest, sendWeeklyDigest, updateDigestConfig } from './use-cases/digest/send-weekly-digest.js'
+import {
+  getDigest,
+  getDigestConfig,
+  listDigests,
+  scheduleWeeklyDigest,
+  sendWeeklyDigest,
+  updateDigestConfig,
+} from './use-cases/digest/send-weekly-digest.js'
 import { sendReminders } from './use-cases/notifications/send-reminders.js'
 import { syncTasksToGoogleSheets } from './use-cases/sheets/sync-tasks-to-google-sheets.js'
-import { getPlatformSettings, updatePlatformSettings, updateUser, upsertArea, upsertProject } from './use-cases/admin/commands.js'
-import { getActionItemDetail, getActionItemDto, listActionItems, listActionItemsByMeeting } from './queries/action-items.js'
+import {
+  getPlatformSettings,
+  updatePlatformSettings,
+  updateUser,
+  upsertArea,
+  upsertProject,
+} from './use-cases/admin/commands.js'
+import {
+  getActionItemDetail,
+  getActionItemDto,
+  listActionItems,
+  listActionItemsByMeeting,
+} from './queries/action-items.js'
 import { getMeetingDetail, getMeetingTranscript, listMeetings } from './queries/meetings.js'
 import { getDashboard } from './queries/dashboard.js'
 import { searchKnowledge } from './queries/search.js'
@@ -78,8 +103,12 @@ export * from './queries/misc.js'
 
 type Bound<F> = F extends (ctx: AppContext, ...args: infer A) => infer R ? (...args: A) => R : never
 
-function bind<F extends (ctx: AppContext, ...args: never[]) => unknown>(ctx: AppContext, fn: F): Bound<F> {
-  return ((...args: unknown[]) => (fn as unknown as (...a: unknown[]) => unknown)(ctx, ...args)) as Bound<F>
+function bind<F extends (ctx: AppContext, ...args: never[]) => unknown>(
+  ctx: AppContext,
+  fn: F,
+): Bound<F> {
+  return ((...args: unknown[]) =>
+    (fn as unknown as (...a: unknown[]) => unknown)(ctx, ...args)) as Bound<F>
 }
 
 /**
@@ -146,7 +175,10 @@ export function createApplication(ctx: AppContext) {
       getDigestConfig: bind(ctx, getDigestConfig),
       updateDigestConfig: bind(ctx, updateDigestConfig),
     },
-    notifications: { sendReminders: bind(ctx, sendReminders), getCounts: bind(ctx, getNotificationCounts) },
+    notifications: {
+      sendReminders: bind(ctx, sendReminders),
+      getCounts: bind(ctx, getNotificationCounts),
+    },
     sheets: { syncTasksToGoogleSheets: bind(ctx, syncTasksToGoogleSheets) },
     session: { get: bind(ctx, getSession) },
     admin: {

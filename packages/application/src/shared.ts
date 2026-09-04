@@ -61,12 +61,18 @@ export async function setProcessingStatus(
   extra: Parameters<Repositories['meetings']['updateProcessing']>[1] = {},
 ): Promise<Meeting> {
   if (meeting.processingStatus === to) {
-    return Object.keys(extra).length > 0 ? repos.meetings.updateProcessing(meeting.id, extra) : meeting
+    return Object.keys(extra).length > 0
+      ? repos.meetings.updateProcessing(meeting.id, extra)
+      : meeting
   }
   if (!canTransitionProcessing(meeting.processingStatus, to)) {
-    throw new DomainError(DomainErrorCode.CONFLICT, `Transición de procesamiento no permitida: ${meeting.processingStatus} -> ${to}`, {
-      details: { meetingId: meeting.id, from: meeting.processingStatus, to },
-    })
+    throw new DomainError(
+      DomainErrorCode.CONFLICT,
+      `Transición de procesamiento no permitida: ${meeting.processingStatus} -> ${to}`,
+      {
+        details: { meetingId: meeting.id, from: meeting.processingStatus, to },
+      },
+    )
   }
   return repos.meetings.updateProcessing(meeting.id, { ...extra, processingStatus: to })
 }
@@ -93,7 +99,10 @@ export function toDateTime(date: Date): string {
   return date.toISOString()
 }
 
-export function principalFromUser(user: User, extras: { managedAreaIds?: string[]; teamUserIds?: string[] } = {}): Principal {
+export function principalFromUser(
+  user: User,
+  extras: { managedAreaIds?: string[]; teamUserIds?: string[] } = {},
+): Principal {
   return { id: user.id, role: user.role, areaId: user.areaId, email: user.email, ...extras }
 }
 
@@ -142,11 +151,13 @@ export async function resolveUserByNameOrEmail(
     const score = trigramSimilarity(full, name)
     if (!best || score > best.score) best = { user: u, score }
   }
-  if (best && best.score >= 0.85) return { user: best.user, confidence: Math.round(best.score * 100) / 100 }
+  if (best && best.score >= 0.85)
+    return { user: best.user, confidence: Math.round(best.score * 100) / 100 }
   // Nombre de pila único entre los usuarios → coincidencia razonable.
   const firstName = name.split(' ')[0] ?? ''
   const byFirst = users.filter((u) => normalizeText(u.displayName).split(' ')[0] === firstName)
-  if (firstName.length > 2 && byFirst.length === 1 && name.split(' ').length === 1) return { user: byFirst[0] as User, confidence: 0.8 }
+  if (firstName.length > 2 && byFirst.length === 1 && name.split(' ').length === 1)
+    return { user: byFirst[0] as User, confidence: 0.8 }
   return { user: null, confidence: best?.score ?? 0 }
 }
 
@@ -155,13 +166,25 @@ export function isInternal(email: string | null | undefined, domain: string): bo
 }
 
 export function clampPage(page: number, pageSize: number): { page: number; pageSize: number } {
-  return { page: Math.max(1, Math.floor(page || 1)), pageSize: Math.min(200, Math.max(1, Math.floor(pageSize || 25))) }
+  return {
+    page: Math.max(1, Math.floor(page || 1)),
+    pageSize: Math.min(200, Math.max(1, Math.floor(pageSize || 25))),
+  }
 }
 
-export function paginate<T>(items: T[], page: number, pageSize: number): { items: T[]; total: number; page: number; pageSize: number } {
+export function paginate<T>(
+  items: T[],
+  page: number,
+  pageSize: number,
+): { items: T[]; total: number; page: number; pageSize: number } {
   const p = clampPage(page, pageSize)
   const start = (p.page - 1) * p.pageSize
-  return { items: items.slice(start, start + p.pageSize), total: items.length, page: p.page, pageSize: p.pageSize }
+  return {
+    items: items.slice(start, start + p.pageSize),
+    total: items.length,
+    page: p.page,
+    pageSize: p.pageSize,
+  }
 }
 
 export function sha256(input: string): string {

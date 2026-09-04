@@ -197,7 +197,11 @@ export function isoWeekOf(date: Date, timeZone = DEFAULT_COMPANY_TIMEZONE): IsoW
   }
 }
 
-export function previousWeeks(from: Date, count: number, timeZone = DEFAULT_COMPANY_TIMEZONE): IsoWeek[] {
+export function previousWeeks(
+  from: Date,
+  count: number,
+  timeZone = DEFAULT_COMPANY_TIMEZONE,
+): IsoWeek[] {
   const weeks: IsoWeek[] = []
   let cursor = from
   for (let i = 0; i < count; i++) {

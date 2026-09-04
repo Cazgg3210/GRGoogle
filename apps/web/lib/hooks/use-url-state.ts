@@ -11,7 +11,10 @@ export function useUrlState() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const get = React.useCallback((key: string): string | undefined => searchParams.get(key) ?? undefined, [searchParams])
+  const get = React.useCallback(
+    (key: string): string | undefined => searchParams.get(key) ?? undefined,
+    [searchParams],
+  )
 
   const set = React.useCallback(
     (patch: UrlPatch, opts: { resetPage?: boolean; push?: boolean } = {}) => {

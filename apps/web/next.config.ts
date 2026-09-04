@@ -12,7 +12,13 @@ const standalone = process.platform !== 'win32' || process.env.NEXT_STANDALONE =
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   ...(standalone ? { output: 'standalone' as const } : {}),
-  transpilePackages: ['@smlxl/ui', '@smlxl/auth', '@smlxl/contracts', '@smlxl/domain', '@smlxl/config'],
+  transpilePackages: [
+    '@smlxl/ui',
+    '@smlxl/auth',
+    '@smlxl/contracts',
+    '@smlxl/domain',
+    '@smlxl/config',
+  ],
   experimental: {
     optimizePackageImports: ['lucide-react', '@smlxl/ui'],
   },

@@ -34,18 +34,25 @@ const buttonVariants = cva(
 )
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean
   loading?: boolean
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, loading = false, children, disabled, ...props }, ref) => {
+  (
+    { className, variant, size, asChild = false, loading = false, children, disabled, ...props },
+    ref,
+  ) => {
     if (asChild) {
       // Slot exige un único hijo React: se delega el contenido tal cual (sin spinner).
       return (
-        <Slot className={cn(buttonVariants({ variant, size, className }))} ref={ref} aria-disabled={disabled || undefined} {...props}>
+        <Slot
+          className={cn(buttonVariants({ variant, size, className }))}
+          ref={ref}
+          aria-disabled={disabled || undefined}
+          {...props}
+        >
           {children}
         </Slot>
       )

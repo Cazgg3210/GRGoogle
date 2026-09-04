@@ -11,7 +11,13 @@ import type {
 import { DomainErrorCode, isDomainError } from '@smlxl/domain'
 import { GOOGLE_SCOPES } from '../scopes.js'
 import { withGoogleRetry, httpStatusOf } from '../http/retry.js'
-import { collectPages, toDate, type AuthClient, type GoogleAdapterDeps, type RawGoogleRequester } from './shared.js'
+import {
+  collectPages,
+  toDate,
+  type AuthClient,
+  type GoogleAdapterDeps,
+  type RawGoogleRequester,
+} from './shared.js'
 
 /**
  * Adapter de Google Meet REST API v2 (§12). Toda llamada impersona al usuario
@@ -24,7 +30,10 @@ import { collectPages, toDate, type AuthClient, type GoogleAdapterDeps, type Raw
  */
 export interface MeetApiClient {
   spaces: {
-    get(params: meet_v2.Params$Resource$Spaces$Get, options?: { signal?: AbortSignal }): Promise<{ data: meet_v2.Schema$Space }>
+    get(
+      params: meet_v2.Params$Resource$Spaces$Get,
+      options?: { signal?: AbortSignal },
+    ): Promise<{ data: meet_v2.Schema$Space }>
   }
   conferenceRecords: {
     get(
@@ -96,7 +105,9 @@ function artifactFlag(value: string | null | undefined): 'ON' | 'OFF' | 'UNKNOWN
   return 'UNKNOWN'
 }
 
-function artifactState(value: string | null | undefined): 'STARTED' | 'ENDED' | 'FILE_GENERATED' | 'UNKNOWN' {
+function artifactState(
+  value: string | null | undefined,
+): 'STARTED' | 'ENDED' | 'FILE_GENERATED' | 'UNKNOWN' {
   if (value === 'STARTED' || value === 'ENDED' || value === 'FILE_GENERATED') return value
   return 'UNKNOWN'
 }
@@ -106,8 +117,12 @@ export function mapSpace(space: SpaceWithArtifactConfig): MeetSpace {
     name: space.name ?? '',
     meetingCode: space.meetingCode ?? '',
     meetingUri: space.meetingUri ?? '',
-    autoTranscriptionGeneration: artifactFlag(space.config?.artifactConfig?.transcriptionConfig?.autoTranscriptionGeneration),
-    autoSmartNotesGeneration: artifactFlag(space.config?.artifactConfig?.smartNotesConfig?.autoSmartNotesGeneration),
+    autoTranscriptionGeneration: artifactFlag(
+      space.config?.artifactConfig?.transcriptionConfig?.autoTranscriptionGeneration,
+    ),
+    autoSmartNotesGeneration: artifactFlag(
+      space.config?.artifactConfig?.smartNotesConfig?.autoSmartNotesGeneration,
+    ),
   }
 }
 
@@ -127,7 +142,9 @@ export class GoogleMeetAdapter implements MeetingCapturePort {
   private readonly emailCache = new Map<string, string | null>()
 
   constructor(private readonly deps: GoogleMeetAdapterDeps) {
-    this.clientFactory = deps.clientFactory ?? ((auth) => google.meet({ version: 'v2', auth }) as unknown as MeetApiClient)
+    this.clientFactory =
+      deps.clientFactory ??
+      ((auth) => google.meet({ version: 'v2', auth }) as unknown as MeetApiClient)
     this.rawFactory = deps.rawFactory ?? ((auth) => auth as unknown as RawGoogleRequester)
   }
 
@@ -146,7 +163,11 @@ export class GoogleMeetAdapter implements MeetingCapturePort {
   async getSpaceByMeetingCode(meetingCode: string, asUser: string): Promise<MeetSpace | null> {
     try {
       const res = await withGoogleRetry(
-        (signal) => this.client(asUser).spaces.get({ name: meetingCode.startsWith('spaces/') ? meetingCode : `spaces/${meetingCode}` }, { signal }),
+        (signal) =>
+          this.client(asUser).spaces.get(
+            { name: meetingCode.startsWith('spaces/') ? meetingCode : `spaces/${meetingCode}` },
+            { signal },
+          ),
         this.retryOpts('meet.spaces.get'),
       )
       return mapSpace(res.data as SpaceWithArtifactConfig)
@@ -164,7 +185,9 @@ export class GoogleMeetAdapter implements MeetingCapturePort {
     const body: SpaceWithArtifactConfig = {
       config: {
         artifactConfig: {
-          transcriptionConfig: { autoTranscriptionGeneration: config.autoTranscription ? 'ON' : 'OFF' },
+          transcriptionConfig: {
+            autoTranscriptionGeneration: config.autoTranscription ? 'ON' : 'OFF',
+          },
           smartNotesConfig: { autoSmartNotesGeneration: config.autoSmartNotes ? 'ON' : 'OFF' },
         },
       },
@@ -187,7 +210,9 @@ export class GoogleMeetAdapter implements MeetingCapturePort {
       return { applied: true }
     } catch (err) {
       // 403/400: política o privilegios insuficientes → CAPABILITY_BLOCKED, nunca romper la reunión (§12.3).
-      const status = isDomainError(err) ? (err.details?.status as number | null | undefined) : httpStatusOf(err)
+      const status = isDomainError(err)
+        ? (err.details?.status as number | null | undefined)
+        : httpStatusOf(err)
       if (
         isDomainError(err) &&
         (err.code === DomainErrorCode.GOOGLE_PERMISSION_DENIED ||
@@ -214,34 +239,31 @@ export class GoogleMeetAdapter implements MeetingCapturePort {
     }
   }
 
-  async listConferenceRecordsByMeetingCode(meetingCode: string, asUser: string): Promise<MeetConferenceRecord[]> {
+  async listConferenceRecordsByMeetingCode(
+    meetingCode: string,
+    asUser: string,
+  ): Promise<MeetConferenceRecord[]> {
     const items = await collectPages((pageToken) =>
-      withGoogleRetry(
-        async (signal) => {
-          const res = await this.client(asUser).conferenceRecords.list(
-            { filter: `space.meeting_code = "${meetingCode}"`, pageSize: 50, pageToken },
-            { signal },
-          )
-          return { items: res.data.conferenceRecords ?? [], nextPageToken: res.data.nextPageToken }
-        },
-        this.retryOpts('meet.conferenceRecords.list'),
-      ),
+      withGoogleRetry(async (signal) => {
+        const res = await this.client(asUser).conferenceRecords.list(
+          { filter: `space.meeting_code = "${meetingCode}"`, pageSize: 50, pageToken },
+          { signal },
+        )
+        return { items: res.data.conferenceRecords ?? [], nextPageToken: res.data.nextPageToken }
+      }, this.retryOpts('meet.conferenceRecords.list')),
     )
     return items.map(mapConferenceRecord)
   }
 
   async listParticipants(conferenceRecordName: string, asUser: string): Promise<MeetParticipant[]> {
     const items = await collectPages((pageToken) =>
-      withGoogleRetry(
-        async (signal) => {
-          const res = await this.client(asUser).conferenceRecords.participants.list(
-            { parent: conferenceRecordName, pageSize: 100, pageToken },
-            { signal },
-          )
-          return { items: res.data.participants ?? [], nextPageToken: res.data.nextPageToken }
-        },
-        this.retryOpts('meet.participants.list'),
-      ),
+      withGoogleRetry(async (signal) => {
+        const res = await this.client(asUser).conferenceRecords.participants.list(
+          { parent: conferenceRecordName, pageSize: 100, pageToken },
+          { signal },
+        )
+        return { items: res.data.participants ?? [], nextPageToken: res.data.nextPageToken }
+      }, this.retryOpts('meet.participants.list')),
     )
     const out: MeetParticipant[] = []
     for (const p of items) {
@@ -285,18 +307,18 @@ export class GoogleMeetAdapter implements MeetingCapturePort {
     return email
   }
 
-  async listTranscripts(conferenceRecordName: string, asUser: string): Promise<MeetTranscriptMeta[]> {
+  async listTranscripts(
+    conferenceRecordName: string,
+    asUser: string,
+  ): Promise<MeetTranscriptMeta[]> {
     const items = await collectPages((pageToken) =>
-      withGoogleRetry(
-        async (signal) => {
-          const res = await this.client(asUser).conferenceRecords.transcripts.list(
-            { parent: conferenceRecordName, pageSize: 50, pageToken },
-            { signal },
-          )
-          return { items: res.data.transcripts ?? [], nextPageToken: res.data.nextPageToken }
-        },
-        this.retryOpts('meet.transcripts.list'),
-      ),
+      withGoogleRetry(async (signal) => {
+        const res = await this.client(asUser).conferenceRecords.transcripts.list(
+          { parent: conferenceRecordName, pageSize: 50, pageToken },
+          { signal },
+        )
+        return { items: res.data.transcripts ?? [], nextPageToken: res.data.nextPageToken }
+      }, this.retryOpts('meet.transcripts.list')),
     )
     return items.map((t) => ({
       name: t.name ?? '',
@@ -307,19 +329,19 @@ export class GoogleMeetAdapter implements MeetingCapturePort {
     }))
   }
 
-  async listTranscriptEntries(transcriptName: string, asUser: string): Promise<MeetTranscriptEntry[]> {
+  async listTranscriptEntries(
+    transcriptName: string,
+    asUser: string,
+  ): Promise<MeetTranscriptEntry[]> {
     const items = await collectPages(
       (pageToken) =>
-        withGoogleRetry(
-          async (signal) => {
-            const res = await this.client(asUser).conferenceRecords.transcripts.entries.list(
-              { parent: transcriptName, pageSize: 100, pageToken },
-              { signal },
-            )
-            return { items: res.data.transcriptEntries ?? [], nextPageToken: res.data.nextPageToken }
-          },
-          this.retryOpts('meet.transcripts.entries.list'),
-        ),
+        withGoogleRetry(async (signal) => {
+          const res = await this.client(asUser).conferenceRecords.transcripts.entries.list(
+            { parent: transcriptName, pageSize: 100, pageToken },
+            { signal },
+          )
+          return { items: res.data.transcriptEntries ?? [], nextPageToken: res.data.nextPageToken }
+        }, this.retryOpts('meet.transcripts.entries.list')),
       500,
     )
     return items.map((e) => ({
@@ -335,18 +357,15 @@ export class GoogleMeetAdapter implements MeetingCapturePort {
   async listSmartNotes(conferenceRecordName: string, asUser: string): Promise<MeetSmartNoteMeta[]> {
     // Sin typings en googleapis@144: petición raw a conferenceRecords.smartNotes.list.
     const items = await collectPages((pageToken) =>
-      withGoogleRetry(
-        async (signal) => {
-          const res = await this.raw(asUser).request<RawListSmartNotesResponse>({
-            url: `${MEET_BASE_URL}/${conferenceRecordName}/smartNotes`,
-            method: 'GET',
-            params: { pageSize: 50, pageToken },
-            signal,
-          })
-          return { items: res.data.smartNotes ?? [], nextPageToken: res.data.nextPageToken }
-        },
-        this.retryOpts('meet.smartNotes.list'),
-      ),
+      withGoogleRetry(async (signal) => {
+        const res = await this.raw(asUser).request<RawListSmartNotesResponse>({
+          url: `${MEET_BASE_URL}/${conferenceRecordName}/smartNotes`,
+          method: 'GET',
+          params: { pageSize: 50, pageToken },
+          signal,
+        })
+        return { items: res.data.smartNotes ?? [], nextPageToken: res.data.nextPageToken }
+      }, this.retryOpts('meet.smartNotes.list')),
     )
     return items.map((n) => ({
       name: n.name ?? '',

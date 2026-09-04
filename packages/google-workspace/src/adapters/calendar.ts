@@ -32,13 +32,19 @@ export function mapCalendarEvent(e: calendar_v3.Schema$Event): CalendarEventSumm
   const videoEntry = e.conferenceData?.entryPoints?.find((p) => p.entryPointType === 'video')
   const meetUri = videoEntry?.uri ?? e.hangoutLink ?? null
   const meetingCode = videoEntry?.meetingCode?.toLowerCase() ?? extractMeetingCode(meetUri)
-  const startAt = toDate(e.start?.dateTime) ?? (e.start?.date ? new Date(`${e.start.date}T00:00:00Z`) : null)
-  const endAt = toDate(e.end?.dateTime) ?? (e.end?.date ? new Date(`${e.end.date}T00:00:00Z`) : null)
+  const startAt =
+    toDate(e.start?.dateTime) ?? (e.start?.date ? new Date(`${e.start.date}T00:00:00Z`) : null)
+  const endAt =
+    toDate(e.end?.dateTime) ?? (e.end?.date ? new Date(`${e.end.date}T00:00:00Z`) : null)
   const status: CalendarEventSummary['status'] =
     e.status === 'cancelled' ? 'cancelled' : e.status === 'tentative' ? 'tentative' : 'confirmed'
   const attendees = (e.attendees ?? [])
     .filter((a) => typeof a.email === 'string' && a.email.length > 0)
-    .map((a) => ({ email: (a.email as string).toLowerCase(), responseStatus: a.responseStatus ?? null, isOrganizer: a.organizer === true }))
+    .map((a) => ({
+      email: (a.email as string).toLowerCase(),
+      responseStatus: a.responseStatus ?? null,
+      isOrganizer: a.organizer === true,
+    }))
   return {
     calendarEventId: e.id,
     iCalUid: e.iCalUID ?? null,
@@ -67,7 +73,9 @@ export class GoogleCalendarAdapter implements CalendarPort {
   private readonly clientFactory: (auth: AuthClient) => CalendarApiClient
 
   constructor(private readonly deps: CalendarAdapterDeps) {
-    this.clientFactory = deps.clientFactory ?? ((auth) => google.calendar({ version: 'v3', auth }) as unknown as CalendarApiClient)
+    this.clientFactory =
+      deps.clientFactory ??
+      ((auth) => google.calendar({ version: 'v3', auth }) as unknown as CalendarApiClient)
   }
 
   async syncEvents(input: {
@@ -76,7 +84,11 @@ export class GoogleCalendarAdapter implements CalendarPort {
     syncToken: string | null
     timeMin?: Date
     timeMax?: Date
-  }): Promise<{ events: CalendarEventSummary[]; nextSyncToken: string | null; fullSyncRequired: boolean }> {
+  }): Promise<{
+    events: CalendarEventSummary[]
+    nextSyncToken: string | null
+    fullSyncRequired: boolean
+  }> {
     const client = this.clientFactory(this.deps.auth.for(input.userEmail, SCOPES))
     const events: CalendarEventSummary[] = []
     let pageToken: string | undefined
@@ -102,7 +114,8 @@ export class GoogleCalendarAdapter implements CalendarPort {
         })
         data = res.data
       } catch (err) {
-        const status = (err as { details?: { status?: number | null } }).details?.status ?? httpStatusOf(err)
+        const status =
+          (err as { details?: { status?: number | null } }).details?.status ?? httpStatusOf(err)
         if (status === 410) return { events: [], nextSyncToken: null, fullSyncRequired: true }
         throw mapGoogleError(err, 'calendar.events.list')
       }

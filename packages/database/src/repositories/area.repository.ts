@@ -28,7 +28,11 @@ export class PrismaAreaRepository extends BaseRepository implements AreaReposito
 
   async save(area: Area): Promise<Area> {
     const { id, ...rest } = areaToDb(area)
-    const row = await this.db.area.upsert({ where: { id: area.id }, create: { id, ...rest }, update: rest })
+    const row = await this.db.area.upsert({
+      where: { id: area.id },
+      create: { id, ...rest },
+      update: rest,
+    })
     return toArea(row)
   }
 }

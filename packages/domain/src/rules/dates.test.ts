@@ -26,8 +26,12 @@ describe('fechas con zona horaria', () => {
     const afterEod = new Date('2026-09-09T06:00:00Z')
     expect(isOverdue({ dueDate: due, status: ActionItemStatus.PENDING }, beforeEod, TZ)).toBe(false)
     expect(isOverdue({ dueDate: due, status: ActionItemStatus.PENDING }, afterEod, TZ)).toBe(true)
-    expect(isOverdue({ dueDate: due, status: ActionItemStatus.COMPLETED }, afterEod, TZ)).toBe(false)
-    expect(isOverdue({ dueDate: due, status: ActionItemStatus.CANCELLED }, afterEod, TZ)).toBe(false)
+    expect(isOverdue({ dueDate: due, status: ActionItemStatus.COMPLETED }, afterEod, TZ)).toBe(
+      false,
+    )
+    expect(isOverdue({ dueDate: due, status: ActionItemStatus.CANCELLED }, afterEod, TZ)).toBe(
+      false,
+    )
     expect(isOverdue({ dueDate: null, status: ActionItemStatus.PENDING }, afterEod, TZ)).toBe(false)
   })
 
@@ -49,7 +53,12 @@ describe('fechas con zona horaria', () => {
     expect(toLocalDateString(saturday, TZ)).toBe('2026-09-05')
     // Si ya pasó la hora del mismo día, salta una semana
     const fridayLate = zonedDateTime(2026, 9, 4, 19, 0, 0, TZ)
-    expect(toLocalDateString(nextDigestRunAt({ dayOfWeek: 5, localTime: '18:00', timezone: TZ }, fridayLate), TZ)).toBe('2026-09-11')
+    expect(
+      toLocalDateString(
+        nextDigestRunAt({ dayOfWeek: 5, localTime: '18:00', timezone: TZ }, fridayLate),
+        TZ,
+      ),
+    ).toBe('2026-09-11')
   })
 
   it('parseLocalDate rechaza formatos inválidos', () => {

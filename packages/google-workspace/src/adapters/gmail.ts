@@ -14,7 +14,10 @@ import type { AuthClient, GoogleAdapterDeps } from './shared.js'
 export interface GmailApiClient {
   users: {
     messages: {
-      send(params: gmail_v1.Params$Resource$Users$Messages$Send, options?: { signal?: AbortSignal }): Promise<{ data: gmail_v1.Schema$Message }>
+      send(
+        params: gmail_v1.Params$Resource$Users$Messages$Send,
+        options?: { signal?: AbortSignal },
+      ): Promise<{ data: gmail_v1.Schema$Message }>
     }
   }
 }
@@ -45,7 +48,6 @@ export function base64Url(input: string | Buffer): string {
 
 /** RFC 2047 (UTF-8, base64) para cabeceras con acentos. */
 export function encodeHeader(value: string): string {
-  // eslint-disable-next-line no-control-regex
   if (/^[\x20-\x7e]*$/.test(value)) return value
   return `=?UTF-8?B?${Buffer.from(value, 'utf8').toString('base64')}?=`
 }
@@ -59,7 +61,11 @@ function sanitizeAddress(addr: string): string {
 }
 
 /** Construye el mensaje MIME (RFC 2822, multipart/alternative) y lo devuelve en base64url. */
-export function buildMimeMessage(message: MailMessage, from: string, boundary = `smlxl-${Date.now().toString(36)}`): {
+export function buildMimeMessage(
+  message: MailMessage,
+  from: string,
+  boundary = `smlxl-${Date.now().toString(36)}`,
+): {
   raw: string
   mime: string
 } {
@@ -67,7 +73,8 @@ export function buildMimeMessage(message: MailMessage, from: string, boundary = 
     `From: ${sanitizeAddress(from)}`,
     `To: ${message.to.map(sanitizeAddress).join(', ')}`,
   ]
-  if (message.cc && message.cc.length > 0) headers.push(`Cc: ${message.cc.map(sanitizeAddress).join(', ')}`)
+  if (message.cc && message.cc.length > 0)
+    headers.push(`Cc: ${message.cc.map(sanitizeAddress).join(', ')}`)
   if (message.replyTo) headers.push(`Reply-To: ${sanitizeAddress(message.replyTo)}`)
   headers.push(`Subject: ${encodeHeader(message.subject.replace(/[\r\n]/g, ' '))}`)
   headers.push('MIME-Version: 1.0')
@@ -101,9 +108,14 @@ export class GmailAdapter implements MailPort {
   private readonly clientFactory: (auth: AuthClient) => GmailApiClient
 
   constructor(private readonly deps: GmailAdapterDeps) {
-    this.clientFactory = deps.clientFactory ?? ((auth) => google.gmail({ version: 'v1', auth }) as unknown as GmailApiClient)
+    this.clientFactory =
+      deps.clientFactory ??
+      ((auth) => google.gmail({ version: 'v1', auth }) as unknown as GmailApiClient)
     if (!deps.senderEmail) {
-      throw new DomainError(DomainErrorCode.VALIDATION_ERROR, 'GmailAdapter requiere GMAIL_SENDER_EMAIL')
+      throw new DomainError(
+        DomainErrorCode.VALIDATION_ERROR,
+        'GmailAdapter requiere GMAIL_SENDER_EMAIL',
+      )
     }
   }
 
@@ -126,11 +138,15 @@ export class GmailAdapter implements MailPort {
       return { messageId, skipped: false }
     } catch (err) {
       const cause = err instanceof DomainError ? err : undefined
-      throw new DomainError(DomainErrorCode.EMAIL_SEND_FAILED, `No se pudo enviar el correo: ${cause?.message ?? 'error'}`, {
-        retryable: cause?.retryable ?? false,
-        details: { idempotencyKey: message.idempotencyKey, googleCode: cause?.code ?? null },
-        cause: err,
-      })
+      throw new DomainError(
+        DomainErrorCode.EMAIL_SEND_FAILED,
+        `No se pudo enviar el correo: ${cause?.message ?? 'error'}`,
+        {
+          retryable: cause?.retryable ?? false,
+          details: { idempotencyKey: message.idempotencyKey, googleCode: cause?.code ?? null },
+          cause: err,
+        },
+      )
     }
   }
 }

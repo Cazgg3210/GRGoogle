@@ -69,7 +69,12 @@ export function ConfirmDialog({
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={loading}>
             Cancelar
           </Button>
-          <Button variant={variant} onClick={() => void onConfirm(reason.trim())} loading={loading} disabled={disabled}>
+          <Button
+            variant={variant}
+            onClick={() => void onConfirm(reason.trim())}
+            loading={loading}
+            disabled={disabled}
+          >
             {confirmLabel}
           </Button>
         </DialogFooter>

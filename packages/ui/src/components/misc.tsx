@@ -26,7 +26,11 @@ const Separator = React.forwardRef<
     ref={ref}
     decorative={decorative}
     orientation={orientation}
-    className={cn('shrink-0 bg-border', orientation === 'horizontal' ? 'h-px w-full' : 'h-full w-px', className)}
+    className={cn(
+      'shrink-0 bg-border',
+      orientation === 'horizontal' ? 'h-px w-full' : 'h-full w-px',
+      className,
+    )}
     {...props}
   />
 ))
@@ -56,7 +60,11 @@ const AvatarImage = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Image>,
   React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
 >(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Image ref={ref} className={cn('aspect-square h-full w-full', className)} {...props} />
+  <AvatarPrimitive.Image
+    ref={ref}
+    className={cn('aspect-square h-full w-full', className)}
+    {...props}
+  />
 ))
 AvatarImage.displayName = AvatarPrimitive.Image.displayName
 
@@ -66,14 +74,25 @@ const AvatarFallback = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AvatarPrimitive.Fallback
     ref={ref}
-    className={cn('flex h-full w-full items-center justify-center rounded-full bg-ink-100 font-semibold text-ink-800', className)}
+    className={cn(
+      'flex h-full w-full items-center justify-center rounded-full bg-ink-100 font-semibold text-ink-800',
+      className,
+    )}
     {...props}
   />
 ))
 AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName
 
 /** Avatar con iniciales por nombre (sin imagen). */
-function UserAvatar({ name, size = 'sm', className }: { name: string | null | undefined; size?: 'xs' | 'sm' | 'md' | 'lg'; className?: string }) {
+function UserAvatar({
+  name,
+  size = 'sm',
+  className,
+}: {
+  name: string | null | undefined
+  size?: 'xs' | 'sm' | 'md' | 'lg'
+  className?: string
+}) {
   return (
     <Avatar size={size} className={className} aria-hidden>
       <AvatarFallback>{initials(name)}</AvatarFallback>
@@ -84,7 +103,9 @@ function UserAvatar({ name, size = 'sm', className }: { name: string | null | un
 // Progress -------------------------------------------------------------------
 const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> & { tone?: 'ink' | 'success' | 'warning' | 'danger' | 'ai' }
+  React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> & {
+    tone?: 'ink' | 'success' | 'warning' | 'danger' | 'ai'
+  }
 >(({ className, value, tone = 'ink', ...props }, ref) => (
   <ProgressPrimitive.Root
     ref={ref}
@@ -174,8 +195,14 @@ const ScrollArea = React.forwardRef<
   React.ElementRef<typeof ScrollAreaPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root>
 >(({ className, children, ...props }, ref) => (
-  <ScrollAreaPrimitive.Root ref={ref} className={cn('relative overflow-hidden', className)} {...props}>
-    <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]">{children}</ScrollAreaPrimitive.Viewport>
+  <ScrollAreaPrimitive.Root
+    ref={ref}
+    className={cn('relative overflow-hidden', className)}
+    {...props}
+  >
+    <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]">
+      {children}
+    </ScrollAreaPrimitive.Viewport>
     <ScrollBar />
     <ScrollAreaPrimitive.Corner />
   </ScrollAreaPrimitive.Root>

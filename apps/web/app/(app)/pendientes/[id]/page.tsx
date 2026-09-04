@@ -7,7 +7,11 @@ import { ActionItemDetail } from './detail'
 
 export const dynamic = 'force-dynamic'
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
   const { id } = await params
   const result = await safe(api.get<ActionItemDetailDto>(`/action-items/${id}`))
   return { title: result.ok ? `${result.data.externalKey} · ${result.data.title}` : 'Pendiente' }

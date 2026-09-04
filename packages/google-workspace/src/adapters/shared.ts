@@ -34,7 +34,9 @@ export function protoDuration(seconds: number): string {
 
 /** Pagina cualquier `list` de Google acumulando resultados. */
 export async function collectPages<T>(
-  fetchPage: (pageToken: string | undefined) => Promise<{ items: T[]; nextPageToken: string | null | undefined }>,
+  fetchPage: (
+    pageToken: string | undefined,
+  ) => Promise<{ items: T[]; nextPageToken: string | null | undefined }>,
   maxPages = 50,
 ): Promise<T[]> {
   const out: T[] = []

@@ -80,7 +80,9 @@ export function toProjectAlias(row: ProjectAliasRow): ProjectAlias {
 export function toNotificationPreferences(value: unknown): NotificationPreferences {
   const rec = asRecord(value)
   const out: NotificationPreferences = { ...DEFAULT_NOTIFICATION_PREFERENCES }
-  for (const key of Object.keys(DEFAULT_NOTIFICATION_PREFERENCES) as (keyof NotificationPreferences)[]) {
+  for (const key of Object.keys(
+    DEFAULT_NOTIFICATION_PREFERENCES,
+  ) as (keyof NotificationPreferences)[]) {
     const v = rec[key]
     if (key === 'dueSoonDays') {
       if (typeof v === 'number' && Number.isFinite(v)) out.dueSoonDays = v
@@ -146,7 +148,9 @@ export function toExternalAssignee(row: ExternalAssigneeRow): ExternalAssignee {
   }
 }
 
-export function externalAssigneeToDb(a: ExternalAssignee): Prisma.ExternalAssigneeUncheckedCreateInput {
+export function externalAssigneeToDb(
+  a: ExternalAssignee,
+): Prisma.ExternalAssigneeUncheckedCreateInput {
   return {
     id: a.id,
     displayName: a.displayName,

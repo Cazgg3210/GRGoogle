@@ -7,16 +7,40 @@ export const IsoDateOnly = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 export const IsoDateTime = z.string().datetime({ offset: true })
 
 export const ActionItemStatusSchema = z.enum([
-  'PROPOSED', 'PENDING', 'IN_PROGRESS', 'BLOCKED', 'WAITING', 'COMPLETION_PROPOSED', 'COMPLETED', 'CANCELLED',
+  'PROPOSED',
+  'PENDING',
+  'IN_PROGRESS',
+  'BLOCKED',
+  'WAITING',
+  'COMPLETION_PROPOSED',
+  'COMPLETED',
+  'CANCELLED',
 ])
 export const PrioritySchema = z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT'])
 export const ConfidentialitySchema = z.enum(['NORMAL', 'RESTRICTED', 'LEGAL', 'EXECUTIVE'])
 export const UserRoleSchema = z.enum(['ADMIN', 'DIRECTOR', 'MANAGER', 'MEMBER', 'AUDITOR'])
 export const MeetingProcessingStatusSchema = z.enum([
-  'DISCOVERED', 'WAITING_FOR_ARTIFACTS', 'ARTIFACTS_AVAILABLE', 'INGESTING', 'INGESTED', 'ANALYZING', 'ANALYZED', 'REVIEW_REQUIRED', 'COMPLETED', 'FAILED', 'EXCLUDED',
+  'DISCOVERED',
+  'WAITING_FOR_ARTIFACTS',
+  'ARTIFACTS_AVAILABLE',
+  'INGESTING',
+  'INGESTED',
+  'ANALYZING',
+  'ANALYZED',
+  'REVIEW_REQUIRED',
+  'COMPLETED',
+  'FAILED',
+  'EXCLUDED',
 ])
 export const ArtifactStatusSchema = z.enum([
-  'NOT_REQUESTED', 'PENDING', 'AVAILABLE', 'INGESTED', 'UNAVAILABLE', 'UNAVAILABLE_EXTERNAL_HOST', 'CAPABILITY_BLOCKED', 'FAILED',
+  'NOT_REQUESTED',
+  'PENDING',
+  'AVAILABLE',
+  'INGESTED',
+  'UNAVAILABLE',
+  'UNAVAILABLE_EXTERNAL_HOST',
+  'CAPABILITY_BLOCKED',
+  'FAILED',
 ])
 
 export const PaginationQuerySchema = z.object({
@@ -241,7 +265,18 @@ export const ManualMeetingBodySchema = z.object({
 
 export const ActionItemListQuerySchema = PaginationQuerySchema.extend({
   view: z
-    .enum(['all', 'mine', 'team', 'overdue', 'thisWeek', 'noDueDate', 'noOwner', 'blocked', 'completed', 'proposed'])
+    .enum([
+      'all',
+      'mine',
+      'team',
+      'overdue',
+      'thisWeek',
+      'noDueDate',
+      'noOwner',
+      'blocked',
+      'completed',
+      'proposed',
+    ])
     .default('all'),
   status: z.string().optional(), // CSV
   ownerUserId: IdSchema.optional(),
@@ -445,7 +480,12 @@ export const AiReviewMergeBodySchema = z.object({
 export const AiReviewRejectBodySchema = z.object({ note: z.string().max(1000).optional() })
 
 export const AiReviewReasonSchema = z.enum([
-  'LOW_CONFIDENCE', 'AMBIGUOUS_OWNER', 'AMBIGUOUS_DUE_DATE', 'POSSIBLE_DUPLICATE', 'POSSIBLE_COMPLETION', 'CONFLICT_WITH_EXISTING',
+  'LOW_CONFIDENCE',
+  'AMBIGUOUS_OWNER',
+  'AMBIGUOUS_DUE_DATE',
+  'POSSIBLE_DUPLICATE',
+  'POSSIBLE_COMPLETION',
+  'CONFLICT_WITH_EXISTING',
 ])
 
 /** GET /ai-review: paginación + filtros opcionales por reunión y motivo. */
@@ -530,7 +570,9 @@ export const WeeklyDigestConfigDtoSchema = z.object({
   nextRunAt: IsoDateTime.nullable(),
 })
 
-export const UpdateWeeklyDigestConfigBodySchema = WeeklyDigestConfigDtoSchema.omit({ nextRunAt: true }).partial()
+export const UpdateWeeklyDigestConfigBodySchema = WeeklyDigestConfigDtoSchema.omit({
+  nextRunAt: true,
+}).partial()
 
 export const WeeklyDigestDtoSchema = z.object({
   id: IdSchema,
@@ -567,7 +609,10 @@ export const FeatureFlagsDtoSchema = z.object({
 
 export const PlatformSettingsDtoSchema = z.object({
   featureFlags: FeatureFlagsDtoSchema,
-  confidenceThresholds: z.object({ autoAccept: z.number().min(0).max(1), proposal: z.number().min(0).max(1) }),
+  confidenceThresholds: z.object({
+    autoAccept: z.number().min(0).max(1),
+    proposal: z.number().min(0).max(1),
+  }),
   companyTimezone: z.string(),
   companyDomain: z.string(),
   rawTranscriptRetentionDays: z.number().int().min(1).nullable(),
@@ -609,7 +654,13 @@ export const GoogleStatusDtoSchema = z.object({
       lastErrorCode: z.string().nullable(),
     }),
   ),
-  aiUsage: z.object({ runs: z.number(), inputTokens: z.number(), outputTokens: z.number(), estimatedCostUsd: z.number(), failures: z.number() }),
+  aiUsage: z.object({
+    runs: z.number(),
+    inputTokens: z.number(),
+    outputTokens: z.number(),
+    estimatedCostUsd: z.number(),
+    failures: z.number(),
+  }),
 })
 
 export const SheetsSyncResultSchema = z.object({
@@ -652,9 +703,27 @@ export const SearchQuerySchema = z.object({
 
 export const SearchResultSchema = z.object({
   query: z.string(),
-  meetings: z.array(z.object({ id: IdSchema, title: z.string(), startAt: IsoDateTime, snippet: z.string() })),
-  actionItems: z.array(z.object({ id: IdSchema, externalKey: z.string(), title: z.string(), status: ActionItemStatusSchema, ownerName: z.string().nullable(), snippet: z.string() })),
-  decisions: z.array(z.object({ id: IdSchema, meetingId: IdSchema, meetingTitle: z.string(), description: z.string() })),
+  meetings: z.array(
+    z.object({ id: IdSchema, title: z.string(), startAt: IsoDateTime, snippet: z.string() }),
+  ),
+  actionItems: z.array(
+    z.object({
+      id: IdSchema,
+      externalKey: z.string(),
+      title: z.string(),
+      status: ActionItemStatusSchema,
+      ownerName: z.string().nullable(),
+      snippet: z.string(),
+    }),
+  ),
+  decisions: z.array(
+    z.object({
+      id: IdSchema,
+      meetingId: IdSchema,
+      meetingTitle: z.string(),
+      description: z.string(),
+    }),
+  ),
   /** Siempre se indican las reuniones fuente (§24). */
   sourceMeetingIds: z.array(IdSchema),
 })
@@ -680,15 +749,31 @@ export const NotificationCountsSchema = z.object({
 })
 
 /** POST /meetings/:id/reprocess */
-export const ReprocessResponseSchema = z.object({ queued: z.literal(true), jobId: z.string().nullable() })
+export const ReprocessResponseSchema = z.object({
+  queued: z.literal(true),
+  jobId: z.string().nullable(),
+})
 
 /** GET /admin/jobs */
 export const JobQueueStatsSchema = z.object({
-  queues: z.array(z.object({ name: z.string(), created: z.number(), active: z.number(), completed: z.number(), failed: z.number() })),
+  queues: z.array(
+    z.object({
+      name: z.string(),
+      created: z.number(),
+      active: z.number(),
+      completed: z.number(),
+      failed: z.number(),
+    }),
+  ),
 })
 
 export function pageSchema<T extends z.ZodTypeAny>(item: T) {
-  return z.object({ items: z.array(item), total: z.number(), page: z.number(), pageSize: z.number() })
+  return z.object({
+    items: z.array(item),
+    total: z.number(),
+    page: z.number(),
+    pageSize: z.number(),
+  })
 }
 
 export type MeetingListItemDto = z.infer<typeof MeetingListItemSchema>

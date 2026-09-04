@@ -1,6 +1,13 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { verifyApiToken } from '@smlxl/auth/token'
-import { DomainError, DomainErrorCode, hasPermission, type Permission, type Principal, type UserRepository } from '@smlxl/domain'
+import {
+  DomainError,
+  DomainErrorCode,
+  hasPermission,
+  type Permission,
+  type Principal,
+  type UserRepository,
+} from '@smlxl/domain'
 import type { Env } from '@smlxl/config'
 
 declare module 'fastify' {
@@ -43,7 +50,8 @@ export function registerAuth(app: FastifyInstance, options: AuthPluginOptions): 
     if (!found || !found.active) {
       throw new DomainError(DomainErrorCode.UNAUTHORIZED, 'Usuario no autorizado en la plataforma')
     }
-    const teamUserIds = found.role === 'MANAGER' ? await options.users.listTeamUserIds(found.id) : []
+    const teamUserIds =
+      found.role === 'MANAGER' ? await options.users.listTeamUserIds(found.id) : []
     request.principal = {
       id: found.id,
       role: found.role,
@@ -56,7 +64,8 @@ export function registerAuth(app: FastifyInstance, options: AuthPluginOptions): 
 }
 
 export function requirePrincipal(request: FastifyRequest): Principal {
-  if (!request.principal) throw new DomainError(DomainErrorCode.UNAUTHORIZED, 'Se requiere autenticación')
+  if (!request.principal)
+    throw new DomainError(DomainErrorCode.UNAUTHORIZED, 'Se requiere autenticación')
   return request.principal
 }
 

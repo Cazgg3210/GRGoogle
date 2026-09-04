@@ -2,7 +2,10 @@ import type { CalendarSyncCursor, CalendarSyncCursorRepository, Id } from '@smlx
 import { cursorToDb, toCursor } from '../mappers/system.js'
 import { BaseRepository } from './base.js'
 
-export class PrismaCalendarSyncCursorRepository extends BaseRepository implements CalendarSyncCursorRepository {
+export class PrismaCalendarSyncCursorRepository
+  extends BaseRepository
+  implements CalendarSyncCursorRepository
+{
   async find(userId: Id, calendarId: string): Promise<CalendarSyncCursor | null> {
     const row = await this.db.calendarSyncCursor.findUnique({
       where: { userId_calendarId: { userId, calendarId } },
@@ -22,7 +25,9 @@ export class PrismaCalendarSyncCursorRepository extends BaseRepository implement
   }
 
   async list(): Promise<CalendarSyncCursor[]> {
-    const rows = await this.db.calendarSyncCursor.findMany({ orderBy: [{ userId: 'asc' }, { calendarId: 'asc' }] })
+    const rows = await this.db.calendarSyncCursor.findMany({
+      orderBy: [{ userId: 'asc' }, { calendarId: 'asc' }],
+    })
     return rows.map(toCursor)
   }
 }

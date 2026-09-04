@@ -55,8 +55,17 @@ export interface Lookups {
   thresholds: PlatformSettings['confidenceThresholds']
 }
 
-export async function loadLookups(repos: Repositories, settings: PlatformSettings, now: Date, meetingIds: Iterable<string> = []): Promise<Lookups> {
-  const [users, areas, projects] = await Promise.all([repos.users.list(), repos.areas.list(), repos.projects.list()])
+export async function loadLookups(
+  repos: Repositories,
+  settings: PlatformSettings,
+  now: Date,
+  meetingIds: Iterable<string> = [],
+): Promise<Lookups> {
+  const [users, areas, projects] = await Promise.all([
+    repos.users.list(),
+    repos.areas.list(),
+    repos.projects.list(),
+  ])
   const meetings = new Map<string, Meeting>()
   for (const id of new Set(meetingIds)) {
     const m = await repos.meetings.findById(id)
@@ -76,10 +85,24 @@ export async function loadLookups(repos: Repositories, settings: PlatformSetting
 export function toActionItemDto(
   item: ActionItem,
   lk: Lookups,
-  extra: { pendingProposalId?: string | null; mentionsWithoutProgress?: number; externalAssigneeName?: string | null } = {},
+  extra: {
+    pendingProposalId?: string | null
+    mentionsWithoutProgress?: number
+    externalAssigneeName?: string | null
+  } = {},
 ): ActionItemDto {
-  const attention = attentionScore({ item, mentionsWithoutProgress: extra.mentionsWithoutProgress ?? 0, lowConfidenceThreshold: lk.thresholds.proposal }, lk.now, lk.timezone)
-  const createdFrom = item.createdFromMeetingId ? lk.meetings.get(item.createdFromMeetingId) : undefined
+  const attention = attentionScore(
+    {
+      item,
+      mentionsWithoutProgress: extra.mentionsWithoutProgress ?? 0,
+      lowConfidenceThreshold: lk.thresholds.proposal,
+    },
+    lk.now,
+    lk.timezone,
+  )
+  const createdFrom = item.createdFromMeetingId
+    ? lk.meetings.get(item.createdFromMeetingId)
+    : undefined
   return {
     id: item.id,
     externalKey: item.externalKey,
@@ -127,7 +150,14 @@ export function toActionItemDto(
 }
 
 export function toCommentDto(c: ActionItemComment, lk: Lookups): CommentDto {
-  return { id: c.id, authorUserId: c.authorUserId, authorName: c.authorUserId ? (lk.users.get(c.authorUserId)?.displayName ?? null) : null, body: c.body, source: c.source, createdAt: c.createdAt.toISOString() }
+  return {
+    id: c.id,
+    authorUserId: c.authorUserId,
+    authorName: c.authorUserId ? (lk.users.get(c.authorUserId)?.displayName ?? null) : null,
+    body: c.body,
+    source: c.source,
+    createdAt: c.createdAt.toISOString(),
+  }
 }
 
 export function toProposalDto(p: CompletionProposal, lk: Lookups): CompletionProposalDto {
@@ -136,9 +166,15 @@ export function toProposalDto(p: CompletionProposal, lk: Lookups): CompletionPro
     actionItemId: p.actionItemId,
     proposedByType: p.proposedByType,
     proposedByUserId: p.proposedByUserId,
-    proposedByName: p.proposedByUserId ? (lk.users.get(p.proposedByUserId)?.displayName ?? null) : p.proposedByType === 'AI' ? 'IA' : null,
+    proposedByName: p.proposedByUserId
+      ? (lk.users.get(p.proposedByUserId)?.displayName ?? null)
+      : p.proposedByType === 'AI'
+        ? 'IA'
+        : null,
     proposedFromMeetingId: p.proposedFromMeetingId,
-    proposedFromMeetingTitle: p.proposedFromMeetingId ? (lk.meetings.get(p.proposedFromMeetingId)?.title ?? null) : null,
+    proposedFromMeetingTitle: p.proposedFromMeetingId
+      ? (lk.meetings.get(p.proposedFromMeetingId)?.title ?? null)
+      : null,
     reason: p.reason,
     evidence: p.evidence,
     confidence: p.confidence,
@@ -154,13 +190,25 @@ export function toActionItemDetailDto(
   item: ActionItem,
   principal: Principal,
   lk: Lookups,
-  parts: { comments: ActionItemComment[]; history: ActionItemStatusHistory[]; links: ActionItemMeetingLink[]; proposals: CompletionProposal[]; mentionsWithoutProgress: number; externalAssigneeName?: string | null },
+  parts: {
+    comments: ActionItemComment[]
+    history: ActionItemStatusHistory[]
+    links: ActionItemMeetingLink[]
+    proposals: CompletionProposal[]
+    mentionsWithoutProgress: number
+    externalAssigneeName?: string | null
+  },
 ): ActionItemDetailDto {
   const pending = parts.proposals.find((p) => p.status === 'PENDING') ?? null
-  const base = toActionItemDto(item, lk, { pendingProposalId: pending?.id ?? null, mentionsWithoutProgress: parts.mentionsWithoutProgress, externalAssigneeName: parts.externalAssigneeName ?? null })
+  const base = toActionItemDto(item, lk, {
+    pendingProposalId: pending?.id ?? null,
+    mentionsWithoutProgress: parts.mentionsWithoutProgress,
+    externalAssigneeName: parts.externalAssigneeName ?? null,
+  })
   const transitions = allowedTransitions(item.status, 'USER').filter((s) => {
     if (s === ActionItemStatus.COMPLETED) return false
-    if (s === ActionItemStatus.CANCELLED) return hasPermission(principal, Permission.ACTION_ITEM_CANCEL)
+    if (s === ActionItemStatus.CANCELLED)
+      return hasPermission(principal, Permission.ACTION_ITEM_CANCEL)
     return true
   })
   return {
@@ -171,7 +219,11 @@ export function toActionItemDetailDto(
       fromStatus: h.fromStatus,
       toStatus: h.toStatus,
       changedByUserId: h.changedByUserId,
-      changedByName: h.changedByUserId ? (lk.users.get(h.changedByUserId)?.displayName ?? null) : h.changedBySystem ? 'Sistema/IA' : null,
+      changedByName: h.changedByUserId
+        ? (lk.users.get(h.changedByUserId)?.displayName ?? null)
+        : h.changedBySystem
+          ? 'Sistema/IA'
+          : null,
       changedBySystem: h.changedBySystem,
       reason: h.reason,
       meetingId: h.meetingId,
@@ -197,7 +249,12 @@ export function toActionItemDetailDto(
 export function toMeetingListItemDto(
   m: Meeting,
   lk: Lookups,
-  extra: { participants: MeetingParticipant[]; actionItemCount: number; pendingReviewCount: number; extractionConfidence?: number | null },
+  extra: {
+    participants: MeetingParticipant[]
+    actionItemCount: number
+    pendingReviewCount: number
+    extractionConfidence?: number | null
+  },
 ): MeetingListItemDto {
   return {
     id: m.id,
@@ -206,7 +263,9 @@ export function toMeetingListItemDto(
     endAt: isoDateTime(m.endAt),
     durationSeconds: m.durationSeconds,
     organizerUserId: m.organizerUserId,
-    organizerName: m.organizerUserId ? (lk.users.get(m.organizerUserId)?.displayName ?? null) : (m.organizerEmail ?? null),
+    organizerName: m.organizerUserId
+      ? (lk.users.get(m.organizerUserId)?.displayName ?? null)
+      : (m.organizerEmail ?? null),
     organizerEmail: m.organizerEmail,
     isExternalHost: m.isExternalHost,
     participantCount: extra.participants.length,
@@ -229,7 +288,15 @@ export function toMeetingListItemDto(
 export function toMeetingDetailDto(
   m: Meeting,
   lk: Lookups,
-  extra: { participants: MeetingParticipant[]; actionItemCount: number; pendingReviewCount: number; summary: MeetingSummary | null; decisions: Decision[]; runs: ProcessingRun[]; extractionConfidence?: number | null },
+  extra: {
+    participants: MeetingParticipant[]
+    actionItemCount: number
+    pendingReviewCount: number
+    summary: MeetingSummary | null
+    decisions: Decision[]
+    runs: ProcessingRun[]
+    extractionConfidence?: number | null
+  },
 ): MeetingDetailDto {
   return {
     ...toMeetingListItemDto(m, lk, extra),
@@ -294,7 +361,11 @@ export function toMeetingDetailDto(
   }
 }
 
-export function toAiReviewItemDto(r: AiReviewItem, lk: Lookups, candidate: ActionItem | null): AiReviewItemDto {
+export function toAiReviewItemDto(
+  r: AiReviewItem,
+  lk: Lookups,
+  candidate: ActionItem | null,
+): AiReviewItemDto {
   const meeting = lk.meetings.get(r.meetingId)
   return {
     id: r.id,
@@ -310,7 +381,9 @@ export function toAiReviewItemDto(r: AiReviewItem, lk: Lookups, candidate: Actio
     proposedActionItemId: r.proposedActionItemId,
     extracted: r.extracted,
     suggestedOwnerUserId: r.suggestedOwnerUserId,
-    suggestedOwnerName: r.suggestedOwnerUserId ? (lk.users.get(r.suggestedOwnerUserId)?.displayName ?? null) : null,
+    suggestedOwnerName: r.suggestedOwnerUserId
+      ? (lk.users.get(r.suggestedOwnerUserId)?.displayName ?? null)
+      : null,
     suggestedOwnerConfidence: r.suggestedOwnerConfidence,
     suggestedDueDate: isoDate(r.suggestedDueDate, lk.timezone),
     suggestedDueDateConfidence: r.suggestedDueDateConfidence,
@@ -323,7 +396,13 @@ export function toAuditEntryDto(e: AuditLogEntry, lk: Lookups): AuditEntryDto {
   return {
     id: e.id,
     actorUserId: e.actorUserId,
-    actorName: e.actorUserId ? (lk.users.get(e.actorUserId)?.displayName ?? null) : e.actorType === 'AI' ? 'IA' : e.actorType === 'SYSTEM' ? 'Sistema' : null,
+    actorName: e.actorUserId
+      ? (lk.users.get(e.actorUserId)?.displayName ?? null)
+      : e.actorType === 'AI'
+        ? 'IA'
+        : e.actorType === 'SYSTEM'
+          ? 'Sistema'
+          : null,
     actorType: e.actorType,
     action: e.action,
     entity: e.entity,
@@ -337,13 +416,37 @@ export function toAuditEntryDto(e: AuditLogEntry, lk: Lookups): AuditEntryDto {
 }
 
 export function toUserDto(u: User, lk: Pick<Lookups, 'areas'>): UserDto {
-  return { id: u.id, email: u.email, displayName: u.displayName, role: u.role, areaId: u.areaId, areaName: u.areaId ? (lk.areas.get(u.areaId)?.name ?? null) : null, managerId: u.managerId, active: u.active, monitored: u.monitored }
+  return {
+    id: u.id,
+    email: u.email,
+    displayName: u.displayName,
+    role: u.role,
+    areaId: u.areaId,
+    areaName: u.areaId ? (lk.areas.get(u.areaId)?.name ?? null) : null,
+    managerId: u.managerId,
+    active: u.active,
+    monitored: u.monitored,
+  }
 }
 
 export function toAreaDto(a: Area): AreaDto {
-  return { id: a.id, name: a.name, code: a.code, isExternalCategory: a.isExternalCategory, active: a.active, sortOrder: a.sortOrder }
+  return {
+    id: a.id,
+    name: a.name,
+    code: a.code,
+    isExternalCategory: a.isExternalCategory,
+    active: a.active,
+    sortOrder: a.sortOrder,
+  }
 }
 
 export function toProjectDto(p: Project, aliases: ProjectAlias[]): ProjectDto {
-  return { id: p.id, canonicalName: p.canonicalName, code: p.code, active: p.active, areaId: p.areaId, aliases: aliases.filter((a) => a.projectId === p.id).map((a) => a.aliasNormalized) }
+  return {
+    id: p.id,
+    canonicalName: p.canonicalName,
+    code: p.code,
+    active: p.active,
+    areaId: p.areaId,
+    aliases: aliases.filter((a) => a.projectId === p.id).map((a) => a.aliasNormalized),
+  }
 }

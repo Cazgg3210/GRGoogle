@@ -18,7 +18,10 @@ export class PrismaAiReviewRepository extends BaseRepository implements AiReview
   }
 
   async listByMeeting(meetingId: Id): Promise<AiReviewItem[]> {
-    const rows = await this.db.aiReviewItem.findMany({ where: { meetingId }, orderBy: { createdAt: 'asc' } })
+    const rows = await this.db.aiReviewItem.findMany({
+      where: { meetingId },
+      orderBy: { createdAt: 'asc' },
+    })
     return rows.map((r) => toReviewItem(r, this.ctx))
   }
 

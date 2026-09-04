@@ -41,9 +41,13 @@ export class GoogleDirectoryAdapter implements DirectoryPort {
 
   constructor(private readonly deps: DirectoryAdapterDeps) {
     this.clientFactory =
-      deps.clientFactory ?? ((auth) => google.admin({ version: 'directory_v1', auth }) as unknown as DirectoryApiClient)
+      deps.clientFactory ??
+      ((auth) => google.admin({ version: 'directory_v1', auth }) as unknown as DirectoryApiClient)
     if (!deps.adminEmail) {
-      throw new DomainError(DomainErrorCode.VALIDATION_ERROR, 'GoogleDirectoryAdapter requiere adminEmail para impersonación')
+      throw new DomainError(
+        DomainErrorCode.VALIDATION_ERROR,
+        'GoogleDirectoryAdapter requiere adminEmail para impersonación',
+      )
     }
   }
 
@@ -51,11 +55,18 @@ export class GoogleDirectoryAdapter implements DirectoryPort {
     return this.clientFactory(this.deps.auth.for(this.deps.adminEmail, SCOPES))
   }
 
-  async listDomainUsers(domain: string): Promise<Array<{ googleUserId: string; email: string; displayName: string; suspended: boolean }>> {
+  async listDomainUsers(
+    domain: string,
+  ): Promise<
+    Array<{ googleUserId: string; email: string; displayName: string; suspended: boolean }>
+  > {
     const users = await collectPages((pageToken) =>
       withGoogleRetry(
         async (signal) => {
-          const res = await this.client().users.list({ domain, maxResults: 200, orderBy: 'email', pageToken }, { signal })
+          const res = await this.client().users.list(
+            { domain, maxResults: 200, orderBy: 'email', pageToken },
+            { signal },
+          )
           return { items: res.data.users ?? [], nextPageToken: res.data.nextPageToken }
         },
         { ...this.deps.retry, operation: 'directory.users.list' },
@@ -81,10 +92,13 @@ export class GoogleDirectoryAdapter implements DirectoryPort {
     const key = email.trim().toLowerCase()
     if (this.idCache.has(key)) return this.idCache.get(key) ?? null
     try {
-      const res = await withGoogleRetry((signal) => this.client().users.get({ userKey: key }, { signal }), {
-        ...this.deps.retry,
-        operation: 'directory.users.get',
-      })
+      const res = await withGoogleRetry(
+        (signal) => this.client().users.get({ userKey: key }, { signal }),
+        {
+          ...this.deps.retry,
+          operation: 'directory.users.get',
+        },
+      )
       const id = res.data.id ?? null
       this.idCache.set(key, id)
       return id
@@ -100,10 +114,13 @@ export class GoogleDirectoryAdapter implements DirectoryPort {
   /** Resuelve email primario a partir del id de Google (`users/{id}` en Meet API). */
   async getUserEmailById(googleUserId: string): Promise<string | null> {
     try {
-      const res = await withGoogleRetry((signal) => this.client().users.get({ userKey: googleUserId }, { signal }), {
-        ...this.deps.retry,
-        operation: 'directory.users.get',
-      })
+      const res = await withGoogleRetry(
+        (signal) => this.client().users.get({ userKey: googleUserId }, { signal }),
+        {
+          ...this.deps.retry,
+          operation: 'directory.users.get',
+        },
+      )
       return res.data.primaryEmail?.toLowerCase() ?? null
     } catch (err) {
       if (err instanceof DomainError && err.code === DomainErrorCode.GOOGLE_NOT_FOUND) return null

@@ -24,8 +24,33 @@ export function isBlankLike(value: unknown): boolean {
 }
 
 const STOPWORDS = new Set([
-  'de', 'la', 'el', 'los', 'las', 'del', 'y', 'a', 'en', 'con', 'para', 'por', 'un', 'una',
-  'que', 'se', 'al', 'lo', 'su', 'sus', 'e', 'o', 'u', 'the', 'of', 'to', 'and',
+  'de',
+  'la',
+  'el',
+  'los',
+  'las',
+  'del',
+  'y',
+  'a',
+  'en',
+  'con',
+  'para',
+  'por',
+  'un',
+  'una',
+  'que',
+  'se',
+  'al',
+  'lo',
+  'su',
+  'sus',
+  'e',
+  'o',
+  'u',
+  'the',
+  'of',
+  'to',
+  'and',
 ])
 
 export function tokenize(value: string): string[] {
@@ -62,7 +87,9 @@ export function trigramSimilarity(a: string, b: string): number {
   return inter / (ga.size + gb.size - inter)
 }
 
-export function normalizePriority(value: string | null | undefined): 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | null {
+export function normalizePriority(
+  value: string | null | undefined,
+): 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | null {
   const v = normalizeText(value)
   if (v === '') return null
   if (v === 'alta' || v === 'high' || v === 'a') return 'HIGH'
@@ -72,13 +99,27 @@ export function normalizePriority(value: string | null | undefined): 'LOW' | 'ME
   return null
 }
 
-const RECURRING_HINTS = ['diaria', 'diario', 'dia a dia', 'semanal', 'cada semana', 'quincenal', 'mensual', 'todos los dias', 'cada dia', 'seguimiento continuo']
+const RECURRING_HINTS = [
+  'diaria',
+  'diario',
+  'dia a dia',
+  'semanal',
+  'cada semana',
+  'quincenal',
+  'mensual',
+  'todos los dias',
+  'cada dia',
+  'seguimiento continuo',
+]
 
-export function detectRecurrenceHint(text: string): { frequency: 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY'; textOriginal: string } | null {
+export function detectRecurrenceHint(
+  text: string,
+): { frequency: 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY'; textOriginal: string } | null {
   const n = normalizeText(text)
   for (const hint of RECURRING_HINTS) {
     if (n.includes(hint)) {
-      if (hint.startsWith('diari') || hint.includes('dia')) return { frequency: 'DAILY', textOriginal: hint }
+      if (hint.startsWith('diari') || hint.includes('dia'))
+        return { frequency: 'DAILY', textOriginal: hint }
       if (hint.includes('semana')) return { frequency: 'WEEKLY', textOriginal: hint }
       if (hint.startsWith('quincen')) return { frequency: 'BIWEEKLY', textOriginal: hint }
       if (hint.startsWith('mensual')) return { frequency: 'MONTHLY', textOriginal: hint }

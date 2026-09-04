@@ -134,7 +134,14 @@ export interface WeeklyDigestInput {
   weekStart: string
   weekEnd: string
   stats: Record<string, number>
-  newItems: Array<{ key: string; title: string; owner: string | null; area: string | null; priority: string; dueDate: string | null }>
+  newItems: Array<{
+    key: string
+    title: string
+    owner: string | null
+    area: string | null
+    priority: string
+    dueDate: string | null
+  }>
   overdueItems: Array<{ key: string; title: string; owner: string | null; daysOverdue: number }>
   proposals: Array<{ key: string; title: string; reason: string }>
   captureIssues: Array<{ meetingTitle: string; issue: string }>

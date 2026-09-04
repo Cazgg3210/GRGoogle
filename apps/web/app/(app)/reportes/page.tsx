@@ -15,11 +15,15 @@ export const metadata: Metadata = { title: 'Reportes' }
 export default async function ReportsPage() {
   const session = await getAppSession()
   const perms = session?.permissions ?? []
-  const canConfig = hasPermission(perms, Permission.CONFIG_MANAGE) || hasPermission(perms, Permission.DIGEST_GENERATE)
+  const canConfig =
+    hasPermission(perms, Permission.CONFIG_MANAGE) ||
+    hasPermission(perms, Permission.DIGEST_GENERATE)
   const canSheets = hasPermission(perms, Permission.SHEETS_SYNC)
   const [digests, config, users, areas] = await Promise.all([
     safe(api.get<WeeklyDigestDto[]>('/reports/weekly', { query: { limit: 20 } })),
-    canConfig ? safe(api.get<WeeklyDigestConfigDto>('/reports/weekly/config')) : Promise.resolve(null),
+    canConfig
+      ? safe(api.get<WeeklyDigestConfigDto>('/reports/weekly/config'))
+      : Promise.resolve(null),
     safe(api.get<UserDto[]>('/team/users')),
     safe(api.get<AreaDto[]>('/team/areas')),
   ])
@@ -34,7 +38,10 @@ export default async function ReportsPage() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div className="flex flex-col gap-6">
           {digests.ok ? (
-            <DigestsPanel digests={digests.data} canGenerate={hasPermission(perms, Permission.DIGEST_GENERATE)} />
+            <DigestsPanel
+              digests={digests.data}
+              canGenerate={hasPermission(perms, Permission.DIGEST_GENERATE)}
+            />
           ) : (
             <PageError error={digests.error} retryHref="/reportes" />
           )}

@@ -33,7 +33,11 @@ export class PrismaUserRepository extends BaseRepository implements UserReposito
   async save(user: User): Promise<User> {
     const data = userToDb(user)
     const { id, ...rest } = data
-    const row = await this.db.user.upsert({ where: { id: user.id }, create: { id, ...rest }, update: rest })
+    const row = await this.db.user.upsert({
+      where: { id: user.id },
+      create: { id, ...rest },
+      update: rest,
+    })
     return toUser(row)
   }
 
@@ -45,7 +49,11 @@ export class PrismaUserRepository extends BaseRepository implements UserReposito
   async addAlias(alias: Omit<UserAlias, 'id'>): Promise<UserAlias> {
     const row = await this.db.userAlias.upsert({
       where: { aliasNormalized: alias.aliasNormalized },
-      create: { userId: alias.userId, aliasNormalized: alias.aliasNormalized, source: alias.source },
+      create: {
+        userId: alias.userId,
+        aliasNormalized: alias.aliasNormalized,
+        source: alias.source,
+      },
       update: { userId: alias.userId, source: alias.source },
     })
     return toUserAlias(row)

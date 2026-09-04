@@ -34,9 +34,19 @@ import {
   type PrismaRepositories,
   type RepositoryDefaults,
 } from '@smlxl/database'
-import { findDuplicateIds, findSemanticDuplicates, normalizeRow, type NormalizedRow } from './normalize.js'
+import {
+  findDuplicateIds,
+  findSemanticDuplicates,
+  normalizeRow,
+  type NormalizedRow,
+} from './normalize.js'
 import type { SourceSheet, WorkbookReadResult } from './reader.js'
-import { compareWithBaseline, type BaselineMetrics, type ImportReport, type SheetStats } from './report.js'
+import {
+  compareWithBaseline,
+  type BaselineMetrics,
+  type ImportReport,
+  type SheetStats,
+} from './report.js'
 
 export type ImportMode = 'dry-run' | 'commit'
 
@@ -159,14 +169,18 @@ export async function runLegacyImport(
     const local = u.email.split('@')[0]
     if (local) userIndex.set(normalizeText(local), u.id)
   }
-  for (const a of userAliases) if (!userIndex.has(a.aliasNormalized)) userIndex.set(a.aliasNormalized, a.userId)
+  for (const a of userAliases)
+    if (!userIndex.has(a.aliasNormalized)) userIndex.set(a.aliasNormalized, a.userId)
   const projects = await repos.projects.list()
   const projectAliases = await repos.projects.listAliases()
   const projectIndex = new Map<string, string>()
   for (const p of projects) projectIndex.set(normalizeText(p.canonicalName), p.id)
-  for (const a of projectAliases) if (!projectIndex.has(a.aliasNormalized)) projectIndex.set(a.aliasNormalized, a.projectId)
+  for (const a of projectAliases)
+    if (!projectIndex.has(a.aliasNormalized)) projectIndex.set(a.aliasNormalized, a.projectId)
   const externals = await repos.externalAssignees.list()
-  const externalIndex = new Map<string, ExternalAssignee>(externals.map((e) => [normalizeText(e.displayName), e]))
+  const externalIndex = new Map<string, ExternalAssignee>(
+    externals.map((e) => [normalizeText(e.displayName), e]),
+  )
   const importedKeys = await repos.legacyImports.listImportedKeys(sourceFile)
 
   // --- 3. Planificación ---------------------------------------------------------
@@ -183,7 +197,12 @@ export async function runLegacyImport(
     if (cached) return cached
     const existing = row.isExternalSheet ? externalArea : (areaByName.get(key) ?? null)
     const planned: PlannedArea = existing
-      ? { id: existing.id, name: existing.name, isExternalCategory: existing.isExternalCategory, isNew: false }
+      ? {
+          id: existing.id,
+          name: existing.name,
+          isExternalCategory: existing.isExternalCategory,
+          isNew: false,
+        }
       : { id: ids.next(), name: row.sheet, isExternalCategory: row.isExternalSheet, isNew: true }
     plannedAreas.set(key, planned)
     return planned
@@ -192,7 +211,8 @@ export async function runLegacyImport(
   const findExistingMeeting = async (title: string): Promise<Meeting | null> => {
     if (existingMeetingCache.has(title)) return existingMeetingCache.get(title) ?? null
     const page = await repos.meetings.list({ search: title }, { page: 1, pageSize: 10 })
-    const found = page.items.find((m) => m.title === title && m.source === MeetingSource.LEGACY_IMPORT) ?? null
+    const found =
+      page.items.find((m) => m.title === title && m.source === MeetingSource.LEGACY_IMPORT) ?? null
     existingMeetingCache.set(title, found)
     return found
   }
@@ -224,8 +244,22 @@ export async function runLegacyImport(
         if (!planned) {
           const existing = externalIndex.get(externalKey)
           planned = existing
-            ? { id: existing.id, name: existing.displayName, company: existing.company, isNew: false, count: 0, sheets: new Set() }
-            : { id: ids.next(), name: row.ownerText ?? row.ownerNormalized, company: row.company, isNew: true, count: 0, sheets: new Set() }
+            ? {
+                id: existing.id,
+                name: existing.displayName,
+                company: existing.company,
+                isNew: false,
+                count: 0,
+                sheets: new Set(),
+              }
+            : {
+                id: ids.next(),
+                name: row.ownerText ?? row.ownerNormalized,
+                company: row.company,
+                isNew: true,
+                count: 0,
+                sheets: new Set(),
+              }
           plannedExternals.set(externalKey, planned)
         }
         planned.count++
@@ -241,8 +275,20 @@ export async function runLegacyImport(
       if (!planned) {
         const existingId = projectIndex.get(projectKey)
         planned = existingId
-          ? { id: existingId, name: row.projectText ?? projectKey, alias: projectKey, isNew: false, count: 0 }
-          : { id: ids.next(), name: row.projectText ?? projectKey, alias: projectKey, isNew: true, count: 0 }
+          ? {
+              id: existingId,
+              name: row.projectText ?? projectKey,
+              alias: projectKey,
+              isNew: false,
+              count: 0,
+            }
+          : {
+              id: ids.next(),
+              name: row.projectText ?? projectKey,
+              alias: projectKey,
+              isNew: true,
+              count: 0,
+            }
         plannedProjects.set(projectKey, planned)
       }
       planned.count++
@@ -272,7 +318,15 @@ export async function runLegacyImport(
       planned.rows++
     }
 
-    plannedRows.push({ row, actionItemId: ids.next(), areaId: area.id, ownerUserId, externalKey, projectKey, meetingKey })
+    plannedRows.push({
+      row,
+      actionItemId: ids.next(),
+      areaId: area.id,
+      ownerUserId,
+      externalKey,
+      projectKey,
+      meetingKey,
+    })
     stats.imported++
   }
 
@@ -285,10 +339,15 @@ export async function runLegacyImport(
     internalRows: internalRows.length,
     externalRows: externalRows.length,
     completedFlag,
-    enProceso: internalRows.filter((r) => r.statusNormalized === 'en proceso' || r.statusNormalized === 'en progreso').length,
+    enProceso: internalRows.filter(
+      (r) => r.statusNormalized === 'en proceso' || r.statusNormalized === 'en progreso',
+    ).length,
     pendiente: internalRows.filter((r) => r.statusNormalized === 'pendiente').length,
     overdue: titledRows.filter((r) => r.overdueFlag === true).length,
-    progressPct: internalRows.length === 0 ? 0 : Number(((completedFlag / internalRows.length) * 100).toFixed(1)),
+    progressPct:
+      internalRows.length === 0
+        ? 0
+        : Number(((completedFlag / internalRows.length) * 100).toFixed(1)),
   }
   const statusDistribution: Record<string, number> = {}
   const priorityDistribution: Record<string, number> = {}
@@ -299,27 +358,56 @@ export async function runLegacyImport(
   const legacyStatusDistribution: Record<string, number> = {}
   for (const r of titledRows) bump(legacyStatusDistribution, r.statusNormalized || '(vacío)')
   const blankFields: Record<string, number> = {}
-  for (const r of titledRows) for (const i of r.issues) if (i.code === 'BLANK_FIELD' && i.field) bump(blankFields, i.field)
+  for (const r of titledRows)
+    for (const i of r.issues) if (i.code === 'BLANK_FIELD' && i.field) bump(blankFields, i.field)
   const contradictions = titledRows
     .filter((r) => r.issues.some((i) => i.code === 'CONTRADICTION_COMPLETED_FLAG'))
-    .map((r) => ({ sheet: r.sheet, row: r.sourceRow, legacyId: r.legacyId, title: r.title, statusRaw: r.statusRaw, completedFlag: r.completedFlag, resolvedStatus: r.status }))
+    .map((r) => ({
+      sheet: r.sheet,
+      row: r.sourceRow,
+      legacyId: r.legacyId,
+      title: r.title,
+      statusRaw: r.statusRaw,
+      completedFlag: r.completedFlag,
+      resolvedStatus: r.status,
+    }))
   const semanticDuplicates = findSemanticDuplicates(titledRows, options.duplicateThreshold ?? 0.8)
   const duplicateIds = findDuplicateIds(titledRows)
   const recurring = titledRows
     .filter((r) => r.recurrence)
-    .map((r) => ({ sheet: r.sheet, row: r.sourceRow, title: r.title, frequency: r.recurrence?.frequency ?? '', hint: r.recurrence?.textOriginal ?? '' }))
-  const issueRows = (code: NormalizedRow['issues'][number]['code']): Array<{ sheet: string; row: number; value: string }> =>
-    titledRows.flatMap((r) => r.issues.filter((i) => i.code === code).map((i) => ({ sheet: r.sheet, row: r.sourceRow, value: i.detail })))
+    .map((r) => ({
+      sheet: r.sheet,
+      row: r.sourceRow,
+      title: r.title,
+      frequency: r.recurrence?.frequency ?? '',
+      hint: r.recurrence?.textOriginal ?? '',
+    }))
+  const issueRows = (
+    code: NormalizedRow['issues'][number]['code'],
+  ): Array<{ sheet: string; row: number; value: string }> =>
+    titledRows.flatMap((r) =>
+      r.issues
+        .filter((i) => i.code === code)
+        .map((i) => ({ sheet: r.sheet, row: r.sourceRow, value: i.detail })),
+    )
   const unresolvedOwners = Array.from(plannedExternals.values()).map((e) => ({
     owner: e.name,
     count: e.count,
     sheets: Array.from(e.sheets),
     externalAssignee: e.isNew ? ('new' as const) : ('existing' as const),
   }))
-  const newProjects = Array.from(plannedProjects.values()).filter((p) => p.isNew).map((p) => ({ name: p.name, alias: p.alias, count: p.count }))
-  const newExternalAssignees = Array.from(plannedExternals.values()).filter((e) => e.isNew).map((e) => e.name)
-  const newAreas = Array.from(plannedAreas.values()).filter((a) => a.isNew).map((a) => a.name)
-  const proposalsPlanned = plannedRows.filter((p) => p.row.status === ActionItemStatus.COMPLETION_PROPOSED).length
+  const newProjects = Array.from(plannedProjects.values())
+    .filter((p) => p.isNew)
+    .map((p) => ({ name: p.name, alias: p.alias, count: p.count }))
+  const newExternalAssignees = Array.from(plannedExternals.values())
+    .filter((e) => e.isNew)
+    .map((e) => e.name)
+  const newAreas = Array.from(plannedAreas.values())
+    .filter((a) => a.isNew)
+    .map((a) => a.name)
+  const proposalsPlanned = plannedRows.filter(
+    (p) => p.row.status === ActionItemStatus.COMPLETION_PROPOSED,
+  ).length
   const commentsPlanned = plannedRows.filter((p) => p.row.comments).length
   const totalsBase = {
     rowsRead: rows.length,
@@ -336,7 +424,10 @@ export async function runLegacyImport(
     completionProposals: proposalsPlanned,
     comments: commentsPlanned,
   }
-  const blankRowsSkipped = Array.from(sheetStats.values()).reduce((n, s) => n + s.blankRowsSkipped, 0)
+  const blankRowsSkipped = Array.from(sheetStats.values()).reduce(
+    (n, s) => n + s.blankRowsSkipped,
+    0,
+  )
 
   const report: ImportReport = {
     file: sourceFile,
@@ -356,7 +447,13 @@ export async function runLegacyImport(
     newProjects,
     newExternalAssignees,
     newAreas,
-    meetings: Array.from(plannedMeetings.values()).map((m) => ({ sheet: m.sheet, date: m.date, title: m.title, rows: m.rows, existing: !m.isNew })),
+    meetings: Array.from(plannedMeetings.values()).map((m) => ({
+      sheet: m.sheet,
+      date: m.date,
+      title: m.title,
+      rows: m.rows,
+      existing: !m.isNew,
+    })),
     contradictions,
     semanticDuplicates,
     duplicateIds,
@@ -378,32 +475,74 @@ export async function runLegacyImport(
     errors,
   }
 
-  const created: ImportCreated = { batchId: null, actionItemIds: [], meetingIds: [], projectIds: [], externalAssigneeIds: [], areaIds: [] }
+  const created: ImportCreated = {
+    batchId: null,
+    actionItemIds: [],
+    meetingIds: [],
+    projectIds: [],
+    externalAssigneeIds: [],
+    areaIds: [],
+  }
 
   // --- 5. Escritura (sólo commit y sólo si hay algo que importar) --------------
   if (options.mode === 'commit' && plannedRows.length > 0) {
     const batchId = ids.next()
     const uow = new PrismaUnitOfWork(client, defaults, { maxWait: 15_000, timeout: 120_000 })
     await uow.runWithPrisma(async (tx: PrismaRepositories) => {
-      await tx.legacyImports.createBatch({ id: batchId, sourceFile, mode: options.mode, startedAt: now })
+      await tx.legacyImports.createBatch({
+        id: batchId,
+        sourceFile,
+        mode: options.mode,
+        startedAt: now,
+      })
 
       for (const a of plannedAreas.values()) {
         if (!a.isNew) continue
-        await tx.areas.save({ id: a.id, name: a.name, code: null, isExternalCategory: a.isExternalCategory, active: true, sortOrder: 99 })
+        await tx.areas.save({
+          id: a.id,
+          name: a.name,
+          code: null,
+          isExternalCategory: a.isExternalCategory,
+          active: true,
+          sortOrder: 99,
+        })
         created.areaIds.push(a.id)
       }
       for (const p of plannedProjects.values()) {
         if (!p.isNew) continue
-        const project: Project = { id: p.id, canonicalName: p.name, code: null, active: true, areaId: null }
+        const project: Project = {
+          id: p.id,
+          canonicalName: p.name,
+          code: null,
+          active: true,
+          areaId: null,
+        }
         await tx.projects.save(project)
-        await tx.projects.addAlias({ projectId: p.id, aliasNormalized: p.alias, source: 'LEGACY_IMPORT' })
+        await tx.projects.addAlias({
+          projectId: p.id,
+          aliasNormalized: p.alias,
+          source: 'LEGACY_IMPORT',
+        })
         const canonical = normalizeText(p.name)
-        if (canonical !== p.alias) await tx.projects.addAlias({ projectId: p.id, aliasNormalized: canonical, source: 'LEGACY_IMPORT' })
+        if (canonical !== p.alias)
+          await tx.projects.addAlias({
+            projectId: p.id,
+            aliasNormalized: canonical,
+            source: 'LEGACY_IMPORT',
+          })
         created.projectIds.push(p.id)
       }
       for (const e of plannedExternals.values()) {
         if (!e.isNew) continue
-        await tx.externalAssignees.save({ id: e.id, displayName: e.name, company: e.company, email: null, phone: null, source: 'LEGACY_IMPORT', active: true })
+        await tx.externalAssignees.save({
+          id: e.id,
+          displayName: e.name,
+          company: e.company,
+          email: null,
+          phone: null,
+          source: 'LEGACY_IMPORT',
+          active: true,
+        })
         created.externalAssigneeIds.push(e.id)
       }
       for (const m of plannedMeetings.values()) {
@@ -446,7 +585,7 @@ export async function runLegacyImport(
       const refs: LegacyImportReference[] = []
       for (const p of plannedRows) {
         const r = p.row
-        const meeting = p.meetingKey ? plannedMeetings.get(p.meetingKey) ?? null : null
+        const meeting = p.meetingKey ? (plannedMeetings.get(p.meetingKey) ?? null) : null
         const meetingDate = r.meetingDate ? parseLocalDate(r.meetingDate, tz) : null
         const createdAt = meetingDate ?? now
         const item: ActionItem = {
@@ -456,11 +595,13 @@ export async function runLegacyImport(
           description: null,
           type: r.recurrence ? ActionItemType.RECURRING : ActionItemType.ONE_OFF,
           ownerUserId: p.ownerUserId,
-          externalAssigneeId: p.externalKey ? plannedExternals.get(p.externalKey)?.id ?? null : null,
+          externalAssigneeId: p.externalKey
+            ? (plannedExternals.get(p.externalKey)?.id ?? null)
+            : null,
           ownerTextOriginal: r.ownerText,
           collaboratorUserIds: [],
           areaId: p.areaId,
-          projectId: p.projectKey ? plannedProjects.get(p.projectKey)?.id ?? null : null,
+          projectId: p.projectKey ? (plannedProjects.get(p.projectKey)?.id ?? null) : null,
           createdFromMeetingId: meeting?.id ?? null,
           latestMeetingId: meeting?.id ?? null,
           status: r.status,
@@ -476,7 +617,10 @@ export async function runLegacyImport(
           sourceEvidence: [],
           recurrence: r.recurrence,
           parentActionItemId: null,
-          blocker: r.status === ActionItemStatus.BLOCKED ? (r.comments ?? 'Bloqueada según el legado') : null,
+          blocker:
+            r.status === ActionItemStatus.BLOCKED
+              ? (r.comments ?? 'Bloqueada según el legado')
+              : null,
           tags: [LEGACY_TAG],
           migrationTrust: MigrationTrust.LEGACY,
           legacyId: r.legacyId,
@@ -547,7 +691,11 @@ export async function runLegacyImport(
           sourceSheet: r.sheet,
           sourceRow: r.sourceRow,
           legacyId: r.legacyId,
-          rawPayload: { ...r.rawPayload, __sheetOriginal: r.sheetOriginal, __issues: r.issues.map((i) => i.code) },
+          rawPayload: {
+            ...r.rawPayload,
+            __sheetOriginal: r.sheetOriginal,
+            __issues: r.issues.map((i) => i.code),
+          },
           importBatchId: batchId,
           importedAt: now,
         })
@@ -559,7 +707,13 @@ export async function runLegacyImport(
           entity: 'ActionItem',
           entityId: saved.id,
           before: null,
-          after: { externalKey: saved.externalKey, legacyId: r.legacyId, sheet: r.sheet, row: r.sourceRow, status: r.status },
+          after: {
+            externalKey: saved.externalKey,
+            legacyId: r.legacyId,
+            sheet: r.sheet,
+            row: r.sourceRow,
+            status: r.status,
+          },
           source: 'legacy-import',
           correlationId: batchId,
           timestamp: now,
@@ -576,7 +730,12 @@ export async function runLegacyImport(
         entity: 'LegacyImportBatch',
         entityId: batchId,
         before: null,
-        after: { sourceFile, imported: plannedRows.length, meetings: created.meetingIds.length, newProjects: created.projectIds.length },
+        after: {
+          sourceFile,
+          imported: plannedRows.length,
+          meetings: created.meetingIds.length,
+          newProjects: created.projectIds.length,
+        },
         source: 'legacy-import',
         correlationId: batchId,
         timestamp: new Date(),

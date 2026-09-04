@@ -7,7 +7,8 @@ export class FakeDriveAdapter implements DrivePort {
 
   constructor(fixtures?: FakeGoogleFixtures | Record<string, string>) {
     if (!fixtures) this.documents = loadDefaultFixtures().documents
-    else if ('documents' in fixtures && typeof fixtures.documents === 'object') this.documents = (fixtures as FakeGoogleFixtures).documents
+    else if ('documents' in fixtures && typeof fixtures.documents === 'object')
+      this.documents = (fixtures as FakeGoogleFixtures).documents
     else this.documents = fixtures as Record<string, string>
   }
 

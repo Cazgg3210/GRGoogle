@@ -78,7 +78,14 @@ export interface ApiClient {
 
 async function parseError(res: Response): Promise<ErrorResponseDto> {
   const fallback: ErrorResponseDto = {
-    code: res.status === 401 ? 'UNAUTHORIZED' : res.status === 403 ? 'FORBIDDEN' : res.status === 404 ? 'NOT_FOUND' : 'INTERNAL_ERROR',
+    code:
+      res.status === 401
+        ? 'UNAUTHORIZED'
+        : res.status === 403
+          ? 'FORBIDDEN'
+          : res.status === 404
+            ? 'NOT_FOUND'
+            : 'INTERNAL_ERROR',
     message: res.statusText || `Error ${res.status}`,
   }
   try {
@@ -104,7 +111,12 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
   const fetchImpl = opts.fetchImpl ?? fetch
   const timeoutMs = opts.timeoutMs ?? 15_000
 
-  async function request<T>(method: string, path: string, body: unknown, options: RequestOptions = {}): Promise<T> {
+  async function request<T>(
+    method: string,
+    path: string,
+    body: unknown,
+    options: RequestOptions = {},
+  ): Promise<T> {
     const url = `${base}${path.startsWith('/') ? path : `/${path}`}${buildQuery(options.query)}`
     const headers: Record<string, string> = { Accept: 'application/json' }
     if (body !== undefined) headers['Content-Type'] = 'application/json'
@@ -112,7 +124,8 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
 
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(new Error('timeout')), timeoutMs)
-    if (options.signal) options.signal.addEventListener('abort', () => controller.abort(options.signal?.reason))
+    if (options.signal)
+      options.signal.addEventListener('abort', () => controller.abort(options.signal?.reason))
 
     let res: Response
     try {

@@ -14,5 +14,7 @@ export const authConfig = createAuthConfig({
 
 export const { handlers, auth, signIn, signOut } = NextAuth(authConfig)
 
-export const googleLoginEnabled = Boolean(env.GOOGLE_OAUTH_CLIENT_ID && env.GOOGLE_OAUTH_CLIENT_SECRET)
+export const googleLoginEnabled = Boolean(
+  env.GOOGLE_OAUTH_CLIENT_ID && env.GOOGLE_OAUTH_CLIENT_SECRET,
+)
 export const devBypassEnabled = env.AUTH_DEV_BYPASS && env.NODE_ENV !== 'production'

@@ -40,7 +40,11 @@ const TabsContent = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
 >(({ className, ...props }, ref) => (
-  <TabsPrimitive.Content ref={ref} className={cn('mt-4 focus-visible:outline-none', className)} {...props} />
+  <TabsPrimitive.Content
+    ref={ref}
+    className={cn('mt-4 focus-visible:outline-none', className)}
+    {...props}
+  />
 ))
 TabsContent.displayName = TabsPrimitive.Content.displayName
 
@@ -51,7 +55,10 @@ const SegmentedList = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <TabsPrimitive.List
     ref={ref}
-    className={cn('inline-flex h-8 items-center gap-0.5 rounded-md bg-surface-sunken p-0.5 text-muted-foreground', className)}
+    className={cn(
+      'inline-flex h-8 items-center gap-0.5 rounded-md bg-surface-sunken p-0.5 text-muted-foreground',
+      className,
+    )}
     {...props}
   />
 ))

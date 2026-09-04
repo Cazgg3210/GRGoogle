@@ -43,7 +43,12 @@ export interface TranscriptSegment {
 }
 
 export interface TranscriptResponse {
-  transcripts: Array<{ id: string; sourceType: string; languageCode: string | null; segments: TranscriptSegment[] }>
+  transcripts: Array<{
+    id: string
+    sourceType: string
+    languageCode: string | null
+    segments: TranscriptSegment[]
+  }>
 }
 
 export function useTranscript(meetingId: string | null | undefined, enabled = true) {
@@ -59,7 +64,9 @@ export function useTranscript(meetingId: string | null | undefined, enabled = tr
 export function flattenSegments(data: TranscriptResponse | undefined): TranscriptSegment[] {
   if (!data) return []
   const order = ['MEET_TRANSCRIPT', 'MANUAL', 'MEET_SMART_NOTES']
-  const sorted = [...data.transcripts].sort((a, b) => order.indexOf(a.sourceType) - order.indexOf(b.sourceType))
+  const sorted = [...data.transcripts].sort(
+    (a, b) => order.indexOf(a.sourceType) - order.indexOf(b.sourceType),
+  )
   const primary = sorted[0]
   return primary ? [...primary.segments].sort((a, b) => a.sequence - b.sequence) : []
 }
@@ -120,35 +127,52 @@ export function EvidenceDrawer({
 }) {
   const transcript = useTranscript(meetingId, open)
   const segments = React.useMemo(() => flattenSegments(transcript.data), [transcript.data])
-  const forbidden = transcript.isError && isApiError(transcript.error) && (transcript.error.status === 403 || transcript.error.status === 404)
+  const forbidden =
+    transcript.isError &&
+    isApiError(transcript.error) &&
+    (transcript.error.status === 403 || transcript.error.status === 404)
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-2xl">
         <SheetHeader>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ai-700">Evidencia IA</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ai-700">
+            Evidencia IA
+          </p>
           <SheetTitle>{title}</SheetTitle>
           <SheetDescription asChild>
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
               {subtitle}
               {meetingId ? (
-                <Link href={`/reuniones/${meetingId}?tab=transcripcion`} className="inline-flex items-center gap-1 text-info-700 hover:underline">
+                <Link
+                  href={`/reuniones/${meetingId}?tab=transcripcion`}
+                  className="inline-flex items-center gap-1 text-info-700 hover:underline"
+                >
                   {meetingTitle ?? 'Ver reunión'}
                   <ExternalLink className="size-3" />
                 </Link>
               ) : null}
-              {meetingStartAt ? <span className="text-muted-foreground">· {formatDateTime(meetingStartAt)}</span> : null}
+              {meetingStartAt ? (
+                <span className="text-muted-foreground">· {formatDateTime(meetingStartAt)}</span>
+              ) : null}
             </div>
           </SheetDescription>
         </SheetHeader>
         <SheetBody className="flex flex-col gap-6 pt-5">
           {evidence.length === 0 ? (
-            <InlineNotice tone="warning">Este elemento no conserva citas de evidencia.</InlineNotice>
+            <InlineNotice tone="warning">
+              Este elemento no conserva citas de evidencia.
+            </InlineNotice>
           ) : null}
           {!meetingId ? (
-            <InlineNotice tone="neutral">Sin reunión asociada: se muestra la cita sin contexto de transcripción.</InlineNotice>
+            <InlineNotice tone="neutral">
+              Sin reunión asociada: se muestra la cita sin contexto de transcripción.
+            </InlineNotice>
           ) : forbidden ? (
-            <InlineNotice tone="warning">No tienes acceso a la transcripción de esta reunión; se muestra sólo la cita registrada.</InlineNotice>
+            <InlineNotice tone="warning">
+              No tienes acceso a la transcripción de esta reunión; se muestra sólo la cita
+              registrada.
+            </InlineNotice>
           ) : transcript.isError ? (
             <InlineNotice tone="danger" title={describeError(transcript.error).title}>
               {describeError(transcript.error).message}
@@ -169,7 +193,9 @@ export function EvidenceDrawer({
           {meetingId ? (
             <div className="flex justify-end">
               <Button variant="outline" size="sm" asChild>
-                <Link href={`/reuniones/${meetingId}?tab=transcripcion`}>Abrir transcripción completa</Link>
+                <Link href={`/reuniones/${meetingId}?tab=transcripcion`}>
+                  Abrir transcripción completa
+                </Link>
               </Button>
             </div>
           ) : null}
@@ -198,7 +224,11 @@ function EvidenceBlock({
   const before = idx >= 0 ? segments.slice(Math.max(0, idx - contextSize), idx) : []
   const match = idx >= 0 ? segments[idx] : undefined
   const after = idx >= 0 ? segments.slice(idx + 1, idx + 1 + contextSize) : []
-  const time = evidence.startTime ? formatClock(evidence.startTime, meetingStartAt) : match?.startAt ? formatClock(match.startAt, meetingStartAt) : null
+  const time = evidence.startTime
+    ? formatClock(evidence.startTime, meetingStartAt)
+    : match?.startAt
+      ? formatClock(match.startAt, meetingStartAt)
+      : null
 
   return (
     <section className="rounded-lg border border-border bg-surface shadow-card">
@@ -209,11 +239,16 @@ function EvidenceBlock({
         ) : (
           <span className="text-sm text-muted-foreground">Speaker no identificado</span>
         )}
-        {time ? <span className="ml-auto font-mono text-xs text-muted-foreground">{time}</span> : null}
+        {time ? (
+          <span className="ml-auto font-mono text-xs text-muted-foreground">{time}</span>
+        ) : null}
       </header>
       <div className="px-4 py-3">
         <blockquote className="relative border-l-2 border-signal-400 bg-signal-50/60 py-2 pl-4 pr-3 font-display text-lg leading-snug text-ink-950">
-          <Quote className="absolute -left-2 -top-2 size-4 rotate-180 text-signal-400" aria-hidden />
+          <Quote
+            className="absolute -left-2 -top-2 size-4 rotate-180 text-signal-400"
+            aria-hidden
+          />
           “{evidence.text}”
         </blockquote>
         {loading ? (
@@ -228,14 +263,17 @@ function EvidenceBlock({
               {before.map((s) => (
                 <ContextLine key={s.id} segment={s} meetingStartAt={meetingStartAt} />
               ))}
-              {match ? <ContextLine segment={match} meetingStartAt={meetingStartAt} highlight /> : null}
+              {match ? (
+                <ContextLine segment={match} meetingStartAt={meetingStartAt} highlight />
+              ) : null}
               {after.map((s) => (
                 <ContextLine key={s.id} segment={s} meetingStartAt={meetingStartAt} />
               ))}
             </ol>
           ) : (
             <p className="mt-3 text-xs text-muted-foreground">
-              No se localizó esta cita en la transcripción (puede haber sido parafraseada por la IA).
+              No se localizó esta cita en la transcripción (puede haber sido parafraseada por la
+              IA).
             </p>
           )
         ) : null}
@@ -244,7 +282,15 @@ function EvidenceBlock({
   )
 }
 
-function ContextLine({ segment, meetingStartAt, highlight }: { segment: TranscriptSegment; meetingStartAt: string | null; highlight?: boolean }) {
+function ContextLine({
+  segment,
+  meetingStartAt,
+  highlight,
+}: {
+  segment: TranscriptSegment
+  meetingStartAt: string | null
+  highlight?: boolean
+}) {
   return (
     <li
       className={cn(
@@ -252,8 +298,12 @@ function ContextLine({ segment, meetingStartAt, highlight }: { segment: Transcri
         highlight ? 'bg-warning-50 ring-1 ring-warning-200' : 'text-muted-foreground',
       )}
     >
-      <span className="font-mono text-[11px] tabular text-muted-foreground">{formatClock(segment.startAt, meetingStartAt)}</span>
-      <span className={cn('truncate text-xs font-medium', highlight ? 'text-ink-900' : '')}>{segment.speakerLabel}</span>
+      <span className="font-mono text-[11px] tabular text-muted-foreground">
+        {formatClock(segment.startAt, meetingStartAt)}
+      </span>
+      <span className={cn('truncate text-xs font-medium', highlight ? 'text-ink-900' : '')}>
+        {segment.speakerLabel}
+      </span>
       <span className={cn(highlight && 'text-foreground')}>{segment.text}</span>
     </li>
   )

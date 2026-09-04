@@ -91,7 +91,10 @@ export function classifyHeader(header: string): ColumnKey | null {
 
 function isHeaderRow(cells: unknown[]): boolean {
   const normalized = cells.map((c) => normalizeText(typeof c === 'string' ? c : ''))
-  return normalized.some((c) => c.includes('pendiente')) && normalized.some((c) => c.includes('responsable'))
+  return (
+    normalized.some((c) => c.includes('pendiente')) &&
+    normalized.some((c) => c.includes('responsable'))
+  )
 }
 
 function cellIsBlank(value: unknown): boolean {
@@ -112,7 +115,12 @@ export function readSheet(workbook: XLSX.WorkBook, sheetName: string): SheetRead
   if (!canonical) return null
   const ws = workbook.Sheets[sheetName]
   if (!ws) return null
-  const matrix = XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, raw: true, defval: null, blankrows: true })
+  const matrix = XLSX.utils.sheet_to_json<unknown[]>(ws, {
+    header: 1,
+    raw: true,
+    defval: null,
+    blankrows: true,
+  })
   const result: SheetReadResult = {
     sheet: canonical,
     sheetOriginal: sheetName,
@@ -133,11 +141,15 @@ export function readSheet(workbook: XLSX.WorkBook, sheetName: string): SheetRead
     }
   }
   if (headerIndex < 0) {
-    result.warnings.push(`No se encontró fila de encabezado (Pendiente + Responsable) en la hoja "${sheetName}"`)
+    result.warnings.push(
+      `No se encontró fila de encabezado (Pendiente + Responsable) en la hoja "${sheetName}"`,
+    )
     return result
   }
   result.headerRow = headerIndex + 1
-  const headerCells = (matrix[headerIndex] ?? []).map((c) => (typeof c === 'string' ? c.trim() : c === null ? '' : String(c)))
+  const headerCells = (matrix[headerIndex] ?? []).map((c) =>
+    typeof c === 'string' ? c.trim() : c === null ? '' : String(c),
+  )
   result.headers = headerCells
   for (const [col, header] of headerCells.entries()) {
     const key = classifyHeader(header)

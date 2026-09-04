@@ -61,9 +61,16 @@ export interface CreateGoogleAdaptersDeps {
   fakeMailOutDir?: string | null
 }
 
-export function createFakeGoogleAdapters(env: Pick<Env, 'GOOGLE_WORKSPACE_DOMAIN'>, deps: CreateGoogleAdaptersDeps = {}): FakeGoogleAdapters {
+export function createFakeGoogleAdapters(
+  env: Pick<Env, 'GOOGLE_WORKSPACE_DOMAIN'>,
+  deps: CreateGoogleAdaptersDeps = {},
+): FakeGoogleAdapters {
   const now = deps.now ?? (() => new Date())
-  const meet = new FakeMeetAdapter({ fixtures: deps.fixtures, now, companyDomain: env.GOOGLE_WORKSPACE_DOMAIN })
+  const meet = new FakeMeetAdapter({
+    fixtures: deps.fixtures,
+    now,
+    companyDomain: env.GOOGLE_WORKSPACE_DOMAIN,
+  })
   // Calendar y Drive comparten la misma instancia de fixtures que Meet para coherencia.
   const calendar = new FakeCalendarAdapter({ fixtures: meet.fixtures, now })
   const drive = new FakeDriveAdapter(meet.fixtures)
@@ -79,16 +86,29 @@ export function createFakeGoogleAdapters(env: Pick<Env, 'GOOGLE_WORKSPACE_DOMAIN
   }
 }
 
-export function createRealGoogleAdapters(env: Env, deps: CreateGoogleAdaptersDeps = {}): GoogleAdapters {
+export function createRealGoogleAdapters(
+  env: Env,
+  deps: CreateGoogleAdaptersDeps = {},
+): GoogleAdapters {
   const credentials = loadServiceAccountCredentials(env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS)
   if (!credentials) {
-    throw new DomainError(DomainErrorCode.VALIDATION_ERROR, 'GOOGLE_SERVICE_ACCOUNT_CREDENTIALS es obligatorio en modo REAL')
+    throw new DomainError(
+      DomainErrorCode.VALIDATION_ERROR,
+      'GOOGLE_SERVICE_ACCOUNT_CREDENTIALS es obligatorio en modo REAL',
+    )
   }
-  const auth = new ImpersonatedAuthFactory({ credentials, allowedDomain: env.GOOGLE_WORKSPACE_DOMAIN })
+  const auth = new ImpersonatedAuthFactory({
+    credentials,
+    allowedDomain: env.GOOGLE_WORKSPACE_DOMAIN,
+  })
   const retry = deps.retry
   const adminEmail = deps.adminEmail || env.GMAIL_SENDER_EMAIL
   const directory = new GoogleDirectoryAdapter({ auth, retry, adminEmail })
-  const meet = new GoogleMeetAdapter({ auth, retry, resolveUserEmail: (id) => directory.getUserEmailById(id) })
+  const meet = new GoogleMeetAdapter({
+    auth,
+    retry,
+    resolveUserEmail: (id) => directory.getUserEmailById(id),
+  })
   return {
     meet,
     calendar: new GoogleCalendarAdapter({ auth, retry }),
@@ -101,11 +121,19 @@ export function createRealGoogleAdapters(env: Env, deps: CreateGoogleAdaptersDep
       senderEmail: env.GMAIL_SENDER_EMAIL,
       notificationLog: deps.notificationLog ?? new InMemoryNotificationLog(),
     }),
-    sheets: new GoogleSheetsAdapter({ auth, retry, actingUserEmail: env.GMAIL_SENDER_EMAIL || adminEmail }),
+    sheets: new GoogleSheetsAdapter({
+      auth,
+      retry,
+      actingUserEmail: env.GMAIL_SENDER_EMAIL || adminEmail,
+    }),
   }
 }
 
 /** Fábrica principal: `mode` proviene de `googleMode(env)` (§51). */
-export function createGoogleAdapters(env: Env, mode: 'FAKE' | 'REAL', deps: CreateGoogleAdaptersDeps = {}): GoogleAdapters {
+export function createGoogleAdapters(
+  env: Env,
+  mode: 'FAKE' | 'REAL',
+  deps: CreateGoogleAdaptersDeps = {},
+): GoogleAdapters {
   return mode === 'REAL' ? createRealGoogleAdapters(env, deps) : createFakeGoogleAdapters(env, deps)
 }

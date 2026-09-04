@@ -10,7 +10,10 @@ export const runtime = 'nodejs'
  * Proxy delgado hacia la API interna: reenvía método, query y body agregando
  * `Authorization` desde la sesión. Sin lógica de negocio.
  */
-async function forward(req: NextRequest, ctx: { params: Promise<{ path: string[] }> }): Promise<Response> {
+async function forward(
+  req: NextRequest,
+  ctx: { params: Promise<{ path: string[] }> },
+): Promise<Response> {
   const session = await auth()
   const token = getApiToken(session)
   if (!session?.user || !token) {
@@ -52,7 +55,10 @@ async function forward(req: NextRequest, ctx: { params: Promise<{ path: string[]
   if (upstreamCorrelation) resHeaders.set('x-correlation-id', upstreamCorrelation)
   resHeaders.set('Cache-Control', 'no-store')
 
-  return new Response(upstream.status === 204 ? null : upstream.body, { status: upstream.status, headers: resHeaders })
+  return new Response(upstream.status === 204 ? null : upstream.body, {
+    status: upstream.status,
+    headers: resHeaders,
+  })
 }
 
 export const GET = forward

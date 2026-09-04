@@ -3,10 +3,24 @@
 import * as React from 'react'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import type { AuditEntryDto } from '@smlxl/contracts'
-import { Badge, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, cn, formatDateTime } from '@smlxl/ui'
+import {
+  Badge,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  cn,
+  formatDateTime,
+} from '@smlxl/ui'
 import { JsonDiff } from './json-diff'
 
-const ACTOR_TONE: Record<string, 'info' | 'ai' | 'neutral'> = { USER: 'info', AI: 'ai', SYSTEM: 'neutral' }
+const ACTOR_TONE: Record<string, 'info' | 'ai' | 'neutral'> = {
+  USER: 'info',
+  AI: 'ai',
+  SYSTEM: 'neutral',
+}
 
 export function AuditTable({ entries }: { entries: AuditEntryDto[] }) {
   const [open, setOpen] = React.useState<Set<string>>(new Set())
@@ -37,11 +51,22 @@ export function AuditTable({ entries }: { entries: AuditEntryDto[] }) {
             const hasDiff = e.before !== null || e.after !== null
             return (
               <React.Fragment key={e.id}>
-                <TableRow className={cn(hasDiff && 'cursor-pointer')} onClick={hasDiff ? () => toggle(e.id) : undefined}>
+                <TableRow
+                  className={cn(hasDiff && 'cursor-pointer')}
+                  onClick={hasDiff ? () => toggle(e.id) : undefined}
+                >
                   <TableCell className="text-muted-foreground">
-                    {hasDiff ? expanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" /> : null}
+                    {hasDiff ? (
+                      expanded ? (
+                        <ChevronDown className="size-4" />
+                      ) : (
+                        <ChevronRight className="size-4" />
+                      )
+                    ) : null}
                   </TableCell>
-                  <TableCell className="whitespace-nowrap font-mono text-xs">{formatDateTime(e.timestamp)}</TableCell>
+                  <TableCell className="whitespace-nowrap font-mono text-xs">
+                    {formatDateTime(e.timestamp)}
+                  </TableCell>
                   <TableCell>
                     <span className="inline-flex items-center gap-1.5 text-sm">
                       <Badge tone={ACTOR_TONE[e.actorType] ?? 'neutral'}>{e.actorType}</Badge>
@@ -50,10 +75,15 @@ export function AuditTable({ entries }: { entries: AuditEntryDto[] }) {
                   </TableCell>
                   <TableCell className="font-mono text-xs">{e.action}</TableCell>
                   <TableCell className="text-xs">
-                    {e.entity} <span className="font-mono text-muted-foreground">{e.entityId.slice(0, 8)}</span>
+                    {e.entity}{' '}
+                    <span className="font-mono text-muted-foreground">
+                      {e.entityId.slice(0, 8)}
+                    </span>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">{e.source}</TableCell>
-                  <TableCell className="font-mono text-[11px] text-muted-foreground">{e.correlationId ?? '—'}</TableCell>
+                  <TableCell className="font-mono text-[11px] text-muted-foreground">
+                    {e.correlationId ?? '—'}
+                  </TableCell>
                 </TableRow>
                 {expanded ? (
                   <TableRow className="bg-surface-muted/40 hover:bg-surface-muted/40">

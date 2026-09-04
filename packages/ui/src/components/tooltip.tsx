@@ -27,7 +27,15 @@ const TooltipContent = React.forwardRef<
 TooltipContent.displayName = TooltipPrimitive.Content.displayName
 
 /** Atajo: envuelve `children` con un tooltip de texto. */
-function SimpleTooltip({ label, children, side }: { label: React.ReactNode; children: React.ReactNode; side?: 'top' | 'bottom' | 'left' | 'right' }) {
+function SimpleTooltip({
+  label,
+  children,
+  side,
+}: {
+  label: React.ReactNode
+  children: React.ReactNode
+  side?: 'top' | 'bottom' | 'left' | 'right'
+}) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>

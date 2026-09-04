@@ -34,8 +34,8 @@ export function DevUserPicker({
     <form action={devSignInAction} className="flex flex-col gap-4">
       <input type="hidden" name="callbackUrl" value={callbackUrl} />
       <p className="text-xs text-muted-foreground">
-        Modo <span className="font-mono">AUTH_DEV_BYPASS</span>: entra como cualquier usuario del directorio sin OAuth. Nunca disponible en
-        producción.
+        Modo <span className="font-mono">AUTH_DEV_BYPASS</span>: entra como cualquier usuario del
+        directorio sin OAuth. Nunca disponible en producción.
       </p>
       {loadError ? <p className="text-xs text-warning-800">{loadError}</p> : null}
 
@@ -61,16 +61,27 @@ export function DevUserPicker({
                     onChange={() => setSelected(u.email)}
                     className="sr-only"
                   />
-                  <UserAvatar name={u.displayName} size="sm" className={cn(active && 'ring-2 ring-signal-400')} />
+                  <UserAvatar
+                    name={u.displayName}
+                    size="sm"
+                    className={cn(active && 'ring-2 ring-signal-400')}
+                  />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">{u.displayName}</span>
-                    <span className={cn('block truncate text-xs', active ? 'text-ink-300' : 'text-muted-foreground')}>
+                    <span
+                      className={cn(
+                        'block truncate text-xs',
+                        active ? 'text-ink-300' : 'text-muted-foreground',
+                      )}
+                    >
                       {u.email}
                       {u.areaName ? ` · ${u.areaName}` : ''}
                     </span>
                   </span>
                   {active ? (
-                    <span className="rounded-sm bg-paper-50/15 px-1.5 py-0.5 text-[11px] font-medium">{labelFor(ROLE_LABELS, u.role).label}</span>
+                    <span className="rounded-sm bg-paper-50/15 px-1.5 py-0.5 text-[11px] font-medium">
+                      {labelFor(ROLE_LABELS, u.role).label}
+                    </span>
                   ) : (
                     <RoleBadge role={u.role} />
                   )}
@@ -97,7 +108,8 @@ export function DevUserPicker({
       )}
 
       <SubmitButton disabled={useManual ? manual.length === 0 : selected.length === 0}>
-        Entrar como {useManual ? (manual || '…') : (users.find((u) => u.email === selected)?.displayName ?? '…')}
+        Entrar como{' '}
+        {useManual ? manual || '…' : (users.find((u) => u.email === selected)?.displayName ?? '…')}
       </SubmitButton>
     </form>
   )

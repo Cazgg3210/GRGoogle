@@ -19,7 +19,9 @@
 # Datos y documentación no necesarios en runtime
 imports/*.xlsx
 docs
-tests
+# tests/fixtures se conserva: los adapters fake de Google los cargan en runtime
+tests/integration
+tests/e2e
 docker/README.md
 SMLXL_MASTER_PROMPT_PLATAFORMA_REUNIONES_IA_v1.0.md
 README.md

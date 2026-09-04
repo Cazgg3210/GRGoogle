@@ -111,7 +111,9 @@ export function toParticipant(row: ParticipantRow): MeetingParticipant {
   }
 }
 
-export function participantToDb(p: MeetingParticipant): Prisma.MeetingParticipantUncheckedCreateInput {
+export function participantToDb(
+  p: MeetingParticipant,
+): Prisma.MeetingParticipantUncheckedCreateInput {
   return {
     id: p.id,
     meetingId: p.meetingId,

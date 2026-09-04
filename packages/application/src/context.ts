@@ -51,7 +51,11 @@ export interface JobPayloads {
   [JobNames.FETCH_MEETING_ARTIFACTS]: { meetingId: string }
   [JobNames.ANALYZE_MEETING]: { meetingId: string; kind?: 'ANALYZE_MEETING' | 'REPROCESS' }
   [JobNames.RECONCILE_ACTION_ITEMS]: { meetingId: string; processingRunId: string }
-  [JobNames.SEND_ACTION_ITEM_NOTIFICATION]: { actionItemId: string; type: 'NEW_ASSIGNMENT'; previousOwnerUserId?: string | null }
+  [JobNames.SEND_ACTION_ITEM_NOTIFICATION]: {
+    actionItemId: string
+    type: 'NEW_ASSIGNMENT'
+    previousOwnerUserId?: string | null
+  }
   [JobNames.SEND_DUE_REMINDERS]: { userId?: string }
   [JobNames.GENERATE_WEEKLY_DIGEST]: { weekOf?: string; sendAfterGenerate?: boolean }
   [JobNames.SEND_WEEKLY_DIGEST]: { digestId: string }

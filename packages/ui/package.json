@@ -9,7 +9,9 @@
     ".": "./src/index.ts",
     "./styles/theme.css": "./src/styles/theme.css"
   },
-  "sideEffects": ["**/*.css"],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "scripts": {
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",

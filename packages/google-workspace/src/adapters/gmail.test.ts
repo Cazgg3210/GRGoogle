@@ -1,10 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import type { gmail_v1 } from 'googleapis'
 import { ImpersonatedAuthFactory } from '../auth/dwd.js'
-import { GmailAdapter, InMemoryNotificationLog, buildMimeMessage, encodeHeader, type GmailApiClient } from './gmail.js'
+import {
+  GmailAdapter,
+  InMemoryNotificationLog,
+  buildMimeMessage,
+  encodeHeader,
+  type GmailApiClient,
+} from './gmail.js'
 
 const auth = new ImpersonatedAuthFactory({
-  credentials: { client_email: 'sa@proj.iam.gserviceaccount.com', private_key: '-----BEGIN PRIVATE KEY-----\nMIIB\n-----END PRIVATE KEY-----\n' },
+  credentials: {
+    client_email: 'sa@proj.iam.gserviceaccount.com',
+    private_key: '-----BEGIN PRIVATE KEY-----\nMIIB\n-----END PRIVATE KEY-----\n',
+  },
   allowedDomain: 'smlxl.mx',
 })
 
@@ -29,7 +38,9 @@ describe('buildMimeMessage', () => {
     expect(mime).toContain('Content-Type: text/html; charset="UTF-8"')
     expect(mime).toContain('X-SMLXL-Idempotency-Key: digest:1:v1')
     expect(raw).not.toMatch(/[+/=]/)
-    const decoded = Buffer.from(raw.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')
+    const decoded = Buffer.from(raw.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString(
+      'utf8',
+    )
     expect(decoded).toBe(mime)
   })
 
@@ -42,14 +53,26 @@ describe('buildMimeMessage', () => {
 describe('GmailAdapter', () => {
   function client(sent: gmail_v1.Schema$Message[]): GmailApiClient {
     return {
-      users: { messages: { send: async (params) => { sent.push(params.requestBody ?? {}); return { data: { id: `m${sent.length}` } } } } },
+      users: {
+        messages: {
+          send: async (params) => {
+            sent.push(params.requestBody ?? {})
+            return { data: { id: `m${sent.length}` } }
+          },
+        },
+      },
     }
   }
 
   it('envía impersonando al remitente y respeta la idempotencia', async () => {
     const sent: gmail_v1.Schema$Message[] = []
     const log = new InMemoryNotificationLog()
-    const adapter = new GmailAdapter({ auth, senderEmail: 'seguimiento@smlxl.mx', notificationLog: log, clientFactory: () => client(sent) })
+    const adapter = new GmailAdapter({
+      auth,
+      senderEmail: 'seguimiento@smlxl.mx',
+      notificationLog: log,
+      clientFactory: () => client(sent),
+    })
     const first = await adapter.send(message)
     expect(first).toEqual({ messageId: 'm1', skipped: false })
     const second = await adapter.send(message)
@@ -59,8 +82,27 @@ describe('GmailAdapter', () => {
   })
 
   it('mapea fallos a EMAIL_SEND_FAILED', async () => {
-    const failing: GmailApiClient = { users: { messages: { send: async () => { const e = new Error('boom') as Error & { response: { status: number } }; e.response = { status: 500 }; throw e } } } }
-    const adapter = new GmailAdapter({ auth, senderEmail: 'seguimiento@smlxl.mx', notificationLog: new InMemoryNotificationLog(), clientFactory: () => failing, retry: { retries: 0 } })
-    await expect(adapter.send(message)).rejects.toMatchObject({ code: 'EMAIL_SEND_FAILED', retryable: true })
+    const failing: GmailApiClient = {
+      users: {
+        messages: {
+          send: async () => {
+            const e = new Error('boom') as Error & { response: { status: number } }
+            e.response = { status: 500 }
+            throw e
+          },
+        },
+      },
+    }
+    const adapter = new GmailAdapter({
+      auth,
+      senderEmail: 'seguimiento@smlxl.mx',
+      notificationLog: new InMemoryNotificationLog(),
+      clientFactory: () => failing,
+      retry: { retries: 0 },
+    })
+    await expect(adapter.send(message)).rejects.toMatchObject({
+      code: 'EMAIL_SEND_FAILED',
+      retryable: true,
+    })
   })
 })

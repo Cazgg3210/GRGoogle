@@ -1,5 +1,16 @@
 import type { SheetsSyncResultDto } from '@smlxl/contracts'
-import { DomainError, DomainErrorCode, Permission, RelationType, daysOpen, hasPermission, isOverdue, toLocalDateString, type Principal, type SheetRow } from '@smlxl/domain'
+import {
+  DomainError,
+  DomainErrorCode,
+  Permission,
+  RelationType,
+  daysOpen,
+  hasPermission,
+  isOverdue,
+  toLocalDateString,
+  type Principal,
+  type SheetRow,
+} from '@smlxl/domain'
 import type { AppContext } from '../../context.js'
 import { audit } from '../../shared.js'
 import { loadLookups } from '../../queries/mappers.js'
@@ -24,12 +35,24 @@ export const PENDIENTES_COLUMNS = [
   'Vencido',
 ] as const
 
-export const REUNIONES_COLUMNS = ['UUID', 'Fecha', 'Reunión', 'Organizador', 'Participantes', 'Resumen', '# Acuerdos', '# Tareas nuevas', 'Link plataforma'] as const
+export const REUNIONES_COLUMNS = [
+  'UUID',
+  'Fecha',
+  'Reunión',
+  'Organizador',
+  'Participantes',
+  'Resumen',
+  '# Acuerdos',
+  '# Tareas nuevas',
+  'Link plataforma',
+] as const
 
 export const SHEET_NAMES = { pendientes: 'Pendientes', reuniones: 'Reuniones' } as const
 const KEY_COLUMN = 'UUID'
 
-export async function buildSheetProjections(ctx: AppContext): Promise<{ pendientes: SheetRow[]; reuniones: SheetRow[] }> {
+export async function buildSheetProjections(
+  ctx: AppContext,
+): Promise<{ pendientes: SheetRow[]; reuniones: SheetRow[] }> {
   const settings = await ctx.getSettings()
   const tz = settings.companyTimezone
   const now = ctx.clock.now()
@@ -51,7 +74,11 @@ export async function buildSheetProjections(ctx: AppContext): Promise<{ pendient
         Estado: i.status,
         Prioridad: i.priority,
         Actividad: i.title,
-        Responsable: i.ownerUserId ? (lk.users.get(i.ownerUserId)?.displayName ?? '') : i.externalAssigneeId ? (externals.get(i.externalAssigneeId)?.displayName ?? '') : (i.ownerTextOriginal ?? ''),
+        Responsable: i.ownerUserId
+          ? (lk.users.get(i.ownerUserId)?.displayName ?? '')
+          : i.externalAssigneeId
+            ? (externals.get(i.externalAssigneeId)?.displayName ?? '')
+            : (i.ownerTextOriginal ?? ''),
         Área: i.areaId ? (lk.areas.get(i.areaId)?.name ?? '') : '',
         Proyecto: i.projectId ? (lk.projects.get(i.projectId)?.canonicalName ?? '') : '',
         'Fecha compromiso': i.dueDate ? toLocalDateString(i.dueDate, tz) : '',
@@ -76,7 +103,9 @@ export async function buildSheetProjections(ctx: AppContext): Promise<{ pendient
       values: {
         Fecha: toLocalDateString(m.startAt, tz),
         Reunión: m.title,
-        Organizador: m.organizerUserId ? (lk.users.get(m.organizerUserId)?.displayName ?? m.organizerEmail ?? '') : (m.organizerEmail ?? ''),
+        Organizador: m.organizerUserId
+          ? (lk.users.get(m.organizerUserId)?.displayName ?? m.organizerEmail ?? '')
+          : (m.organizerEmail ?? ''),
         Participantes: participants.map((p) => p.displayName).join(', '),
         Resumen: summary?.executiveSummary.join(' · ') ?? '',
         '# Acuerdos': decisions.length,
@@ -88,31 +117,69 @@ export async function buildSheetProjections(ctx: AppContext): Promise<{ pendient
   return { pendientes, reuniones }
 }
 
-function preview(columns: readonly string[], rows: SheetRow[]): { columns: string[]; rows: Array<Record<string, unknown>> } {
-  return { columns: [...columns], rows: rows.slice(0, 50).map((r) => ({ [KEY_COLUMN]: r.key, ...r.values })) }
+function preview(
+  columns: readonly string[],
+  rows: SheetRow[],
+): { columns: string[]; rows: Array<Record<string, unknown>> } {
+  return {
+    columns: [...columns],
+    rows: rows.slice(0, 50).map((r) => ({ [KEY_COLUMN]: r.key, ...r.values })),
+  }
 }
 
-export async function syncTasksToGoogleSheets(ctx: AppContext, principal: Principal | null, options: { dryRun?: boolean } = {}): Promise<SheetsSyncResultDto> {
-  if (principal && !hasPermission(principal, Permission.SHEETS_SYNC)) throw DomainError.forbidden('No tienes permiso para sincronizar Sheets')
+export async function syncTasksToGoogleSheets(
+  ctx: AppContext,
+  principal: Principal | null,
+  options: { dryRun?: boolean } = {},
+): Promise<SheetsSyncResultDto> {
+  if (principal && !hasPermission(principal, Permission.SHEETS_SYNC))
+    throw DomainError.forbidden('No tienes permiso para sincronizar Sheets')
   const settings = await ctx.getSettings()
   const dryRun = options.dryRun ?? false
-  if (!dryRun && !settings.featureFlags.SHEETS_SYNC_ENABLED) throw DomainError.featureDisabled('SHEETS_SYNC_ENABLED')
+  if (!dryRun && !settings.featureFlags.SHEETS_SYNC_ENABLED)
+    throw DomainError.featureDisabled('SHEETS_SYNC_ENABLED')
   const spreadsheetId = ctx.env.GOOGLE_SHEETS_SPREADSHEET_ID || null
-  if (!dryRun && !spreadsheetId) throw new DomainError(DomainErrorCode.SHEETS_SYNC_FAILED, 'GOOGLE_SHEETS_SPREADSHEET_ID no configurado')
+  if (!dryRun && !spreadsheetId)
+    throw new DomainError(
+      DomainErrorCode.SHEETS_SYNC_FAILED,
+      'GOOGLE_SHEETS_SPREADSHEET_ID no configurado',
+    )
   const { pendientes, reuniones } = await buildSheetProjections(ctx)
   let pendientesRes = { inserted: 0, updated: 0 }
   let reunionesRes = { inserted: 0, updated: 0 }
   if (!dryRun && spreadsheetId) {
-    pendientesRes = await ctx.sheets.upsertRows({ spreadsheetId, sheetName: SHEET_NAMES.pendientes, keyColumn: KEY_COLUMN, columns: [...PENDIENTES_COLUMNS], rows: pendientes })
-    reunionesRes = await ctx.sheets.upsertRows({ spreadsheetId, sheetName: SHEET_NAMES.reuniones, keyColumn: KEY_COLUMN, columns: [...REUNIONES_COLUMNS], rows: reuniones })
+    pendientesRes = await ctx.sheets.upsertRows({
+      spreadsheetId,
+      sheetName: SHEET_NAMES.pendientes,
+      keyColumn: KEY_COLUMN,
+      columns: [...PENDIENTES_COLUMNS],
+      rows: pendientes,
+    })
+    reunionesRes = await ctx.sheets.upsertRows({
+      spreadsheetId,
+      sheetName: SHEET_NAMES.reuniones,
+      keyColumn: KEY_COLUMN,
+      columns: [...REUNIONES_COLUMNS],
+      rows: reuniones,
+    })
     await ctx.uow.run(async (repos) => {
-      await audit(repos, ctx, { actorType: principal ? 'USER' : 'SYSTEM', actorUserId: principal?.id ?? null, action: 'sheets.synced', entity: 'Spreadsheet', entityId: spreadsheetId, after: { pendientes: pendientesRes, reuniones: reunionesRes } })
+      await audit(repos, ctx, {
+        actorType: principal ? 'USER' : 'SYSTEM',
+        actorUserId: principal?.id ?? null,
+        action: 'sheets.synced',
+        entity: 'Spreadsheet',
+        entityId: spreadsheetId,
+        after: { pendientes: pendientesRes, reuniones: reunionesRes },
+      })
     })
   }
   return {
     spreadsheetId: dryRun ? spreadsheetId : spreadsheetId,
     pendientes: pendientesRes,
     reuniones: reunionesRes,
-    preview: { pendientes: preview(PENDIENTES_COLUMNS, pendientes), reuniones: preview(REUNIONES_COLUMNS, reuniones) },
+    preview: {
+      pendientes: preview(PENDIENTES_COLUMNS, pendientes),
+      reuniones: preview(REUNIONES_COLUMNS, reuniones),
+    },
   }
 }

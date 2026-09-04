@@ -2,14 +2,21 @@ import type { GoogleSubscriptionRepository, GoogleWorkspaceSubscription, Id } fr
 import { subscriptionToDb, toSubscription } from '../mappers/system.js'
 import { BaseRepository } from './base.js'
 
-export class PrismaGoogleSubscriptionRepository extends BaseRepository implements GoogleSubscriptionRepository {
+export class PrismaGoogleSubscriptionRepository
+  extends BaseRepository
+  implements GoogleSubscriptionRepository
+{
   async findByUser(userId: Id): Promise<GoogleWorkspaceSubscription | null> {
-    const row = await this.db.googleWorkspaceSubscription.findUnique({ where: { monitoredUserId: userId } })
+    const row = await this.db.googleWorkspaceSubscription.findUnique({
+      where: { monitoredUserId: userId },
+    })
     return row ? toSubscription(row) : null
   }
 
   async list(): Promise<GoogleWorkspaceSubscription[]> {
-    const rows = await this.db.googleWorkspaceSubscription.findMany({ orderBy: { monitoredUserEmail: 'asc' } })
+    const rows = await this.db.googleWorkspaceSubscription.findMany({
+      orderBy: { monitoredUserEmail: 'asc' },
+    })
     return rows.map(toSubscription)
   }
 

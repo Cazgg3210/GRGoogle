@@ -4,7 +4,15 @@ import * as React from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { Bell, CalendarRange, LogOut, Search, Sparkles, ClipboardCheck, UserCircle2 } from 'lucide-react'
+import {
+  Bell,
+  CalendarRange,
+  LogOut,
+  Search,
+  Sparkles,
+  ClipboardCheck,
+  UserCircle2,
+} from 'lucide-react'
 import {
   Badge,
   Button,
@@ -58,7 +66,9 @@ function GlobalSearch() {
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null
-      const typing = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
+      const typing =
+        target &&
+        (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
       if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && !typing)) {
         e.preventDefault()
         inputRef.current?.focus()
@@ -140,11 +150,16 @@ function NotificationsBell() {
     queryFn: async (): Promise<NotificationCounts> => {
       const [ai, proposals] = await Promise.all([
         canReview
-          ? clientApi.get<Page<unknown>>('/ai-review', { query: { page: 1, pageSize: 1 } }).then((p) => p.total).catch(() => null)
+          ? clientApi
+              .get<Page<unknown>>('/ai-review', { query: { page: 1, pageSize: 1 } })
+              .then((p) => p.total)
+              .catch(() => null)
           : Promise.resolve(null),
         canRead
           ? clientApi
-              .get<Page<unknown>>('/action-items', { query: { view: 'proposed', status: 'COMPLETION_PROPOSED', page: 1, pageSize: 1 } })
+              .get<Page<unknown>>('/action-items', {
+                query: { view: 'proposed', status: 'COMPLETION_PROPOSED', page: 1, pageSize: 1 },
+              })
               .then((p) => p.total)
               .catch(() => null)
           : Promise.resolve(null),
@@ -156,7 +171,12 @@ function NotificationsBell() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={`Notificaciones${total ? `: ${total} pendientes` : ''}`} className="relative">
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={`Notificaciones${total ? `: ${total} pendientes` : ''}`}
+          className="relative"
+        >
           <Bell className="size-4" />
           {total > 0 ? (
             <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-signal-500 px-1 font-mono text-[10px] font-semibold text-white">
@@ -173,13 +193,18 @@ function NotificationsBell() {
         <ul className="divide-y divide-border">
           {canReview ? (
             <li>
-              <Link href="/revision-ia" className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-paper-100">
+              <Link
+                href="/revision-ia"
+                className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-paper-100"
+              >
                 <span className="flex size-8 items-center justify-center rounded-md bg-ai-50 text-ai-700">
                   <Sparkles className="size-4" />
                 </span>
                 <span className="flex-1">
                   <span className="block text-sm font-medium">Revisión IA</span>
-                  <span className="block text-xs text-muted-foreground">Extracciones con baja confianza o ambigüedad</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Extracciones con baja confianza o ambigüedad
+                  </span>
                 </span>
                 <CountPill value={query.data?.aiReview} loading={query.isLoading} />
               </Link>
@@ -187,20 +212,29 @@ function NotificationsBell() {
           ) : null}
           {canRead ? (
             <li>
-              <Link href="/pendientes?view=proposed" className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-paper-100">
+              <Link
+                href="/pendientes?view=proposed"
+                className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-paper-100"
+              >
                 <span className="flex size-8 items-center justify-center rounded-md bg-signal-50 text-signal-700">
                   <ClipboardCheck className="size-4" />
                 </span>
                 <span className="flex-1">
                   <span className="block text-sm font-medium">Propuestas de cierre</span>
-                  <span className="block text-xs text-muted-foreground">Esperando aprobación o rechazo</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Esperando aprobación o rechazo
+                  </span>
                 </span>
                 <CountPill value={query.data?.proposals} loading={query.isLoading} />
               </Link>
             </li>
           ) : null}
         </ul>
-        {query.isError ? <p className="px-4 py-2 text-xs text-danger-700">No se pudieron consultar los contadores.</p> : null}
+        {query.isError ? (
+          <p className="px-4 py-2 text-xs text-danger-700">
+            No se pudieron consultar los contadores.
+          </p>
+        ) : null}
       </PopoverContent>
     </Popover>
   )
@@ -208,9 +242,15 @@ function NotificationsBell() {
 
 function CountPill({ value, loading }: { value: number | null | undefined; loading: boolean }) {
   if (loading) return <span className="h-5 w-8 animate-pulse-soft rounded-full bg-paper-200" />
-  if (value === null || value === undefined) return <span className="font-mono text-xs text-muted-foreground">—</span>
+  if (value === null || value === undefined)
+    return <span className="font-mono text-xs text-muted-foreground">—</span>
   return (
-    <span className={cn('rounded-full px-2 py-0.5 font-mono text-xs font-semibold', value > 0 ? 'bg-ink-900 text-paper-50' : 'bg-paper-200 text-paper-700')}>
+    <span
+      className={cn(
+        'rounded-full px-2 py-0.5 font-mono text-xs font-semibold',
+        value > 0 ? 'bg-ink-900 text-paper-50' : 'bg-paper-200 text-paper-700',
+      )}
+    >
       {value}
     </span>
   )
@@ -222,7 +262,11 @@ function ProfileMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button type="button" className="flex items-center gap-2 rounded-full p-0.5 pr-2 transition-colors hover:bg-paper-200/70" aria-label="Menú de perfil">
+        <button
+          type="button"
+          className="flex items-center gap-2 rounded-full p-0.5 pr-2 transition-colors hover:bg-paper-200/70"
+          aria-label="Menú de perfil"
+        >
           <UserAvatar name={session.name} size="md" />
           {session.devBypass ? <Badge tone="warning">DEV</Badge> : null}
         </button>
@@ -230,7 +274,9 @@ function ProfileMenu() {
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuLabel className="normal-case tracking-normal">
           <span className="block text-sm font-semibold text-foreground">{session.name}</span>
-          <span className="block truncate text-xs font-normal text-muted-foreground">{session.email}</span>
+          <span className="block truncate text-xs font-normal text-muted-foreground">
+            {session.email}
+          </span>
           <span className="mt-1.5 block">
             <Badge tone={role.tone}>{role.label}</Badge>
           </span>

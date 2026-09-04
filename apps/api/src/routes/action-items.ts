@@ -26,13 +26,23 @@ export function registerActionItemRoutes(app: AppServer, deps: RouteDeps): void 
 
   app.get(
     '/api/v1/action-items',
-    { schema: { tags, querystring: ActionItemListQuerySchema, response: { 200: pageSchema(ActionItemDtoSchema) } }, preHandler: requirePermission(Permission.ACTION_ITEM_READ) },
+    {
+      schema: {
+        tags,
+        querystring: ActionItemListQuerySchema,
+        response: { 200: pageSchema(ActionItemDtoSchema) },
+      },
+      preHandler: requirePermission(Permission.ACTION_ITEM_READ),
+    },
     async (request) => application.actionItems.list(requirePrincipal(request), request.query),
   )
 
   app.post(
     '/api/v1/action-items',
-    { schema: { tags, body: CreateActionItemBodySchema, response: { 201: ActionItemDetailSchema } }, preHandler: requirePermission(Permission.ACTION_ITEM_CREATE) },
+    {
+      schema: { tags, body: CreateActionItemBodySchema, response: { 201: ActionItemDetailSchema } },
+      preHandler: requirePermission(Permission.ACTION_ITEM_CREATE),
+    },
     async (request, reply) => {
       const principal = requirePrincipal(request)
       const item = await application.actionItems.create(principal, request.body)
@@ -42,13 +52,25 @@ export function registerActionItemRoutes(app: AppServer, deps: RouteDeps): void 
 
   app.get(
     '/api/v1/action-items/:id',
-    { schema: { tags, params: IdParams, response: { 200: ActionItemDetailSchema } }, preHandler: authenticated },
-    async (request) => application.actionItems.getDetail(requirePrincipal(request), request.params.id),
+    {
+      schema: { tags, params: IdParams, response: { 200: ActionItemDetailSchema } },
+      preHandler: authenticated,
+    },
+    async (request) =>
+      application.actionItems.getDetail(requirePrincipal(request), request.params.id),
   )
 
   app.patch(
     '/api/v1/action-items/:id',
-    { schema: { tags, params: IdParams, body: UpdateActionItemBodySchema, response: { 200: ActionItemDetailSchema } }, preHandler: authenticated },
+    {
+      schema: {
+        tags,
+        params: IdParams,
+        body: UpdateActionItemBodySchema,
+        response: { 200: ActionItemDetailSchema },
+      },
+      preHandler: authenticated,
+    },
     async (request) => {
       const principal = requirePrincipal(request)
       await application.actionItems.update(principal, request.params.id, request.body)
@@ -58,37 +80,83 @@ export function registerActionItemRoutes(app: AppServer, deps: RouteDeps): void 
 
   app.post(
     '/api/v1/action-items/:id/complete',
-    { schema: { tags, params: IdParams, body: ProposeCompletionBodySchema, response: { 200: ActionItemDetailSchema } }, preHandler: authenticated },
+    {
+      schema: {
+        tags,
+        params: IdParams,
+        body: ProposeCompletionBodySchema,
+        response: { 200: ActionItemDetailSchema },
+      },
+      preHandler: authenticated,
+    },
     async (request) => {
       const principal = requirePrincipal(request)
-      await application.actionItems.proposeCompletion(principal, request.params.id, request.body.reason)
+      await application.actionItems.proposeCompletion(
+        principal,
+        request.params.id,
+        request.body.reason,
+      )
       return application.actionItems.getDetail(principal, request.params.id)
     },
   )
 
   app.post(
     '/api/v1/action-items/:id/proposals/:proposalId/approve',
-    { schema: { tags, params: ProposalParams, body: ReviewProposalBodySchema.optional(), response: { 200: ActionItemDetailSchema } }, preHandler: authenticated },
+    {
+      schema: {
+        tags,
+        params: ProposalParams,
+        body: ReviewProposalBodySchema.optional(),
+        response: { 200: ActionItemDetailSchema },
+      },
+      preHandler: authenticated,
+    },
     async (request) => {
       const principal = requirePrincipal(request)
-      await application.actionItems.approveCompletion(principal, request.params.id, request.params.proposalId, request.body ?? {})
+      await application.actionItems.approveCompletion(
+        principal,
+        request.params.id,
+        request.params.proposalId,
+        request.body ?? {},
+      )
       return application.actionItems.getDetail(principal, request.params.id)
     },
   )
 
   app.post(
     '/api/v1/action-items/:id/proposals/:proposalId/reject',
-    { schema: { tags, params: ProposalParams, body: ReviewProposalBodySchema.optional(), response: { 200: ActionItemDetailSchema } }, preHandler: authenticated },
+    {
+      schema: {
+        tags,
+        params: ProposalParams,
+        body: ReviewProposalBodySchema.optional(),
+        response: { 200: ActionItemDetailSchema },
+      },
+      preHandler: authenticated,
+    },
     async (request) => {
       const principal = requirePrincipal(request)
-      await application.actionItems.rejectCompletion(principal, request.params.id, request.params.proposalId, request.body ?? {})
+      await application.actionItems.rejectCompletion(
+        principal,
+        request.params.id,
+        request.params.proposalId,
+        request.body ?? {},
+      )
       return application.actionItems.getDetail(principal, request.params.id)
     },
   )
 
   app.post(
     '/api/v1/action-items/:id/reopen',
-    { schema: { tags, params: IdParams, body: ReopenBodySchema, response: { 200: ActionItemDetailSchema } }, preHandler: authenticated },
+    {
+      schema: {
+        tags,
+        params: IdParams,
+        body: ReopenBodySchema,
+        response: { 200: ActionItemDetailSchema },
+      },
+      preHandler: authenticated,
+    },
     async (request) => {
       const principal = requirePrincipal(request)
       await application.actionItems.reopen(principal, request.params.id, request.body.reason)
@@ -98,10 +166,22 @@ export function registerActionItemRoutes(app: AppServer, deps: RouteDeps): void 
 
   app.post(
     '/api/v1/action-items/:id/comments',
-    { schema: { tags, params: IdParams, body: CommentBodySchema, response: { 201: CommentDtoSchema } }, preHandler: authenticated },
+    {
+      schema: {
+        tags,
+        params: IdParams,
+        body: CommentBodySchema,
+        response: { 201: CommentDtoSchema },
+      },
+      preHandler: authenticated,
+    },
     async (request, reply) => {
       const principal = requirePrincipal(request)
-      const comment = await application.actionItems.addComment(principal, request.params.id, request.body.body)
+      const comment = await application.actionItems.addComment(
+        principal,
+        request.params.id,
+        request.body.body,
+      )
       const full = await application.actionItems.getDetail(principal, request.params.id)
       const dto = full.comments.find((c) => c.id === comment.id) ?? {
         id: comment.id,

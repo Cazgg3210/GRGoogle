@@ -30,7 +30,10 @@ export class FakeWorkspaceEventsAdapter implements WorkspaceEventsPort {
     pubsubTopic: string
   }): Promise<{ subscriptionName: string; expiresAt: Date }> {
     if (this.failFor.has(input.userEmail)) {
-      throw new DomainError(DomainErrorCode.GOOGLE_PERMISSION_DENIED, `Fake: no se pudo crear suscripción para ${input.userEmail}`)
+      throw new DomainError(
+        DomainErrorCode.GOOGLE_PERMISSION_DENIED,
+        `Fake: no se pudo crear suscripción para ${input.userEmail}`,
+      )
     }
     this.seq += 1
     const name = `subscriptions/fake-${String(this.seq).padStart(4, '0')}`
@@ -47,10 +50,16 @@ export class FakeWorkspaceEventsAdapter implements WorkspaceEventsPort {
     return { subscriptionName: name, expiresAt }
   }
 
-  async renewSubscription(subscriptionName: string, _asUser?: string): Promise<{ expiresAt: Date }> {
+  async renewSubscription(
+    subscriptionName: string,
+    _asUser?: string,
+  ): Promise<{ expiresAt: Date }> {
     const sub = this.subscriptions.get(subscriptionName)
     if (!sub || sub.state === 'DELETED') {
-      throw new DomainError(DomainErrorCode.GOOGLE_NOT_FOUND, `Suscripción ${subscriptionName} no existe`)
+      throw new DomainError(
+        DomainErrorCode.GOOGLE_NOT_FOUND,
+        `Suscripción ${subscriptionName} no existe`,
+      )
     }
     sub.state = 'ACTIVE'
     sub.expiresAt = new Date(this.now().getTime() + TTL_MS)
@@ -62,7 +71,10 @@ export class FakeWorkspaceEventsAdapter implements WorkspaceEventsPort {
     if (sub) sub.state = 'DELETED'
   }
 
-  async getSubscription(subscriptionName: string, _asUser?: string): Promise<{ state: string; expiresAt: Date } | null> {
+  async getSubscription(
+    subscriptionName: string,
+    _asUser?: string,
+  ): Promise<{ state: string; expiresAt: Date } | null> {
     const sub = this.subscriptions.get(subscriptionName)
     if (!sub || sub.state === 'DELETED') return null
     return { state: sub.state, expiresAt: sub.expiresAt }

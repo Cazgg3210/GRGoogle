@@ -84,7 +84,8 @@ export const DEFAULT_FIXTURES_PATH = fileURLToPath(
 let cached: FakeGoogleFixtures | null = null
 
 export function loadDefaultFixtures(): FakeGoogleFixtures {
-  if (!cached) cached = JSON.parse(readFileSync(DEFAULT_FIXTURES_PATH, 'utf8')) as FakeGoogleFixtures
+  if (!cached)
+    cached = JSON.parse(readFileSync(DEFAULT_FIXTURES_PATH, 'utf8')) as FakeGoogleFixtures
   // Copia defensiva: los fakes pueden mutar (p. ej. patchArtifactConfig).
   return structuredClone(cached)
 }

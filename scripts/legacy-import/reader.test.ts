@@ -1,13 +1,27 @@
 import { describe, expect, it } from 'vitest'
 import { ActionItemStatus } from '@smlxl/domain'
 import { buildFixtureWorkbook, FIXTURE_ROWS } from './generate-fixture.js'
-import { findDuplicateIds, findSemanticDuplicates, normalizeRow, parseFlag, parseLegacyDate } from './normalize.js'
-import { classifyHeader, readWorkbookFromBook, resolveSourceSheet, SOURCE_SHEETS } from './reader.js'
+import {
+  findDuplicateIds,
+  findSemanticDuplicates,
+  normalizeRow,
+  parseFlag,
+  parseLegacyDate,
+} from './normalize.js'
+import {
+  classifyHeader,
+  readWorkbookFromBook,
+  resolveSourceSheet,
+  SOURCE_SHEETS,
+} from './reader.js'
 
 const workbook = readWorkbookFromBook(buildFixtureWorkbook(), 'maestro-fixture.xlsx')
 const allRows = workbook.sheets.flatMap((s) => s.rows).map(normalizeRow)
 const byLegacy = (sheet: string, id: string) =>
-  allRows.find((r) => r.sheet === sheet && r.legacyId === id) ?? (() => { throw new Error(`fila ${sheet}/${id} no encontrada`) })()
+  allRows.find((r) => r.sheet === sheet && r.legacyId === id) ??
+  (() => {
+    throw new Error(`fila ${sheet}/${id} no encontrada`)
+  })()
 
 describe('reader (fixture en memoria, sin BD)', () => {
   it('lee sólo las hojas fuente e ignora Dashboard/Maestro/Listas', () => {
@@ -70,7 +84,9 @@ describe('normalize', () => {
     expect(byLegacy('Jurídico', 'JU-02').status).toBe(ActionItemStatus.COMPLETED)
     const lower = allRows.find((r) => r.sheet === 'Jurídico' && r.statusRaw === 'completo')
     expect(lower?.status).toBe(ActionItemStatus.COMPLETED)
-    expect(byLegacy('Ventas y Marketing', 'VM-02').status).toBe(ActionItemStatus.COMPLETION_PROPOSED)
+    expect(byLegacy('Ventas y Marketing', 'VM-02').status).toBe(
+      ActionItemStatus.COMPLETION_PROPOSED,
+    )
     expect(byLegacy('Operaciones y Proyectos', 'OP-01').status).toBe(ActionItemStatus.IN_PROGRESS)
     expect(byLegacy('Dirección General', 'DG-02').status).toBe(ActionItemStatus.PENDING)
   })
@@ -96,7 +112,15 @@ describe('normalize', () => {
     expect(af04.statusRecognized).toBe(false)
     expect(af04.priority).toBeNull()
     const blank = af04.issues.filter((i) => i.code === 'BLANK_FIELD').map((i) => i.field)
-    expect(blank).toEqual(expect.arrayContaining(['Responsable', 'Proyecto / Frente', 'Fecha de la junta', 'Prioridad', 'Status']))
+    expect(blank).toEqual(
+      expect.arrayContaining([
+        'Responsable',
+        'Proyecto / Frente',
+        'Fecha de la junta',
+        'Prioridad',
+        'Status',
+      ]),
+    )
   })
 
   it('detecta actividades recurrentes', () => {

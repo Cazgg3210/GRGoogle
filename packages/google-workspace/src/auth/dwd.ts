@@ -32,20 +32,31 @@ export function loadServiceAccountCredentials(raw: string): ServiceAccountCreden
     try {
       json = readFileSync(value, 'utf8')
     } catch (err) {
-      throw new DomainError(DomainErrorCode.VALIDATION_ERROR, 'No se pudo leer el archivo de credenciales de la service account', {
-        cause: err,
-      })
+      throw new DomainError(
+        DomainErrorCode.VALIDATION_ERROR,
+        'No se pudo leer el archivo de credenciales de la service account',
+        {
+          cause: err,
+        },
+      )
     }
   }
   let parsed: unknown
   try {
     parsed = JSON.parse(json)
   } catch (err) {
-    throw new DomainError(DomainErrorCode.VALIDATION_ERROR, 'Credenciales de service account inválidas (JSON)', { cause: err })
+    throw new DomainError(
+      DomainErrorCode.VALIDATION_ERROR,
+      'Credenciales de service account inválidas (JSON)',
+      { cause: err },
+    )
   }
   const obj = parsed as Partial<ServiceAccountCredentials>
   if (typeof obj.client_email !== 'string' || typeof obj.private_key !== 'string') {
-    throw new DomainError(DomainErrorCode.VALIDATION_ERROR, 'Credenciales de service account incompletas (client_email/private_key)')
+    throw new DomainError(
+      DomainErrorCode.VALIDATION_ERROR,
+      'Credenciales de service account incompletas (client_email/private_key)',
+    )
   }
   const creds: ServiceAccountCredentials = {
     client_email: obj.client_email,

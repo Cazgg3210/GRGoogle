@@ -1,4 +1,10 @@
-import { DEFAULT_COMPANY_TIMEZONE, type Id, type WeeklyDigest, type WeeklyDigestConfig, type WeeklyDigestRepository } from '@smlxl/domain'
+import {
+  DEFAULT_COMPANY_TIMEZONE,
+  type Id,
+  type WeeklyDigest,
+  type WeeklyDigestConfig,
+  type WeeklyDigestRepository,
+} from '@smlxl/domain'
 import { digestConfigToDb, digestToDb, toDigest, toDigestConfig } from '../mappers/system.js'
 import { BaseRepository } from './base.js'
 
@@ -39,7 +45,10 @@ export class PrismaWeeklyDigestRepository extends BaseRepository implements Week
     return row ? toDigest(row) : null
   }
 
-  async findByWeek(weekStart: Date, audience: WeeklyDigest['audience']): Promise<WeeklyDigest | null> {
+  async findByWeek(
+    weekStart: Date,
+    audience: WeeklyDigest['audience'],
+  ): Promise<WeeklyDigest | null> {
     const row = await this.db.weeklyDigest.findFirst({
       where: { weekStart, audience },
       orderBy: { version: 'desc' },

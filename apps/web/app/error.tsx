@@ -4,7 +4,13 @@ import * as React from 'react'
 import { ErrorState } from '@smlxl/ui'
 import { describeError } from '@/lib/error-messages'
 
-export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string }
+  reset: () => void
+}) {
   const d = describeError(error)
   React.useEffect(() => {
     console.error(error)

@@ -24,16 +24,24 @@ describe('ActionItem state machine', () => {
   })
 
   it('la IA sólo puede proponer cierre desde estados abiertos', () => {
-    expect(canTransition(ActionItemStatus.PENDING, ActionItemStatus.COMPLETION_PROPOSED, ai)).toBe(true)
-    expect(canTransition(ActionItemStatus.IN_PROGRESS, ActionItemStatus.COMPLETION_PROPOSED, ai)).toBe(true)
+    expect(canTransition(ActionItemStatus.PENDING, ActionItemStatus.COMPLETION_PROPOSED, ai)).toBe(
+      true,
+    )
+    expect(
+      canTransition(ActionItemStatus.IN_PROGRESS, ActionItemStatus.COMPLETION_PROPOSED, ai),
+    ).toBe(true)
     expect(canTransition(ActionItemStatus.PENDING, ActionItemStatus.IN_PROGRESS, ai)).toBe(false)
     expect(canTransition(ActionItemStatus.COMPLETED, ActionItemStatus.IN_PROGRESS, ai)).toBe(false)
   })
 
   it('un usuario no puede saltar a COMPLETED sin propuesta aprobada', () => {
     expect(canTransition(ActionItemStatus.PENDING, ActionItemStatus.COMPLETED, user)).toBe(false)
-    expect(canTransition(ActionItemStatus.COMPLETION_PROPOSED, ActionItemStatus.COMPLETED, user)).toBe(false)
-    expect(() => assertTransition(ActionItemStatus.IN_PROGRESS, ActionItemStatus.COMPLETED, user)).toThrowError(
+    expect(
+      canTransition(ActionItemStatus.COMPLETION_PROPOSED, ActionItemStatus.COMPLETED, user),
+    ).toBe(false)
+    expect(() =>
+      assertTransition(ActionItemStatus.IN_PROGRESS, ActionItemStatus.COMPLETED, user),
+    ).toThrowError(
       expect.objectContaining({ code: DomainErrorCode.ACTION_ITEM_COMPLETION_REQUIRES_APPROVAL }),
     )
   })
@@ -48,8 +56,12 @@ describe('ActionItem state machine', () => {
   })
 
   it('rechazo humano devuelve a PENDING/IN_PROGRESS', () => {
-    expect(canTransition(ActionItemStatus.COMPLETION_PROPOSED, ActionItemStatus.PENDING, user)).toBe(true)
-    expect(canTransition(ActionItemStatus.COMPLETION_PROPOSED, ActionItemStatus.IN_PROGRESS, user)).toBe(true)
+    expect(
+      canTransition(ActionItemStatus.COMPLETION_PROPOSED, ActionItemStatus.PENDING, user),
+    ).toBe(true)
+    expect(
+      canTransition(ActionItemStatus.COMPLETION_PROPOSED, ActionItemStatus.IN_PROGRESS, user),
+    ).toBe(true)
   })
 
   it('reapertura auditada COMPLETED -> IN_PROGRESS', () => {
@@ -58,17 +70,29 @@ describe('ActionItem state machine', () => {
   })
 
   it('cualquier abierto -> CANCELLED por humano', () => {
-    for (const from of [ActionItemStatus.PROPOSED, ActionItemStatus.PENDING, ActionItemStatus.IN_PROGRESS, ActionItemStatus.BLOCKED, ActionItemStatus.WAITING]) {
+    for (const from of [
+      ActionItemStatus.PROPOSED,
+      ActionItemStatus.PENDING,
+      ActionItemStatus.IN_PROGRESS,
+      ActionItemStatus.BLOCKED,
+      ActionItemStatus.WAITING,
+    ]) {
       expect(canTransition(from, ActionItemStatus.CANCELLED, user)).toBe(true)
     }
   })
 
   it('mapea estados legados', () => {
     expect(initialStatusFromLegacy('Pendiente')).toEqual({ status: 'PENDING', recognized: true })
-    expect(initialStatusFromLegacy('En proceso')).toEqual({ status: 'IN_PROGRESS', recognized: true })
+    expect(initialStatusFromLegacy('En proceso')).toEqual({
+      status: 'IN_PROGRESS',
+      recognized: true,
+    })
     expect(initialStatusFromLegacy('Completo')).toEqual({ status: 'COMPLETED', recognized: true })
     expect(initialStatusFromLegacy('completo')).toEqual({ status: 'COMPLETED', recognized: true })
-    expect(initialStatusFromLegacy('Entregado')).toEqual({ status: 'COMPLETION_PROPOSED', recognized: true })
+    expect(initialStatusFromLegacy('Entregado')).toEqual({
+      status: 'COMPLETION_PROPOSED',
+      recognized: true,
+    })
     expect(initialStatusFromLegacy('???')).toEqual({ status: 'PENDING', recognized: false })
     expect(initialStatusFromLegacy(null)).toEqual({ status: 'PENDING', recognized: false })
   })

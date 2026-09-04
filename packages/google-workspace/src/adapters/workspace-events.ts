@@ -43,7 +43,10 @@ export interface WorkspaceEventsApiClient {
 
 /** TTL máximo documentado para suscripciones sin resource data: 7 días. */
 export const MAX_SUBSCRIPTION_TTL_SECONDS = 7 * 24 * 60 * 60
-const SCOPES = [GOOGLE_SCOPES.workspaceEvents.MEET_SPACE_READONLY, GOOGLE_SCOPES.workspaceEvents.MEET_SPACE_CREATED]
+const SCOPES = [
+  GOOGLE_SCOPES.workspaceEvents.MEET_SPACE_READONLY,
+  GOOGLE_SCOPES.workspaceEvents.MEET_SPACE_CREATED,
+]
 
 export interface WorkspaceEventsAdapterDeps extends GoogleAdapterDeps {
   clientFactory?: (auth: AuthClient) => WorkspaceEventsApiClient
@@ -56,7 +59,9 @@ export class GoogleWorkspaceEventsAdapter implements WorkspaceEventsPort {
 
   constructor(private readonly deps: WorkspaceEventsAdapterDeps) {
     this.clientFactory =
-      deps.clientFactory ?? ((auth) => google.workspaceevents({ version: 'v1', auth }) as unknown as WorkspaceEventsApiClient)
+      deps.clientFactory ??
+      ((auth) =>
+        google.workspaceevents({ version: 'v1', auth }) as unknown as WorkspaceEventsApiClient)
     this.sleep = deps.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms)))
   }
 
@@ -84,9 +89,13 @@ export class GoogleWorkspaceEventsAdapter implements WorkspaceEventsPort {
       current = res.data
     }
     if (current.error) {
-      throw new DomainError(DomainErrorCode.GOOGLE_UNAVAILABLE, `Operación de suscripción falló: ${current.error.message ?? 'desconocido'}`, {
-        details: { code: current.error.code ?? null },
-      })
+      throw new DomainError(
+        DomainErrorCode.GOOGLE_UNAVAILABLE,
+        `Operación de suscripción falló: ${current.error.message ?? 'desconocido'}`,
+        {
+          details: { code: current.error.code ?? null },
+        },
+      )
     }
     return (current.response ?? {}) as workspaceevents_v1.Schema$Subscription
   }
@@ -117,9 +126,16 @@ export class GoogleWorkspaceEventsAdapter implements WorkspaceEventsPort {
     const sub = await this.awaitOperation(client, res.data)
     const name = sub.name ?? (res.data.metadata?.['subscription'] as string | undefined) ?? ''
     if (!name) {
-      throw new DomainError(DomainErrorCode.GOOGLE_UNAVAILABLE, 'Google no devolvió el nombre de la suscripción creada')
+      throw new DomainError(
+        DomainErrorCode.GOOGLE_UNAVAILABLE,
+        'Google no devolvió el nombre de la suscripción creada',
+      )
     }
-    return { subscriptionName: name, expiresAt: toDate(sub.expireTime) ?? new Date(Date.now() + MAX_SUBSCRIPTION_TTL_SECONDS * 1000) }
+    return {
+      subscriptionName: name,
+      expiresAt:
+        toDate(sub.expireTime) ?? new Date(Date.now() + MAX_SUBSCRIPTION_TTL_SECONDS * 1000),
+    }
   }
 
   async renewSubscription(subscriptionName: string, asUser: string): Promise<{ expiresAt: Date }> {
@@ -127,7 +143,8 @@ export class GoogleWorkspaceEventsAdapter implements WorkspaceEventsPort {
     const existing = await this.getSubscription(subscriptionName, asUser)
     if (existing?.state === 'SUSPENDED') {
       const re = await withGoogleRetry(
-        (signal) => client.subscriptions.reactivate({ name: subscriptionName, requestBody: {} }, { signal }),
+        (signal) =>
+          client.subscriptions.reactivate({ name: subscriptionName, requestBody: {} }, { signal }),
         this.retryOpts('workspaceevents.subscriptions.reactivate'),
       )
       await this.awaitOperation(client, re.data)
@@ -135,31 +152,45 @@ export class GoogleWorkspaceEventsAdapter implements WorkspaceEventsPort {
     const res = await withGoogleRetry(
       (signal) =>
         client.subscriptions.patch(
-          { name: subscriptionName, updateMask: 'ttl', requestBody: { ttl: protoDuration(MAX_SUBSCRIPTION_TTL_SECONDS) } },
+          {
+            name: subscriptionName,
+            updateMask: 'ttl',
+            requestBody: { ttl: protoDuration(MAX_SUBSCRIPTION_TTL_SECONDS) },
+          },
           { signal },
         ),
       this.retryOpts('workspaceevents.subscriptions.patch'),
     )
     const sub = await this.awaitOperation(client, res.data)
-    return { expiresAt: toDate(sub.expireTime) ?? new Date(Date.now() + MAX_SUBSCRIPTION_TTL_SECONDS * 1000) }
+    return {
+      expiresAt:
+        toDate(sub.expireTime) ?? new Date(Date.now() + MAX_SUBSCRIPTION_TTL_SECONDS * 1000),
+    }
   }
 
   async deleteSubscription(subscriptionName: string, asUser: string): Promise<void> {
     const client = this.client(asUser)
     const res = await withGoogleRetry(
-      (signal) => client.subscriptions.delete({ name: subscriptionName, allowMissing: true }, { signal }),
+      (signal) =>
+        client.subscriptions.delete({ name: subscriptionName, allowMissing: true }, { signal }),
       this.retryOpts('workspaceevents.subscriptions.delete'),
     )
     await this.awaitOperation(client, res.data)
   }
 
-  async getSubscription(subscriptionName: string, asUser: string): Promise<{ state: string; expiresAt: Date } | null> {
+  async getSubscription(
+    subscriptionName: string,
+    asUser: string,
+  ): Promise<{ state: string; expiresAt: Date } | null> {
     try {
       const res = await withGoogleRetry(
         (signal) => this.client(asUser).subscriptions.get({ name: subscriptionName }, { signal }),
         this.retryOpts('workspaceevents.subscriptions.get'),
       )
-      return { state: res.data.state ?? 'UNKNOWN', expiresAt: toDate(res.data.expireTime) ?? new Date(0) }
+      return {
+        state: res.data.state ?? 'UNKNOWN',
+        expiresAt: toDate(res.data.expireTime) ?? new Date(0),
+      }
     } catch (err) {
       if (err instanceof DomainError && err.code === DomainErrorCode.GOOGLE_NOT_FOUND) return null
       throw err

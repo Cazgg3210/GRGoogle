@@ -40,9 +40,16 @@ export interface WeeklyDigestPayload {
     blocked: number
   }
   /** B. Nuevos compromisos de la semana */
-  newCommitments: { items: DigestItem[]; byOwner: DigestGroup[]; byArea: DigestGroup[]; byPriority: DigestGroup[] }
+  newCommitments: {
+    items: DigestItem[]
+    byOwner: DigestGroup[]
+    byArea: DigestGroup[]
+    byPriority: DigestGroup[]
+  }
   /** C. Backlog acumulado (abiertos anteriores a la semana) */
-  backlog: Array<DigestItem & { daysOpen: number; lastMentionedAt: string | null; lastProgressAt: string | null }>
+  backlog: Array<
+    DigestItem & { daysOpen: number; lastMentionedAt: string | null; lastProgressAt: string | null }
+  >
   /** D. Riesgos */
   risks: {
     overdue: Array<DigestItem & { daysOverdue: number }>
@@ -50,10 +57,25 @@ export interface WeeklyDigestPayload {
     noDueDate: DigestItem[]
     blocked: DigestItem[]
     repeatedWithoutProgress: Array<DigestItem & { mentions: number }>
-    captureIssues: Array<{ meetingId: string; title: string; startAt: string; issue: string; url: string }>
+    captureIssues: Array<{
+      meetingId: string
+      title: string
+      startAt: string
+      issue: string
+      url: string
+    }>
   }
   /** E. Cambios detectados */
-  changes: Array<{ actionItemId: string; key: string; title: string; type: 'DUE_DATE' | 'OWNER' | 'PRIORITY' | 'POSSIBLE_COMPLETION' | 'REOPENED' | 'POSSIBLE_DUPLICATE'; detail: string; at: string; url: string }>
+  changes: Array<{
+    actionItemId: string
+    key: string
+    title: string
+    type:
+      'DUE_DATE' | 'OWNER' | 'PRIORITY' | 'POSSIBLE_COMPLETION' | 'REOPENED' | 'POSSIBLE_DUPLICATE'
+    detail: string
+    at: string
+    url: string
+  }>
   /** F. Bandeja de aprobación */
   approvalInbox: Array<DigestItem & { proposalId: string; proposedBy: string; reason: string }>
   /** G. Próxima semana */

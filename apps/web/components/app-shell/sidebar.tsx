@@ -12,7 +12,15 @@ export interface SidebarNavItem {
   label: string
 }
 
-export function Sidebar({ items, collapsed, onToggle }: { items: SidebarNavItem[]; collapsed: boolean; onToggle: () => void }) {
+export function Sidebar({
+  items,
+  collapsed,
+  onToggle,
+}: {
+  items: SidebarNavItem[]
+  collapsed: boolean
+  onToggle: () => void
+}) {
   const pathname = usePathname()
   const session = useAppSession()
   return (
@@ -23,13 +31,22 @@ export function Sidebar({ items, collapsed, onToggle }: { items: SidebarNavItem[
       )}
       aria-label="Navegación principal"
     >
-      <div className={cn('flex h-[var(--header-height)] items-center border-b border-ink-800/80', collapsed ? 'justify-center px-2' : 'px-5')}>
+      <div
+        className={cn(
+          'flex h-[var(--header-height)] items-center border-b border-ink-800/80',
+          collapsed ? 'justify-center px-2' : 'px-5',
+        )}
+      >
         <Link href="/inicio" className="flex items-center gap-2.5" aria-label="SMLXL inicio">
-          <span className="flex size-7 items-center justify-center rounded-sm bg-signal-500 font-display text-lg leading-none text-white">S</span>
+          <span className="flex size-7 items-center justify-center rounded-sm bg-signal-500 font-display text-lg leading-none text-white">
+            S
+          </span>
           {!collapsed ? (
             <span className="flex flex-col leading-none">
               <span className="font-display text-xl tracking-tight text-paper-50">SMLXL</span>
-              <span className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.18em] text-ink-400">Compromisos</span>
+              <span className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.18em] text-ink-400">
+                Compromisos
+              </span>
             </span>
           ) : null}
         </Link>
@@ -48,12 +65,30 @@ export function Sidebar({ items, collapsed, onToggle }: { items: SidebarNavItem[
               className={cn(
                 'group relative flex items-center gap-3 rounded-md py-2 text-sm font-medium transition-colors',
                 collapsed ? 'justify-center px-0' : 'px-3',
-                active ? 'bg-ink-800/90 text-paper-50' : 'text-ink-300 hover:bg-ink-900 hover:text-paper-50',
+                active
+                  ? 'bg-ink-800/90 text-paper-50'
+                  : 'text-ink-300 hover:bg-ink-900 hover:text-paper-50',
               )}
             >
-              {active ? <span className="absolute left-0 top-1.5 h-[calc(100%-12px)] w-0.5 rounded-r bg-signal-400" aria-hidden /> : null}
-              {Icon ? <Icon className={cn('size-4 shrink-0', active ? 'text-signal-300' : 'text-ink-400 group-hover:text-ink-200')} /> : null}
-              {!collapsed ? <span className="truncate">{item.label}</span> : <span className="sr-only">{item.label}</span>}
+              {active ? (
+                <span
+                  className="absolute left-0 top-1.5 h-[calc(100%-12px)] w-0.5 rounded-r bg-signal-400"
+                  aria-hidden
+                />
+              ) : null}
+              {Icon ? (
+                <Icon
+                  className={cn(
+                    'size-4 shrink-0',
+                    active ? 'text-signal-300' : 'text-ink-400 group-hover:text-ink-200',
+                  )}
+                />
+              ) : null}
+              {!collapsed ? (
+                <span className="truncate">{item.label}</span>
+              ) : (
+                <span className="sr-only">{item.label}</span>
+              )}
             </Link>
           )
           return collapsed ? (
@@ -72,7 +107,9 @@ export function Sidebar({ items, collapsed, onToggle }: { items: SidebarNavItem[
             <p className="truncate text-xs font-medium text-paper-100">{session.name}</p>
             <p className="truncate text-[11px] text-ink-400">{session.email}</p>
             {!session.verified ? (
-              <p className="mt-1 text-[10px] uppercase tracking-wider text-warning-300">API sin conexión</p>
+              <p className="mt-1 text-[10px] uppercase tracking-wider text-warning-300">
+                API sin conexión
+              </p>
             ) : null}
           </div>
         ) : null}

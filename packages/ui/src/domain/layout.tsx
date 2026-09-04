@@ -23,10 +23,16 @@ export function PageHeader({
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div className="min-w-0">
           {eyebrow ? (
-            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-signal-600">{eyebrow}</p>
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-signal-600">
+              {eyebrow}
+            </p>
           ) : null}
-          <h1 className="font-display text-[2rem] leading-none tracking-tight text-ink-950 sm:text-[2.35rem]">{title}</h1>
-          {description ? <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{description}</p> : null}
+          <h1 className="font-display text-[2rem] leading-none tracking-tight text-ink-950 sm:text-[2.35rem]">
+            {title}
+          </h1>
+          {description ? (
+            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{description}</p>
+          ) : null}
         </div>
         {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
       </div>
@@ -51,7 +57,9 @@ export function SectionTitle({
   return (
     <div className={cn('mb-3 flex flex-wrap items-end justify-between gap-2', className)}>
       <div>
-        <Tag className="text-sm font-semibold uppercase tracking-[0.08em] text-ink-800">{title}</Tag>
+        <Tag className="text-sm font-semibold uppercase tracking-[0.08em] text-ink-800">
+          {title}
+        </Tag>
         {description ? <p className="mt-0.5 text-xs text-muted-foreground">{description}</p> : null}
       </div>
       {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
@@ -85,7 +93,9 @@ export function KpiTile({
   const body = (
     <>
       <div className="flex items-start justify-between gap-2">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{label}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+          {label}
+        </p>
         {Icon ? (
           <Icon
             className={cn(
@@ -118,8 +128,17 @@ export function KpiTile({
       {hint || delta ? (
         <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
           {delta ? (
-            <span className={cn('inline-flex items-center gap-0.5 font-medium', positive ? 'text-success-700' : delta.value === 0 ? '' : 'text-danger-700')}>
-              {delta.value > 0 ? <ArrowUpRight className="size-3" /> : delta.value < 0 ? <ArrowDownRight className="size-3" /> : null}
+            <span
+              className={cn(
+                'inline-flex items-center gap-0.5 font-medium',
+                positive ? 'text-success-700' : delta.value === 0 ? '' : 'text-danger-700',
+              )}
+            >
+              {delta.value > 0 ? (
+                <ArrowUpRight className="size-3" />
+              ) : delta.value < 0 ? (
+                <ArrowDownRight className="size-3" />
+              ) : null}
               {delta.value > 0 ? '+' : ''}
               {delta.value}
               {delta.label ? ` ${delta.label}` : ''}
@@ -149,11 +168,25 @@ export function KpiTile({
 }
 
 /** Par etiqueta/valor para paneles de detalle. */
-export function DetailRow({ label, children, className, mono }: { label: React.ReactNode; children: React.ReactNode; className?: string; mono?: boolean }) {
+export function DetailRow({
+  label,
+  children,
+  className,
+  mono,
+}: {
+  label: React.ReactNode
+  children: React.ReactNode
+  className?: string
+  mono?: boolean
+}) {
   return (
     <div className={cn('flex flex-col gap-0.5', className)}>
-      <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</dt>
-      <dd className={cn('text-sm text-foreground', mono && 'font-mono text-xs')}>{children ?? '—'}</dd>
+      <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        {label}
+      </dt>
+      <dd className={cn('text-sm text-foreground', mono && 'font-mono text-xs')}>
+        {children ?? '—'}
+      </dd>
     </div>
   )
 }

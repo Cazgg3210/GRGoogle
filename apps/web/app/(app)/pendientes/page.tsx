@@ -13,10 +13,25 @@ import { PendientesBoard, type PendientesQuery } from './board'
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Pendientes' }
 
-const VIEWS = ['all', 'mine', 'team', 'overdue', 'thisWeek', 'noDueDate', 'noOwner', 'blocked', 'completed', 'proposed'] as const
+const VIEWS = [
+  'all',
+  'mine',
+  'team',
+  'overdue',
+  'thisWeek',
+  'noDueDate',
+  'noOwner',
+  'blocked',
+  'completed',
+  'proposed',
+] as const
 const SORTS = ['attention', 'dueDate', 'createdAt', 'updatedAt', 'priority'] as const
 
-export default async function PendientesPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+export default async function PendientesPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>
+}) {
   const sp = await searchParams
   const session = await getAppSession()
   const query: PendientesQuery = {
@@ -45,7 +60,11 @@ export default async function PendientesPage({ searchParams }: { searchParams: P
       {result.ok ? (
         <PendientesBoard page={result.data} query={query} />
       ) : (
-        <PendientesBoard page={null} query={query} error={<PageError error={result.error} retryHref="/pendientes" />} />
+        <PendientesBoard
+          page={null}
+          query={query}
+          error={<PageError error={result.error} retryHref="/pendientes" />}
+        />
       )}
     </>
   )
