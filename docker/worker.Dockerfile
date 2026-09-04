@@ -51,4 +51,4 @@ USER node
 WORKDIR /app/apps/worker
 # Apagado ordenado: pg-boss termina los jobs en vuelo al recibir SIGTERM.
 STOPSIGNAL SIGTERM
-CMD ["node", "dist/main.js"]
+CMD ["node_modules/.bin/tsx", "src/main.ts"]

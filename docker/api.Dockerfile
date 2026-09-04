@@ -65,4 +65,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 WORKDIR /app/apps/api
 # Las migraciones se aplican como paso previo en el despliegue:
 #   pnpm --filter @smlxl/database deploy   (prisma migrate deploy)
-CMD ["node", "dist/main.js"]
+CMD ["node_modules/.bin/tsx", "src/main.ts"]
