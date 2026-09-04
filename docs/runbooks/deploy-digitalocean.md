@@ -1,91 +1,84 @@
-# Runbook — Despliegue en un droplet de DigitalOcean (Ubuntu 24.04)
+# Runbook — Despliegue en el droplet de DigitalOcean (Ubuntu 24.04 + Dokploy)
 
-Aplica a un droplet tipo `s-2vcpu-4gb` o superior. La plataforma corre como cuatro contenedores
-(`postgres`, `api`, `worker`, `web`) definidos en `docker-compose.yml`; encima se puede usar un panel
-(Dokploy o EasyPanel) que aporte HTTPS automático, despliegue desde GitHub y gestión de secretos.
+Estado real de la infraestructura al 4 de septiembre de 2026 (fuente: contexto del propietario):
 
-## 1. Elegir panel: Dokploy vs EasyPanel
+| Elemento | Valor |
+|---|---|
+| Droplet | `ubuntu-s-2vcpu-4gb-nyc1`, 2 vCPU / 4 GB / 80 GB, NYC1, backups activados |
+| **Reserved IP** | **`129.212.197.34`** — la que se usa para DNS, Dokploy y SSH |
+| IP nativa | `147.182.219.216` (no usar para DNS; cambia si se reconstruye el droplet) |
+| Acceso | `ssh root@129.212.197.34` con llave SSH (o Web Console desde el panel de DigitalOcean) |
+| Panel | Dokploy ya instalado (Traefik + Let's Encrypt); comparte el droplet con otras apps (Pórtico San Miguel, etc.) |
+| Dominio | Aún no hay dominio propio; puente temporal con sslip.io: `smlxl.129-212-197-34.sslip.io` |
+| DNS futuro | Zona en DigitalOcean (Networking → Domains) con wildcard `*` → `129.212.197.34` |
 
-| Criterio | Dokploy | EasyPanel |
-|---|---|---|
-| Licencia | Open source (Apache 2.0), sin límite de proyectos | Propietario; plan gratuito limitado a 3 proyectos |
-| Base | Docker Swarm + Traefik | Docker + Traefik |
-| Docker Compose | Soporta el `docker-compose.yml` del repo tal cual | Lo soporta, pero su flujo natural es "un servicio por app" |
-| Build | Nixpacks, Dockerfile o Compose; build en el servidor | Igual |
-| Backups de BD | Programados a S3-compatible (DO Spaces) desde la UI | Igual |
-| Consumo en reposo | ~500 MB RAM | ~300 MB RAM |
-| Madurez | Más joven, comunidad activa | Más tiempo en mercado |
+La plataforma corre como cuatro contenedores (`postgres`, `api`, `worker`, `web`) definidos en
+`docker-compose.dokploy.yml`. Es una app más dentro de Dokploy: no requiere reinstalar nada ni tocar
+las otras aplicaciones del droplet; Traefik enruta por nombre de host.
 
-**Recomendación:** Dokploy. Este repo ya trae `docker-compose.yml` con los cuatro servicios y Dokploy lo
-despliega directamente como "Compose" con Traefik delante; además es open source y los backups a
-DigitalOcean Spaces cubren la sección 42 de la especificación. EasyPanel sigue siendo válido (es lo que
-menciona la sección 6.6 del documento) y los pasos de las secciones 3 a 6 son idénticos.
+## 1. Preparación del servidor (una sola vez, compartida por todas las apps)
 
-## 2. Preparar el droplet
+Ya hecho: Dokploy instalado. Pendiente o por verificar desde `ssh root@129.212.197.34`:
 
 ```bash
-# como root, una sola vez
-apt update && apt upgrade -y
+# reinicio pendiente por actualizaciones del kernel (avisado el 4 sep)
+reboot
+```
+
+```bash
 # swap de 4 GB: el build de Next.js puede exceder 4 GB de RAM
-fallocate -l 4G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
-echo '/swapfile none swap sw 0 0' >> /etc/fstab
-# firewall: solo SSH, HTTP y HTTPS. PostgreSQL nunca se expone.
-ufw allow OpenSSH && ufw allow 80/tcp && ufw allow 443/tcp && ufw --force enable
+swapon --show | grep -q swapfile || (fallocate -l 4G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile && echo '/swapfile none swap sw 0 0' >> /etc/fstab); free -h
 ```
 
-Apunta un dominio (por ejemplo `reuniones.smlxl.mx`) al IPv4 del droplet antes de continuar; Traefik
-emite el certificado Let's Encrypt en el primer despliegue.
+Firewall: usar el de DigitalOcean (Networking → Firewalls → crear `web-basico` con inbound TCP 22, 80,
+443 y outbound todo; asignarlo al droplet). El puerto 3000 solo mientras el panel no tenga dominio
+con HTTPS. Si además se usa `ufw` en el droplet, mantener las mismas reglas.
 
-## 3. Instalar Dokploy
+## 2. Nombre de host de la plataforma
 
-```bash
-curl -sSL https://dokploy.com/install.sh | sh
+Mientras no exista dominio propio, Dokploy puede emitir certificados para nombres sslip.io, que
+resuelven automáticamente a la IP embebida en el nombre:
+
+```text
+smlxl.129-212-197-34.sslip.io
 ```
 
-Abre `http://<ip>:3000`, crea el usuario administrador y, en Settings → Server, configura el dominio
-del panel con HTTPS. Después cierra el acceso directo al 3000 si el panel ya responde por 443.
+Cuando se compre el dominio (por ejemplo `tudominio.com`), en la zona DNS de DigitalOcean ya existirá
+el wildcard `* → 129.212.197.34`; bastará con cambiar en Dokploy el dominio del servicio `web` a
+`reuniones.tudominio.com`, actualizar `APP_URL` y el redirect de OAuth (sección 5) y redesplegar.
 
-Alternativa EasyPanel: `curl -sSL https://get.easypanel.io | sh` y el panel queda en `http://<ip>:3000`.
+Limitación conocida: Let's Encrypt aplica límites de emisión por dominio base y `sslip.io` es
+compartido por muchos usuarios. Si el certificado no se emite, activar en Dokploy el proveedor
+alternativo o esperar al dominio propio. El login con Google exige HTTPS, así que este punto es
+prerequisito del primer acceso.
 
-## 4. Crear el proyecto
+## 3. Crear el servicio en Dokploy
 
-1. Projects → Create → nombre `smlxl-meetings`.
-2. Add service → **Compose** → Provider GitHub (autoriza el repo privado) → rama `main`, Compose Path
-   `docker-compose.dokploy.yml` (archivo completo para producción: conecta `api` y `web` a la red de
-   Traefik y no publica puertos al host).
-3. En **Environment** pega el `.env` de producción (sección 5).
-4. En **Domains** asigna `reuniones.smlxl.mx` al servicio `web` (puerto 3000) y
-   `api.reuniones.smlxl.mx` al servicio `api` (puerto 4000), ambos con HTTPS. Si prefieres un solo dominio,
-   publica solo `web` y deja `api` interno: la web llama a la API por la red de Docker (`API_URL=http://api:4000`)
-   y el navegador pasa por el proxy `/api/proxy`. El webhook de Pub/Sub y el redirect de OAuth sí
-   necesitan que la API o la web sean públicas por HTTPS.
-5. Deploy. El primer build tarda entre 8 y 15 minutos en 2 vCPU.
+1. `https://panel...` (o `http://129.212.197.34:3000` mientras no tenga dominio) → **Projects → Create** →
+   `smlxl-meetings`.
+2. **Create Service → Compose**, nombre `plataforma`. Proveedor **GitHub** (Settings → Git Providers si aún
+   no está autorizado el repo `Cazgg3210/GRGoogle`), rama `main`, **Compose Path**
+   `docker-compose.dokploy.yml`.
+3. **Environment**: pegar las variables de la sección 4.
+4. **Domains → Add Domain**: host `smlxl.129-212-197-34.sslip.io` (o el dominio real), service `web`,
+   container port `3000`, HTTPS + Let's Encrypt.
+5. **Deploy**. Primer build: 10 a 15 minutos en 2 vCPU.
 
-## 5. `.env` de producción (valores de ejemplo, nunca al repositorio)
+## 4. Variables de entorno de producción (nunca al repositorio)
+
+Generar secretos en la PC: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`.
 
 ```env
-NODE_ENV=production
-APP_URL=https://reuniones.smlxl.mx
-API_URL=http://api:4000
-NEXT_PUBLIC_API_URL=https://reuniones.smlxl.mx
-PORT_API=4000
-PORT_WEB=3000
-LOG_LEVEL=info
-COMPANY_TIMEZONE=America/Mexico_City
-
+APP_URL=https://smlxl.129-212-197-34.sslip.io
 POSTGRES_USER=smlxl
-POSTGRES_PASSWORD=<generar: openssl rand -hex 24>
+POSTGRES_PASSWORD=<secreto 1>
 POSTGRES_DB=smlxl
-# DATABASE_URL la construye docker-compose a partir de las tres variables anteriores
-
-AUTH_SECRET=<generar: openssl rand -base64 32>
-AUTH_DEV_BYPASS=false
-AUTH_URL=https://reuniones.smlxl.mx
-GOOGLE_OAUTH_CLIENT_ID=<del proyecto GCP, runbook google-auth.md>
-GOOGLE_OAUTH_CLIENT_SECRET=<idem>
+AUTH_SECRET=<secreto 2>
+GOOGLE_PUBSUB_PUSH_TOKEN=<secreto 3>
 GOOGLE_WORKSPACE_DOMAIN=smlxl.mx
-
-# Fase 2/3: mientras estén en false la plataforma corre con adapters fake
+COMPANY_TIMEZONE=America/Mexico_City
+GOOGLE_OAUTH_CLIENT_ID=
+GOOGLE_OAUTH_CLIENT_SECRET=
 GOOGLE_INTEGRATION_ENABLED=false
 GOOGLE_MEET_EVENTS_ENABLED=false
 AI_PROCESSING_ENABLED=false
@@ -93,42 +86,44 @@ AI_COMPLETION_PROPOSALS_ENABLED=true
 GMAIL_NOTIFICATIONS_ENABLED=false
 SHEETS_SYNC_ENABLED=false
 WEEKLY_DIGEST_ENABLED=true
-GOOGLE_PUBSUB_PUSH_TOKEN=<generar: openssl rand -hex 32>
 ```
 
-La configuración valida al arrancar que en producción `AUTH_DEV_BYPASS` sea `false` y que `AUTH_SECRET`
-no sea el valor por defecto. Sin OAuth de Google configurado no hay forma de iniciar sesión en producción,
-así que el cliente OAuth (runbook `google-auth.md`) es requisito para el primer acceso.
+`GOOGLE_WORKSPACE_DOMAIN` es el dominio de las cuentas de los usuarios (`@smlxl.mx`), independiente
+del dominio donde se aloja la plataforma. La configuración valida en producción que `AUTH_DEV_BYPASS`
+sea `false` (el compose lo fija) y que `AUTH_SECRET` no sea el valor por defecto.
 
-## 6. Primer arranque: migraciones y datos iniciales
+## 5. Login con Google (obligatorio para entrar en producción)
 
-Desde la terminal del panel (o `docker exec`) en el contenedor `api`:
+1. Google Cloud Console con la cuenta Super Admin de `@smlxl.mx` → New Project `smlxl-meeting-intelligence`.
+2. APIs & Services → OAuth consent screen → **Internal**.
+3. Credentials → OAuth client ID → Web application → Authorized redirect URI:
+   `https://smlxl.129-212-197-34.sslip.io/api/auth/callback/google` (cambiarla al dominio real después).
+4. Copiar Client ID / Secret a Environment en Dokploy → **Redeploy**.
+5. La primera cuenta entra como MEMBER; elevarla a ADMIN desde la terminal del contenedor `postgres`:
+   `psql -U smlxl -d smlxl -c "UPDATE users SET role='ADMIN' WHERE email='correo@smlxl.mx';"`.
+
+## 6. Primer arranque: migraciones y datos
+
+Terminal del contenedor `api` en Dokploy:
 
 ```bash
 cd packages/database && npx prisma migrate deploy
 ```
 
-Después carga el catálogo inicial. Para producción NO uses el seed demo; usa el importador legado:
+Datos reales: NO usar el seed demo. Subir el workbook con `scp archivo.xlsx root@129.212.197.34:/root/maestro.xlsx`,
+copiarlo al contenedor (`docker cp /root/maestro.xlsx $(docker ps -qf name=api):/app/imports/maestro.xlsx`)
+y ejecutar `pnpm legacy:import --file ./imports/maestro.xlsx --dry-run` y luego `--commit`.
 
-```bash
-# copia el workbook al contenedor o móntalo en ./imports y ejecuta
-pnpm legacy:import --file ./imports/01_SMLXL_Maestro_de_Tareas_AGOSTO_2026.xlsx --dry-run
-pnpm legacy:import --file ./imports/01_SMLXL_Maestro_de_Tareas_AGOSTO_2026.xlsx --commit
-```
+## 7. Backups (sección 42 de la especificación)
 
-Los 10 usuarios reales se crean al primer login con Google o desde Administración → Usuarios; marca
-`monitorizado` en cada uno para que el worker cree su suscripción de Workspace Events (Fase 2).
-
-## 7. Backups (sección 42)
-
-En Dokploy: servicio `postgres` → Backups → destino S3 (DigitalOcean Spaces, endpoint
-`https://nyc3.digitaloceanspaces.com`), programación diaria a las 03:00 America/Mexico_City, retención
-30 días. Prueba una restauración al mes en un contenedor temporal.
+Además del backup de droplet ya activado en DigitalOcean: Dokploy → servicio → **Backups** → destino S3
+(DigitalOcean Spaces `smlxl-backups`, endpoint `https://nyc3.digitaloceanspaces.com`), base `smlxl`,
+cron `0 3 * * *`, retención 30 días. Probar una restauración al mes.
 
 ## 8. Operación
 
-- Logs: cada servicio en el panel; son JSON estructurados con `correlationId` (sección 33).
-- Salud: `https://api.../health` devuelve `db: up`; Traefik lo usa como healthcheck.
-- Actualizaciones: push a `main` → Dokploy reconstruye y reemplaza los contenedores (sección 41).
-- Escalado: si el worker se queda corto, sube el droplet a 4 vCPU / 8 GB; el worker y la API son
-  stateless y toleran reinicios porque los jobs viven en PostgreSQL (pg-boss).
+- Logs JSON con `correlationId` por servicio en Dokploy (sección 33).
+- Salud: `wget -qO- http://api:4000/health` desde cualquier contenedor de la red → `"db":"up"`.
+- Cada push a `main` en `Cazgg3210/GRGoogle` redespliega automáticamente (sección 41).
+- Si el droplet comparte carga con varias apps y el swap se usa de forma constante, subir a 4 vCPU / 8 GB.
+- Cuando exista dominio propio: cambiar dominio en Dokploy, `APP_URL`, redirect URI de Google y redesplegar.
