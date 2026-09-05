@@ -9,6 +9,7 @@ La API genera OpenAPI en `GET /api/v1/openapi.json` y Swagger UI en `/docs`.
 - El frontend (Auth.js) emite un JWT HS256 firmado con `AUTH_SECRET` con claims `{ sub: userId, email, role, name }` y lo envía en `Authorization: Bearer <jwt>`.
 - La API verifica el JWT, carga el `User` y construye el `Principal` (`@smlxl/domain` → `rbac.ts`). RBAC siempre server-side.
 - `GET /api/v1/session` → `SessionDto` (usuario + permisos efectivos).
+- Alta automática: si el correo autenticado pertenece a `GOOGLE_WORKSPACE_DOMAIN` y no existe en `users`, la API lo crea en su primer acceso (ADMIN si la tabla está vacía, MEMBER en caso contrario). Correos de otros dominios reciben 401.
 - Con `AUTH_DEV_BYPASS=true` (sólo desarrollo) la API acepta además el header `x-dev-user-email` para facilitar pruebas manuales/E2E.
 - El webhook Pub/Sub usa `?token=GOOGLE_PUBSUB_PUSH_TOKEN` (no JWT de usuario).
 

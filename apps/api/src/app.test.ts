@@ -109,14 +109,27 @@ describe('autenticación y sesión', () => {
     })
   })
 
-  it('401 con correo desconocido en bypass', async () => {
+  it('401 con correo de otro dominio', async () => {
     const res = await t.app.inject({
       method: 'GET',
       url: '/api/v1/session',
-      headers: asUser('nadie@smlxl.mx'),
+      headers: asUser('nadie@otro-dominio.com'),
     })
     expect(res.statusCode).toBe(401)
     expect(res.json().code).toBe('UNAUTHORIZED')
+  })
+
+  it('un correo desconocido del dominio se da de alta como MEMBER en su primer acceso', async () => {
+    const res = await t.app.inject({
+      method: 'GET',
+      url: '/api/v1/session',
+      headers: asUser('nuevo@smlxl.mx'),
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().user.role).toBe('MEMBER')
+    expect(res.json().user.email).toBe('nuevo@smlxl.mx')
+    const created = await t.ctx.repos.users.findByEmail('nuevo@smlxl.mx')
+    expect(created?.active).toBe(true)
   })
 
   it('bypass por header resuelve el usuario por email y devuelve permisos efectivos', async () => {
@@ -203,7 +216,7 @@ describe('RBAC y formato de errores', () => {
       headers: asUser(t.users.admin.email),
     })
     expect(ok.statusCode).toBe(200)
-    expect(ok.json()).toHaveLength(4)
+    expect(ok.json().length).toBeGreaterThanOrEqual(4)
     expect(
       (
         await t.app.inject({
