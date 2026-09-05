@@ -126,7 +126,13 @@ export async function ensureWorkspaceSubscriptions(
     } catch (err) {
       const code = isDomainError(err) ? err.code : DomainErrorCode.INTERNAL_ERROR
       ctx.logger.error(
-        { userId: user.id, errorCode: code },
+        {
+          userId: user.id,
+          userEmail: user.email,
+          errorCode: code,
+          errorMessage: err instanceof Error ? err.message : String(err),
+          errorDetails: isDomainError(err) ? err.details : undefined,
+        },
         'Error gestionando suscripción de Workspace Events',
       )
       result.errors.push({ userEmail: user.email, code })
