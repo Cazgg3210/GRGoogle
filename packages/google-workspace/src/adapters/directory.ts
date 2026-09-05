@@ -24,11 +24,18 @@ export interface DirectoryApiClient {
 }
 
 const SCOPES = [GOOGLE_SCOPES.directory.USER_READONLY]
+const SELF_SCOPES = [GOOGLE_SCOPES.directory.USERINFO_PROFILE]
+
+/** Cliente mínimo de `oauth2.userinfo.get` (id de Google del usuario impersonado). */
+export interface UserinfoApiClient {
+  get(): Promise<{ data: { id?: string | null } }>
+}
 
 export interface DirectoryAdapterDeps extends GoogleAdapterDeps {
   /** Cuenta administradora que se impersona para leer el directorio. */
   adminEmail: string
   clientFactory?: (auth: AuthClient) => DirectoryApiClient
+  userinfoFactory?: (auth: AuthClient) => UserinfoApiClient
 }
 
 export function userResourceName(googleUserId: string): string {
@@ -107,8 +114,29 @@ export class GoogleDirectoryAdapter implements DirectoryPort {
         this.idCache.set(key, null)
         return null
       }
+      if (err instanceof DomainError && err.code === DomainErrorCode.GOOGLE_PERMISSION_DENIED) {
+        // Sin privilegios de administrador: el propio usuario puede leer su id (userinfo.profile).
+        const id = await this.getOwnUserId(key)
+        if (id) {
+          this.idCache.set(key, id)
+          return id
+        }
+      }
       throw err
     }
+  }
+
+  /** Id de Google del usuario impersonándolo a él mismo; no requiere Admin SDK ni rol de administrador. */
+  private async getOwnUserId(email: string): Promise<string | null> {
+    const auth = this.deps.auth.for(email, SELF_SCOPES)
+    const client =
+      this.deps.userinfoFactory?.(auth) ??
+      (google.oauth2({ version: 'v2', auth }).userinfo as unknown as UserinfoApiClient)
+    const res = await withGoogleRetry((_signal) => client.get(), {
+      ...this.deps.retry,
+      operation: 'oauth2.userinfo.get',
+    })
+    return res.data.id ?? null
   }
 
   /** Resuelve email primario a partir del id de Google (`users/{id}` en Meet API). */

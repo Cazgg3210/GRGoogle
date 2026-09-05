@@ -39,6 +39,11 @@ export const GOOGLE_SCOPES = {
     USER_READONLY: 'https://www.googleapis.com/auth/admin.directory.user.readonly',
     /** candidato; confirmar en spike (docs/security/google-oauth-scopes.md) — resolver `//cloudidentity.googleapis.com/users/{id}`. */
     CLOUD_IDENTITY_USERS_READONLY: 'https://www.googleapis.com/auth/cloud-identity.users.readonly',
+    /**
+     * candidato; confirmar en spike (docs/security/google-oauth-scopes.md) — `oauth2.userinfo.get`
+     * impersonando al propio usuario para obtener su id de Google sin privilegios de administrador.
+     */
+    USERINFO_PROFILE: 'https://www.googleapis.com/auth/userinfo.profile',
   },
   workspaceEvents: {
     /**
