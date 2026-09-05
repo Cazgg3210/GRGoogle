@@ -45,6 +45,8 @@ export const EnvSchema = z.object({
 
   GOOGLE_SHEETS_SPREADSHEET_ID: z.string().optional().default(''),
   GMAIL_SENDER_EMAIL: z.string().optional().default(''),
+  /** Cuenta administradora de Workspace que se impersona para leer el directorio (Admin SDK). */
+  GOOGLE_ADMIN_EMAIL: z.string().optional().default(''),
 
   GOOGLE_INTEGRATION_ENABLED: bool.default(false),
   GOOGLE_MEET_EVENTS_ENABLED: bool.default(false),

@@ -102,7 +102,7 @@ export function createRealGoogleAdapters(
     allowedDomain: env.GOOGLE_WORKSPACE_DOMAIN,
   })
   const retry = deps.retry
-  const adminEmail = deps.adminEmail || env.GMAIL_SENDER_EMAIL
+  const adminEmail = deps.adminEmail || env.GOOGLE_ADMIN_EMAIL || env.GMAIL_SENDER_EMAIL
   const directory = new GoogleDirectoryAdapter({ auth, retry, adminEmail })
   const meet = new GoogleMeetAdapter({
     auth,
