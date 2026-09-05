@@ -115,17 +115,24 @@ export function createRealGoogleAdapters(
     workspaceEvents: new GoogleWorkspaceEventsAdapter({ auth, retry }),
     directory,
     drive: new GoogleDriveAdapter({ auth, retry }),
-    mail: new GmailAdapter({
-      auth,
-      retry,
-      senderEmail: env.GMAIL_SENDER_EMAIL,
-      notificationLog: deps.notificationLog ?? new InMemoryNotificationLog(),
-    }),
-    sheets: new GoogleSheetsAdapter({
-      auth,
-      retry,
-      actingUserEmail: env.GMAIL_SENDER_EMAIL || adminEmail,
-    }),
+    // Gmail y Sheets sólo se construyen en REAL cuando tienen configuración; si falta
+    // (Fase 2 sin cuenta remitente), se usa el fake para no bloquear Meet/Calendar (§51).
+    mail: env.GMAIL_SENDER_EMAIL
+      ? new GmailAdapter({
+          auth,
+          retry,
+          senderEmail: env.GMAIL_SENDER_EMAIL,
+          notificationLog: deps.notificationLog ?? new InMemoryNotificationLog(),
+        })
+      : new FakeMailAdapter({ outDir: null, now: deps.now ?? (() => new Date()) }),
+    sheets:
+      env.GMAIL_SENDER_EMAIL || adminEmail
+        ? new GoogleSheetsAdapter({
+            auth,
+            retry,
+            actingUserEmail: env.GMAIL_SENDER_EMAIL || adminEmail,
+          })
+        : new FakeSheetsAdapter(),
   }
 }
 
