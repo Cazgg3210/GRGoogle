@@ -43,10 +43,9 @@ export interface WorkspaceEventsApiClient {
 
 /** TTL máximo documentado para suscripciones sin resource data: 7 días. */
 export const MAX_SUBSCRIPTION_TTL_SECONDS = 7 * 24 * 60 * 60
-const SCOPES = [
-  GOOGLE_SCOPES.workspaceEvents.MEET_SPACE_READONLY,
-  GOOGLE_SCOPES.workspaceEvents.MEET_SPACE_CREATED,
-]
+// Con delegación a nivel de dominio, TODOS los scopes solicitados deben estar autorizados;
+// se pide únicamente `readonly` (preferido en docs/security/google-oauth-scopes.md).
+const SCOPES = [GOOGLE_SCOPES.workspaceEvents.MEET_SPACE_READONLY]
 
 export interface WorkspaceEventsAdapterDeps extends GoogleAdapterDeps {
   clientFactory?: (auth: AuthClient) => WorkspaceEventsApiClient
